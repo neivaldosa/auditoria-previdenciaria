@@ -6,7 +6,7 @@ import streamlit as st
 from extrator_cnis import extrair_cnis_v5
 from gerador_pdf import criar_pdf_executivo
 
-st.set_page_config(page_title="Auditoria Previdenciaria & Planejamento", page_icon="⚖️", layout="wide")
+st.set_page_config(page_title="Auditoria Previdenciaria & Planejamento - Diagnostico Estrategico de Aposentadoria e CNIS", page_icon="⚖️", layout="wide")
 
 st.markdown("""
 <style>
