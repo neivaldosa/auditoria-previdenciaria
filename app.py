@@ -219,10 +219,11 @@ if arquivo_pdf is not None:
                 df_res = abas["2_Tempo_Liquido_Resumo"]
                 df_fin = abas["5_Estimativa_Valor_RMI"]
 
-                tempo_liq = str(df_res.loc[df_res["Indicador"] == "TEMPO LIQUIDO DE CONTRIBUICAO (COMUM)", "Valor"].values.pop())
-                rmi_comum = str(df_fin.loc[df_fin["Metrica_Financeira"].str.contains("Regra Comum"), "Valor_Estimado"].values.pop())
-                rmi_pcd = str(df_fin.loc[df_fin["Metrica_Financeira"].str.contains("Aposentadoria PCD"), "Valor_Estimado"].values.pop())
-                dif_mensal = str(df_fin.loc[df_fin["Metrica_Financeira"].str.contains("Diferenca Mensal"), "Valor_Estimado"].values.pop())
+                tempo_liq = str(df_res.loc[df_res["Indicador"] == "TEMPO LIQUIDO DE CONTRIBUICAO (COMUM)", "Valor"].tolist().pop())
+                rmi_comum = str(df_fin.loc[df_fin["Metrica_Financeira"].str.contains("Regra Comum"), "Valor_Estimado"].tolist().pop())
+                rmi_pcd = str(df_fin.loc[df_fin["Metrica_Financeira"].str.contains("Aposentadoria PCD"), "Valor_Estimado"].tolist().pop())
+                dif_mensal = str(df_fin.loc[df_fin["Metrica_Financeira"].str.contains("Diferenca Mensal"), "Valor_Estimado"].tolist().pop())
+
                 tempo_card = tempo_liq.split("(").pop().replace(")", "") if "(" in tempo_liq else tempo_liq
 
                 st.markdown("<br>", unsafe_allow_html=True)
