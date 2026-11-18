@@ -6,7 +6,11 @@ import streamlit as st
 from extrator_cnis import extrair_cnis_v5
 from gerador_pdf import criar_pdf_executivo
 
-st.set_page_config(page_title="Auditoria Previdenciaria & Planejamento", page_icon="⚖️", layout="wide")
+st.set_page_config(
+    page_title="Auditoria Previdenciária & Planejamento - Análise Detalhada do CNIS",
+    page_icon="⚖️",
+    layout="wide"
+)
 
 st.markdown("""
 <style>
@@ -150,48 +154,48 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
+
 st.markdown("""
 <div class="hero-box">
-    <div class="hero-badge">Inteligencia Previdenciaria & Auditoria</div>
-    <h1 class="hero-title">Diagnostico Estrategico de Aposentadoria e CNIS</h1>
-    <p class="hero-subtitle">Analise automatizada de vinculos, auditoria de pendencias no INSS, enquadramento PCD (LC 142/2013) e projecao de renda.</p>
+    <div class="hero-badge">Inteligência Previdenciária & Auditoria</div>
+    <h1 class="hero-title">Diagnóstico Estratégico de Aposentadoria e CNIS</h1>
+    <p class="hero-subtitle">Análise automatizada de vínculos, auditoria de pendências no INSS, enquadramento PCD (LC 142/2013) e projeção de renda.</p>
 </div>
 """, unsafe_allow_html=True)
 
-with st.expander("📌 NAO POSSUI O ARQUIVO PDF DO CNIS? CLIQUE AQUI PARA VER O PASSO A PASSO OFICIAL (2 MINUTOS)"):
+with st.expander("📌 NÃO POSSUI O ARQUIVO PDF DO CNIS? CLIQUE AQUI PARA VER O PASSO A PASSO OFICIAL (2 MINUTOS)"):
     st.markdown("""
-    Para que a auditoria leia todos os seus salarios e pendencias, baixe a **versao completa** no portal oficial:
+    Para que a auditoria leia todos os seus salários e pendências, baixe a **versão completa** no portal oficial:
 
     1. **Acesse o Portal:** Entre em [meu.inss.gov.br](https://inss.gov.br) ou abra o aplicativo **Meu INSS** e entre com sua conta **Gov.br**.
     2. **Busque o Extrato:** Clique em **"Extratos e Comprovantes"** (ou digite *CNIS* na barra de busca).
-    3. **Selecione o Servico:** Clique em **"Extrato de Contribuicoes (CNIS)"**.
-    4. **Baixe a Versao Completa:** Role ate o final da pagina, clique em **"Baixar Documento"** e selecione obrigatoriamente **"Vinculos, Contribuicoes e Remuneracoes"**.
+    3. **Selecione o Serviço:** Clique em **"Extrato de Contribuições (CNIS)"**.
+    4. **Baixe a Versão Completa:** Role até o final da página, clique em **"Baixar Documento"** e selecione obrigatoriamente **"Vínculos, Contribuições e Remunerações"**.
     5. **Envie Abaixo:** Arraste o arquivo PDF salvo para o quadro de envio abaixo.
     """)
-
 with st.sidebar:
     st.markdown("### ⚙️ Configure seu Perfil")
-    sexo = st.selectbox("Sexo biologico (Regra INSS):", options=["M", "F"], format_func=lambda x: "Masculino" if x == "M" else "Feminino")
+    sexo = st.selectbox("Sexo biológico (Regra INSS):", options=["M", "F"], format_func=lambda x: "Masculino" if x == "M" else "Feminino")
 
     st.markdown('<div class="sidebar-card"><div class="sidebar-title">1. Ambiente de Trabalho</div>', unsafe_allow_html=True)
     ambiente = st.radio(
-        "Selecione sua atuacao predominante:",
-        options=["Administrativo / Escritorio", "Operacional / Area de Risco (Insalubridade/Periculosidade)"],
+        "Selecione sua atuação predominante:",
+        options=["Administrativo / Escritório", "Operacional / Área de Risco (Insalubridade/Periculosidade)"],
         index=0,
         label_visibility="collapsed"
     )
     st.markdown('</div>', unsafe_allow_html=True)
-    ambiente_operacional = (ambiente == "Operacional / Area de Risco (Insalubridade/Periculosidade)")
+    ambiente_operacional = (ambiente == "Operacional / Área de Risco (Insalubridade/Periculosidade)")
 
     st.markdown('<div class="sidebar-card"><div class="sidebar-title">2. Enquadramento PCD / TEA</div>', unsafe_allow_html=True)
-    possui_pcd = st.checkbox("Possui deficiencia / TEA (LC 142/2013)?", value=True)
-    st.caption("Marque se possui laudo medico de deficiencia fisica, sensorial, intelectual ou TEA.")
+    possui_pcd = st.checkbox("Possui deficiência / TEA (LC 142/2013)?", value=True)
+    st.caption("Marque se possui laudo médico de deficiência física, sensorial, intelectual ou TEA.")
     st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown("""
     <div class="security-badge">
-        <strong>🔒 Privacidade & Seguranca LGPD</strong><br>
-        Processamento isolado e criptografado em memoria. Nenhum dado pessoal ou PDF fica armazenado apos a analise.
+        <strong>🔒 Privacidade & Segurança LGPD</strong><br>
+        Processamento isolado e criptografado em memória. Nenhum dado pessoal ou PDF fica armazenado após a análise.
     </div>
     """, unsafe_allow_html=True)
 
@@ -199,8 +203,8 @@ st.markdown("### 📤 Envie seu Extrato Oficial (CNIS)")
 arquivo_pdf = st.file_uploader("Selecione ou arraste o arquivo PDF completo baixado do Meu INSS:", type=["pdf"])
 
 if arquivo_pdf is not None:
-    if st.button("🚀 Executar Auditoria e Gerar Dossie Completo", type="primary"):
-        with st.spinner("Processando vinculos, cruzando tetos historicos e auditando indicadores..."):
+    if st.button("🚀 Executar Auditoria e Gerar Dossiê Completo", type="primary"):
+        with st.spinner("Processando vínculos, cruzando tetos históricos e auditando indicadores..."):
             sessao_id = str(uuid.uuid4())
             caminho_temp_pdf = f"temp_{sessao_id}.pdf"
             caminho_temp_xlsx = f"dossie_{sessao_id}.xlsx"
@@ -219,30 +223,30 @@ if arquivo_pdf is not None:
                 df_res = abas["2_Tempo_Liquido_Resumo"]
                 df_fin = abas["5_Estimativa_Valor_RMI"]
 
-                tempo_liq = str(df_res.loc[df_res["Indicador"] == "TEMPO LIQUIDO DE CONTRIBUICAO (COMUM)", "Valor"].tolist().pop())
+                tempo_liq = str(df_res.loc[df_res["Indicador"] == "TEMPO LÍQUIDO DE CONTRIBUIÇÃO (COMUM)", "Valor"].tolist().pop())
                 rmi_comum = str(df_fin.loc[df_fin["Metrica_Financeira"].str.contains("Regra Comum"), "Valor_Estimado"].tolist().pop())
                 rmi_pcd = str(df_fin.loc[df_fin["Metrica_Financeira"].str.contains("Aposentadoria PCD"), "Valor_Estimado"].tolist().pop())
-                dif_mensal = str(df_fin.loc[df_fin["Metrica_Financeira"].str.contains("Diferenca Mensal"), "Valor_Estimado"].tolist().pop())
+                dif_mensal = str(df_fin.loc[df_fin["Metrica_Financeira"].str.contains("Diferença Mensal"), "Valor_Estimado"].tolist().pop())
 
                 tempo_card = tempo_liq.split("(").pop().replace(")", "") if "(" in tempo_liq else tempo_liq
 
                 st.markdown("<br>", unsafe_allow_html=True)
                 col1, col2, col3 = st.columns(3)
                 with col1:
-                    st.markdown(f'<div class="metric-card"><div class="metric-label">Tempo Liquido Apurado</div><div class="metric-value">{tempo_card}</div><div class="metric-sub">Periodos concomitantes ja descontados</div></div>', unsafe_allow_html=True)
+                    st.markdown(f'<div class="metric-card"><div class="metric-label">Tempo Líquido Apurado</div><div class="metric-value">{tempo_card}</div><div class="metric-sub">Períodos concomitantes já descontados</div></div>', unsafe_allow_html=True)
                 with col2:
-                    st.markdown(f'<div class="metric-card"><div class="metric-label">Estimativa Regra Geral</div><div class="metric-value">{rmi_comum}</div><div class="metric-sub">Projecao com coeficiente atual</div></div>', unsafe_allow_html=True)
+                    st.markdown(f'<div class="metric-card"><div class="metric-label">Estimativa Regra Geral</div><div class="metric-value">{rmi_comum}</div><div class="metric-sub">Projeção com coeficiente atual</div></div>', unsafe_allow_html=True)
                 with col3:
                     st.markdown(f'<div class="metric-card highlight"><div class="metric-label">Potencial Regra PCD (LC 142)</div><div class="metric-value">{rmi_pcd}</div><div class="metric-sub">{dif_mensal} vs. Regra Geral</div></div>', unsafe_allow_html=True)
 
                 st.markdown("<br>", unsafe_allow_html=True)
                 tab0, tab1, tab2, tab3, tab4, tab5 = st.tabs([
-                    "📄 Parecer Executivo", "📋 Auditoria de Vinculos", "⏱️ Resumo de Tempo",
-                    "🏭 Especial & GILRAT", "♿ Enquadramento PCD", "💰 Memoria Financeira"
+                    "📄 Parecer Executivo", "📋 Auditoria de Vínculos", "⏱️ Resumo de Tempo",
+                    "🏭 Especial & GILRAT", "♿ Enquadramento PCD", "💰 Memória Financeira"
                 ])
 
                 with tab0:
-                    st.text_area("Relatorio Tecnico Estruturado:", value=parecer_texto, height=400)
+                    st.text_area("Relatório Técnico Estruturado:", value=parecer_texto, height=400)
                 with tab1:
                     st.dataframe(abas["1_CNIS_Extraido"], use_container_width=True)
                 with tab2:
@@ -270,7 +274,7 @@ if arquivo_pdf is not None:
                 col_dl1, col_dl2, col_dl3 = st.columns(3)
                 with col_dl1:
                     st.download_button(
-                        label="📑 Baixar Relatorio Executivo (.pdf)",
+                        label="📑 Baixar Relatório Executivo (.pdf)",
                         data=bytes_pdf,
                         file_name="Relatorio_Executivo_Previdenciario.pdf",
                         mime="application/pdf",
@@ -285,9 +289,9 @@ if arquivo_pdf is not None:
                         use_container_width=True
                     )
                 with col_dl3:
-                    msg_whats = urllib.parse.quote(f"Ola! Acabei de gerar minha Auditoria Previdenciaria (Tempo Liquido: {tempo_card} | Potencial PCD: {rmi_pcd}) e gostaria de agendar uma analise com o escritorio parceiro.")
+                    msg_whats = urllib.parse.quote(f"Olá! Acabei de gerar minha Auditoria Previdenciária (Tempo Líquido: {tempo_card} | Potencial PCD: {rmi_pcd}) e gostaria de agendar uma análise com o escritório parceiro.")
                     link_whats = f"https://wa.me{msg_whats}"
-                    st.link_button("⚖️ Enviar para Escritorio Parceiro", url=link_whats, use_container_width=True)
+                    st.link_button("⚖️ Enviar para Escritório Parceiro", url=link_whats, use_container_width=True)
 
             finally:
                 for arq in [caminho_temp_pdf, caminho_temp_xlsx, caminho_pdf_relatorio]:
