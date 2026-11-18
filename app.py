@@ -112,6 +112,33 @@ st.markdown("""
         padding: 0.55rem 1.3rem !important;
         border-radius: 6px !important;
     }
+    .feature-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 1rem;
+        margin-top: 1.2rem;
+        margin-bottom: 1.5rem;
+    }
+    .feature-card {
+        background: linear-gradient(180deg, #FFFFFF 0%, #FFFDF5 100%);
+        border: 1px solid #E2E8F0;
+        border-top: 4px solid #C59B27;
+        border-radius: 10px;
+        padding: 1.2rem 1.3rem;
+        box-shadow: 0 4px 10px rgba(15, 41, 58, 0.05);
+    }
+    .feature-title {
+        font-size: 0.98rem;
+        font-weight: 700;
+        color: #0F293A;
+        margin-bottom: 0.45rem;
+    }
+    .feature-desc {
+        font-size: 0.86rem;
+        color: #475569;
+        line-height: 1.45;
+        margin: 0;
+    }
     .metric-card {
         background-color: #FFFFFF;
         padding: 1.4rem;
@@ -152,36 +179,8 @@ st.markdown("""
         border-radius: 8px;
         font-size: 1.02rem;
     }
-    .feature-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 1rem;
-        margin-top: 1.5rem;
-        margin-bottom: 1.5rem;
-    }
-    .feature-card {
-        background: linear-gradient(180deg, #FFFFFF 0%, #FFFDF5 100%);
-        border: 1px solid #E2E8F0;
-        border-top: 4px solid #C59B27;
-        border-radius: 10px;
-        padding: 1.2rem 1.3rem;
-        box-shadow: 0 4px 10px rgba(15, 41, 58, 0.05);
-    }
-    .feature-title {
-        font-size: 0.98rem;
-        font-weight: 700;
-        color: #0F293A;
-        margin-bottom: 0.45rem;
-    }
-    .feature-desc {
-        font-size: 0.86rem;
-        color: #475569;
-        line-height: 1.45;
-        margin: 0;
-    }
 </style>
 """, unsafe_allow_html=True)
-
 st.markdown("""
 <div class="hero-box">
     <div class="hero-badge">Inteligência Previdenciária & Auditoria</div>
@@ -200,6 +199,7 @@ with st.expander("📌 NÃO POSSUI O ARQUIVO PDF DO CNIS? CLIQUE AQUI PARA VER O
     4. **Baixe a Versão Completa:** Role até o final da página, clique em **"Baixar Documento"** e selecione obrigatoriamente **"Vínculos, Contribuições e Remunerações"**.
     5. **Envie Abaixo:** Arraste o arquivo PDF salvo para o quadro de envio abaixo.
     """)
+
 with st.sidebar:
     st.markdown("### ⚙️ Configure seu Perfil")
     sexo = st.selectbox("Sexo biológico (Regra INSS):", options=["M", "F"], format_func=lambda x: "Masculino" if x == "M" else "Feminino")
@@ -228,40 +228,8 @@ with st.sidebar:
 
 st.markdown("### 📤 Envie seu Extrato Oficial (CNIS)")
 arquivo_pdf = st.file_uploader("Selecione ou arraste o arquivo PDF completo baixado do Meu INSS:", type=["pdf"])
-
 if arquivo_pdf is not None:
     if st.button("🚀 Executar Auditoria e Gerar Dossiê Completo", type="primary"):
-        st.markdown("""
-<h4 style="color: #0F293A; margin-top: 1.8rem; margin-bottom: 0.2rem;">📋 O que está incluso no seu Dossiê Completo de Auditoria:</h4>
-<p style="color: #64748B; font-size: 0.9rem; margin-bottom: 1rem;">Ao enviar seu CNIS, nosso motor previdenciário gera automaticamente 6 análises técnicas em tela, PDF e Excel:</p>
-
-<div class="feature-grid">
-    <div class="feature-card">
-        <div class="feature-title">📄 1. Parecer Executivo</div>
-        <p class="feature-desc">Diagnóstico jurídico-técnico consolidado que traduz o seu histórico em linguagem clara, apontando riscos, oportunidades e o plano de ação exato para protocolar no Meu INSS.</p>
-    </div>
-    <div class="feature-card">
-        <div class="feature-title">📋 2. Auditoria de Vínculos</div>
-        <p class="feature-desc">Varredura completa de cada empresa e recolhimento, identificando indicadores ocultos do INSS (como falta de data de saída, pendências salariais ou guias concomitantes bloqueadas).</p>
-    </div>
-    <div class="feature-card">
-        <div class="feature-title">⏱️ 3. Resumo de Tempo</div>
-        <p class="feature-desc">Cálculo exato do seu tempo líquido de contribuição, descontando automaticamente períodos sobrepostos para evitar erros de contagem na hora do pedido de aposentadoria.</p>
-    </div>
-    <div class="feature-card">
-        <div class="feature-title">🏭 4. Aposentadoria Especial (Risco)</div>
-        <p class="feature-desc">Identifica períodos operacionais expostos à insalubridade ou periculosidade antes da Reforma de 2019, calculando o acréscimo de tempo (fator 1.4 H / 1.2 M) e orientando sobre PPP e GILRAT.</p>
-    </div>
-    <div class="feature-card">
-        <div class="feature-title">♿ 5. Enquadramento PCD (LC 142)</div>
-        <p class="feature-desc">Simula o direito à aposentadoria da Pessoa com Deficiência (incluindo TEA Nível 1) nos graus grave, moderado e leve — sem exigência de idade mínima e com redução de tempo.</p>
-    </div>
-    <div class="feature-card">
-        <div class="feature-title">💰 6. Memória Financeira (RMI)</div>
-        <p class="feature-desc">Atualiza seus salários desde julho de 1994 pelos tetos históricos do INSS, comparando o valor do benefício na Regra Geral versus a média dos 80% maiores salários da Regra PCD.</p>
-    </div>
-</div>
-""", unsafe_allow_html=True)
         with st.spinner("Processando vínculos, cruzando tetos históricos e auditando indicadores..."):
             sessao_id = str(uuid.uuid4())
             caminho_temp_pdf = f"temp_{sessao_id}.pdf"
@@ -355,3 +323,35 @@ if arquivo_pdf is not None:
                 for arq in [caminho_temp_pdf, caminho_temp_xlsx, caminho_pdf_relatorio]:
                     if os.path.exists(arq):
                         os.remove(arq)
+
+st.markdown("""
+<h4 style="color: #0F293A; margin-top: 2rem; margin-bottom: 0.2rem;">📋 O que está incluso no seu Dossiê Completo de Auditoria:</h4>
+<p style="color: #64748B; font-size: 0.9rem; margin-bottom: 1rem;">Ao enviar seu CNIS, nosso motor previdenciário gera automaticamente 6 análises técnicas em tela, PDF e Excel:</p>
+
+<div class="feature-grid">
+    <div class="feature-card">
+        <div class="feature-title">📄 1. Parecer Executivo</div>
+        <p class="feature-desc">Diagnóstico jurídico-técnico consolidado que traduz o seu histórico em linguagem clara, apontando riscos, oportunidades e o plano de ação exato para protocolar no Meu INSS.</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-title">📋 2. Auditoria de Vínculos</div>
+        <p class="feature-desc">Varredura completa de cada empresa e recolhimento, identificando indicadores ocultos do INSS (como falta de data de saída, pendências salariais ou guias concomitantes bloqueadas).</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-title">⏱️ 3. Resumo de Tempo</div>
+        <p class="feature-desc">Cálculo exato do seu tempo líquido de contribuição, descontando automaticamente períodos sobrepostos para evitar erros de contagem na hora do pedido de aposentadoria.</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-title">🏭 4. Aposentadoria Especial (Risco)</div>
+        <p class="feature-desc">Identifica períodos operacionais expostos à insalubridade ou periculosidade antes da Reforma de 2019, calculando o acréscimo de tempo (fator 1.4 H / 1.2 M) e orientando sobre PPP e GILRAT.</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-title">♿ 5. Enquadramento PCD (LC 142)</div>
+        <p class="feature-desc">Simula o direito à aposentadoria da Pessoa com Deficiência (incluindo TEA Nível 1) nos graus grave, moderado e leve — sem exigência de idade mínima e com redução de tempo.</p>
+    </div>
+    <div class="feature-card">
+        <div class="feature-title">💰 6. Memória Financeira (RMI)</div>
+        <p class="feature-desc">Atualiza seus salários desde julho de 1994 pelos tetos históricos do INSS, comparando o valor do benefício na Regra Geral versus a média dos 80% maiores salários da Regra PCD.</p>
+    </div>
+</div>
+""", unsafe_allow_html=True)
