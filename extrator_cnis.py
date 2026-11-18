@@ -106,7 +106,7 @@ def extrair_cnis_v5(caminho_pdf, caminho_excel_saida, sexo="M", ambiente_operaci
                     seq = int(match_inicio.group(1))
                     resto = match_inicio.group(3)
 
-                    if "Benefício" in resto or "AUXILIO" in resto:
+                    if "Benefício" in resto or "AUXÍLIO" in resto or "AUXILIO" in resto:
                         vinculo_atual = None
                         continue
 
@@ -119,7 +119,7 @@ def extrair_cnis_v5(caminho_pdf, caminho_excel_saida, sexo="M", ambiente_operaci
                     elif "RECOLHIMENTO" in resto or "Contribuinte Individual" in resto or "Facultativo" in resto:
                         cnpj = "RECOLHIMENTO (NIT)"
                     else:
-                        cnpj = "Nao informado"
+                        cnpj = "Não informado"
 
                     datas = re.findall(r"\b\d{2}/\d{2}/\d{4}\b", resto)
                     data_ini = datas.pop(0) if datas else ""
@@ -129,7 +129,7 @@ def extrair_cnis_v5(caminho_pdf, caminho_excel_saida, sexo="M", ambiente_operaci
                     ult_remun = competencias_linha.pop() if competencias_linha else ""
 
                     if "Empregado ou Agente" in resto:
-                        tipo_encontrado = "Empregado ou Agente Publico"
+                        tipo_encontrado = "Empregado ou Agente Público"
                     elif "Contribuinte Individual" in resto:
                         tipo_encontrado = "Contribuinte Individual"
                     elif "Facultativo" in resto:
@@ -137,7 +137,7 @@ def extrair_cnis_v5(caminho_pdf, caminho_excel_saida, sexo="M", ambiente_operaci
                     elif "Segurado Especial" in resto:
                         tipo_encontrado = "Segurado Especial"
                     else:
-                        tipo_encontrado = "Nao identificado"
+                        tipo_encontrado = "Não identificado"
 
                     empresa = resto.replace(cnpj, "") if match_cnpj else resto
                     for corte in ["Empregado ou Agente", "Contribuinte Individual", "Facultativo", "Segurado Especial"]:
@@ -156,8 +156,8 @@ def extrair_cnis_v5(caminho_pdf, caminho_excel_saida, sexo="M", ambiente_operaci
                         "Tipo_Filiado": tipo_encontrado, "Data_Admissao": data_ini,
                         "Data_Demissao": data_fim, "Ultima_Remun": ult_remun,
                         "Indicadores_Lista": [], "Dias_Totais": 0, "Dias_Pre_Reforma_2019": 0,
-                        "Potencial_Especial": "Nao", "Status_Auditoria": "OK",
-                        "Plano_Acao_INSS": "Nenhuma pendencia identificada neste vinculo.",
+                        "Potencial_Especial": "Não", "Status_Auditoria": "OK",
+                        "Plano_Acao_INSS": "Nenhuma pendência identificada neste vínculo.",
                     }
                     continue
 
@@ -175,12 +175,11 @@ def extrair_cnis_v5(caminho_pdf, caminho_excel_saida, sexo="M", ambiente_operaci
 
     if vinculo_atual:
         vinculos.append(vinculo_atual)
-
     max_seq_clt = max((x["Seq"] for x in vinculos if "Empregado" in x["Tipo_Filiado"]), default=0)
     dt_reforma = datetime(2019, 11, 13)
 
     for v in vinculos:
-        v["Indicadores"] = ", ".join(v["Indicadores_Lista"]) if v["Indicadores_Lista"] else "Sem Pendencia"
+        v["Indicadores"] = ", ".join(v["Indicadores_Lista"]) if v["Indicadores_Lista"] else "Sem Pendência"
         del v["Indicadores_Lista"]
 
         if v["Data_Admissao"]:
@@ -200,38 +199,38 @@ def extrair_cnis_v5(caminho_pdf, caminho_excel_saida, sexo="M", ambiente_operaci
 
             if not v["Data_Demissao"] and "Empregado" in v["Tipo_Filiado"]:
                 if v["Seq"] < max_seq_clt:
-                    v["Status_Auditoria"] = "ERRO CRITICO: Sem Data de Saida"
-                    v["Plano_Acao_INSS"] = "Solicitar Acerto de Vinculos e Remuneracoes no Meu INSS e anexar baixa na CTPS ou TRCT."
+                    v["Status_Auditoria"] = "ERRO CRÍTICO: Sem Data de Saída"
+                    v["Plano_Acao_INSS"] = "Solicitar Acerto de Vínculos e Remunerações no Meu INSS e anexar baixa na CTPS ou TRCT."
                 else:
-                    v["Status_Auditoria"] = "VINCULO ATIVO (Em aberto)"
-                    v["Plano_Acao_INSS"] = "Vinculo atual em curso. Contado ate a ultima remuneracao recolhida."
+                    v["Status_Auditoria"] = "VÍNCULO ATIVO (Em aberto)"
+                    v["Plano_Acao_INSS"] = "Vínculo atual em curso. Contado até a última remuneração recolhida."
 
         palavras_risco = ["PETROLEO", "OLEO E GAS", "ENERGIA", "OFFSHORE", "QUIMICA", "MINERACAO", "METALURGICA", "HOSPITAL", "VIGILANCIA", "ELETRICA"]
         tem_risco_ramo = any(p in v["Nome_Empresa"].upper() for p in palavras_risco)
 
         if "PREM-BLOQ-EC103" in v["Indicadores"] or "IREC-MEI" in v["Indicadores"]:
             v["Status_Auditoria"] = "ALERTA: Recolhimento Bloqueado/Concomitante"
-            v["Plano_Acao_INSS"] = "Guia MEI/Autonomo paga no mesmo mes de vinculo CLT. Nao soma tempo extra."
+            v["Plano_Acao_INSS"] = "Guia MEI/Autônomo paga no mesmo mês de vínculo CLT. Não soma tempo extra."
         elif "IVIN-JORN-DIFERENCIADA" in v["Indicadores"] or tem_risco_ramo:
             if ambiente_operacional:
                 v["Potencial_Especial"] = "Sim (Operacional / PPP)"
                 v["Status_Auditoria"] = "OPORTUNIDADE: Atividade Especial / Risco"
-                v["Plano_Acao_INSS"] = "Solicitar PPP e LTCAT a empresa e conferir codigo de ocorrencia GFIP/eSocial."
+                v["Plano_Acao_INSS"] = "Solicitar PPP e LTCAT à empresa e conferir código de ocorrência GFIP/eSocial."
             else:
-                v["Potencial_Especial"] = "Nao (Area Administrativa)"
+                v["Potencial_Especial"] = "Não (Área Administrativa)"
                 if v["Status_Auditoria"] == "OK":
                     v["Status_Auditoria"] = "INFO: Setor Industrial (Cargo Administrativo)"
-                    v["Plano_Acao_INSS"] = "Marcacao de jornada diferenciada/setor de risco, mas sem conversao especial por atuar em area administrativa."
+                    v["Plano_Acao_INSS"] = "Marcação de jornada diferenciada/setor de risco, mas sem conversão especial por atuar em área administrativa."
         elif "IREM-INDPEND" in v["Indicadores"] and v["Status_Auditoria"] == "OK":
-            v["Status_Auditoria"] = "ATENCAO: Pendencia na Remuneracao"
-            v["Plano_Acao_INSS"] = "Guardar holerites e comprovantes de dissidio (IREM-ACD)."
+            v["Status_Auditoria"] = "ATENÇÃO: Pendência na Remuneração"
+            v["Plano_Acao_INSS"] = "Guardar holerites e comprovantes de dissídio (IREM-ACD)."
 
     df_vinculos = pd.DataFrame(vinculos)
     dias_brutos = sum(v["Dias_Totais"] for v in vinculos)
     dias_liquidos = calcular_tempo_liquido(vinculos)
     dias_concomitantes = dias_brutos - dias_liquidos
 
-    idade_atual = "Nao informada"
+    idade_atual = "Não informada"
     if data_nascimento:
         dt_nasc = datetime.strptime(data_nascimento, "%d/%m/%Y")
         idade_atual = f"{int((datetime.now() - dt_nasc).days // 365.25)} anos"
@@ -239,12 +238,11 @@ def extrair_cnis_v5(caminho_pdf, caminho_excel_saida, sexo="M", ambiente_operaci
     df_resumo = pd.DataFrame([
         {"Indicador": "Segurado", "Valor": nome_segurado},
         {"Indicador": "Data de Nascimento / Idade Atual", "Valor": f"{data_nascimento} ({idade_atual})"},
-        {"Indicador": "Ambiente de Trabalho Informado", "Valor": "Operacional / Area de Risco" if ambiente_operacional else "Administrativo / Escritorio"},
-        {"Indicador": "Soma Bruta de Todos os Vinculos", "Valor": f"{dias_brutos} dias ({formatar_ymd(dias_brutos)})"},
-        {"Indicador": "Periodos Concomitantes Descontados", "Valor": f"{dias_concomitantes} dias"},
-        {"Indicador": "TEMPO LIQUIDO DE CONTRIBUICAO (COMUM)", "Valor": f"{dias_liquidos} dias ({formatar_ymd(dias_liquidos)})"},
+        {"Indicador": "Ambiente de Trabalho Informado", "Valor": "Operacional / Área de Risco" if ambiente_operacional else "Administrativo / Escritório"},
+        {"Indicador": "Soma Bruta de Todos os Vínculos", "Valor": f"{dias_brutos} dias ({formatar_ymd(dias_brutos)})"},
+        {"Indicador": "Períodos Concomitantes Descontados", "Valor": f"{dias_concomitantes} dias"},
+        {"Indicador": "TEMPO LÍQUIDO DE CONTRIBUIÇÃO (COMUM)", "Valor": f"{dias_liquidos} dias ({formatar_ymd(dias_liquidos)})"},
     ])
-
 
     fator_conv = 1.4 if sexo == "M" else 1.2
     linhas_especial = []
@@ -260,25 +258,25 @@ def extrair_cnis_v5(caminho_pdf, caminho_excel_saida, sexo="M", ambiente_operaci
                 "Periodo": f"{v['Data_Admissao']} a {v['Data_Demissao'] or v['Ultima_Remun']}",
                 "Dias_Ate_13_11_2019": dias_pre, "Fator_Conversao": fator_conv,
                 "Dias_Extras_Ganhos_Com_PPP": dias_bonus,
-                "Auditoria_Recolhimento_Risco_GILRAT": "Conferir Codigo Ocorrencia 01 a 04 na GFIP/eSocial (adicional GILRAT 6%, 9% ou 12%).",
+                "Auditoria_Recolhimento_Risco_GILRAT": "Conferir Código Ocorrência 01 a 04 na GFIP/eSocial (adicional GILRAT 6%, 9% ou 12%).",
             })
 
     if not linhas_especial:
         linhas_especial.append({
-            "Seq": "-", "Empresa": "Nenhum periodo operacional com exposicao a risco selecionado",
+            "Seq": "-", "Empresa": "Nenhum período operacional com exposição a risco selecionado",
             "Periodo": "-", "Dias_Ate_13_11_2019": 0, "Fator_Conversao": fator_conv,
             "Dias_Extras_Ganhos_Com_PPP": 0,
-            "Auditoria_Recolhimento_Risco_GILRAT": "Como o ambiente informado foi Administrativo/Escritorio, nao ha acrescimo de tempo especial.",
+            "Auditoria_Recolhimento_Risco_GILRAT": "Como o ambiente informado foi Administrativo/Escritório, não há acréscimo de tempo especial.",
         })
 
     novo_total_dias_especial = dias_liquidos + total_dias_bonus_especial
     df_especial = pd.DataFrame(linhas_especial)
 
     metas_pcd = [
-        ("Deficiencia Grave", 25 if sexo == "M" else 20),
-        ("Deficiencia Moderada", 29 if sexo == "M" else 24),
-        ("Deficiencia Leve (Ex: TEA Nivel 1)", 33 if sexo == "M" else 28),
-        ("Regra Comum Pos-Reforma", 35 if sexo == "M" else 30),
+        ("Deficiência Grave", 25 if sexo == "M" else 20),
+        ("Deficiência Moderada", 29 if sexo == "M" else 24),
+        ("Deficiência Leve (Ex: TEA Nível 1)", 33 if sexo == "M" else 28),
+        ("Regra Comum Pós-Reforma", 35 if sexo == "M" else 30),
     ]
 
     linhas_pcd = []
@@ -322,31 +320,31 @@ def extrair_cnis_v5(caminho_pdf, caminho_excel_saida, sexo="M", ambiente_operaci
     rmi_regra_pcd_100 = max(piso_2026, min(teto_2026, media_80_maiores)) if media_80_maiores > 0 else 0.0
 
     df_financeiro = pd.DataFrame([
-        {"Metrica_Financeira": "Competencias Extraidas (Desde 07/1994)", "Valor_Estimado": f"{len(salarios_corrigidos)} meses"},
+        {"Metrica_Financeira": "Competências Extraídas (Desde 07/1994)", "Valor_Estimado": f"{len(salarios_corrigidos)} meses"},
         {"Metrica_Financeira": "Teto Oficial INSS Vigente (2026)", "Valor_Estimado": f"R$ {teto_2026:,.2f}"},
-        {"Metrica_Financeira": "Media de 100% dos Salarios (Regra Geral)", "Valor_Estimado": f"R$ {media_100:,.2f}"},
-        {"Metrica_Financeira": "Media dos 80% Maiores Salarios (Regra PCD LC 142)", "Valor_Estimado": f"R$ {media_80_maiores:,.2f}"},
+        {"Metrica_Financeira": "Média de 100% dos Salários (Regra Geral)", "Valor_Estimado": f"R$ {media_100:,.2f}"},
+        {"Metrica_Financeira": "Média dos 80% Maiores Salários (Regra PCD LC 142)", "Valor_Estimado": f"R$ {media_80_maiores:,.2f}"},
         {"Metrica_Financeira": f"Estimativa RMI Regra Comum (Coeficiente {int(coef_reforma*100)}%)", "Valor_Estimado": f"R$ {rmi_regra_comum_hoje:,.2f}"},
-        {"Metrica_Financeira": "Estimativa RMI Aposentadoria PCD (100% da Media)", "Valor_Estimado": f"R$ {rmi_regra_pcd_100:,.2f}"},
-        {"Metrica_Financeira": "Diferenca Mensal a Favor da Regra PCD", "Valor_Estimado": f"+ R$ {max(0, rmi_regra_pcd_100 - rmi_regra_comum_hoje):,.2f} / mes"},
+        {"Metrica_Financeira": "Estimativa RMI Aposentadoria PCD (100% da Média)", "Valor_Estimado": f"R$ {rmi_regra_pcd_100:,.2f}"},
+        {"Metrica_Financeira": "Diferença Mensal a Favor da Regra PCD", "Valor_Estimado": f"+ R$ {max(0, rmi_regra_pcd_100 - rmi_regra_comum_hoje):,.2f} / mês"},
     ])
 
     erros_lista = [v for v in vinculos if "ERRO" in v["Status_Auditoria"] or "ALERTA" in v["Status_Auditoria"]]
-    texto_parecer = f"PARECER TECNICO PREVIDENCIARIO E AUDITORIA DE CNIS\nSegurado(a): {nome_segurado} | Idade Atual: {idade_atual}\n\n1. TEMPO LIQUIDO DE CONTRIBUICAO\nTempo liquido comprovado hoje: {formatar_ymd(dias_liquidos)} ({dias_liquidos} dias), ja descontados {dias_concomitantes} dias concomitantes.\n\n2. PENDENCIAS NO MEU INSS\n"
+    texto_parecer = f"PARECER TÉCNICO PREVIDENCIÁRIO E AUDITORIA DE CNIS\nSegurado(a): {nome_segurado} | Idade Atual: {idade_atual}\n\n1. TEMPO LÍQUIDO DE CONTRIBUIÇÃO\nTempo líquido comprovado hoje: {formatar_ymd(dias_liquidos)} ({dias_liquidos} dias), já descontados {dias_concomitantes} dias concomitantes.\n\n2. PENDÊNCIAS NO MEU INSS\n"
     if erros_lista:
         for err in erros_lista:
-            texto_parecer += f"- Vinculo {err['Seq']} ({err['Nome_Empresa']}): {err['Status_Auditoria']}. Acao: {err['Plano_Acao_INSS']}\n"
+            texto_parecer += f"- Vínculo {err['Seq']} ({err['Nome_Empresa']}): {err['Status_Auditoria']}. Ação: {err['Plano_Acao_INSS']}\n"
     else:
-        texto_parecer += "- Nenhuma pendencia impeditiva critica encontrada.\n"
+        texto_parecer += "- Nenhuma pendência impeditiva crítica encontrada.\n"
 
-    texto_parecer += "\n3. ANALISE ESPECIAL E PCD (LC 142/2013)\n"
+    texto_parecer += "\n3. ANÁLISE ESPECIAL E PCD (LC 142/2013)\n"
     if ambiente_operacional and total_dias_bonus_especial > 0:
-        texto_parecer += f"- Conversao Especial (PPP): Acrescimo estimado de {formatar_ymd(total_dias_bonus_especial)}. Solicitar PPP/LTCAT e conferir codigo de ocorrencia (01 a 04) na GFIP/eSocial.\n"
+        texto_parecer += f"- Conversão Especial (PPP): Acréscimo estimado de {formatar_ymd(total_dias_bonus_especial)}. Solicitar PPP/LTCAT e conferir código de ocorrência (01 a 04) na GFIP/eSocial.\n"
     else:
-        texto_parecer += "- Conversao Especial (PPP): Perfil Administrativo/Escritorio selecionado (sem acrescimo automatico de insalubridade/periculosidade).\n"
+        texto_parecer += "- Conversão Especial (PPP): Perfil Administrativo/Escritório selecionado (sem acréscimo automático de insalubridade/periculosidade).\n"
 
     if possui_pcd:
-        texto_parecer += f"- Regra PCD (LC 142/2013): Direito a reducao de tempo (25, 29 ou 33 anos H / 20, 24 ou 28 anos M) sem idade minima e com media dos 80% maiores salarios (100%), elevando a estimativa de R$ {rmi_regra_comum_hoje:,.2f} para R$ {rmi_regra_pcd_100:,.2f} (+ R$ {max(0, rmi_regra_pcd_100 - rmi_regra_comum_hoje):,.2f}/mes).\n"
+        texto_parecer += f"- Regra PCD (LC 142/2013): Direito à redução de tempo (25, 29 ou 33 anos H / 20, 24 ou 28 anos M) sem idade mínima e com média dos 80% maiores salários (100%), elevando a estimativa de R$ {rmi_regra_comum_hoje:,.2f} para R$ {rmi_regra_pcd_100:,.2f} (+ R$ {max(0, rmi_regra_pcd_100 - rmi_regra_comum_hoje):,.2f}/mês).\n"
 
     df_parecer = pd.DataFrame([{"Parecer_Tecnico_Completo": texto_parecer}])
 
@@ -365,4 +363,3 @@ def extrair_cnis_v5(caminho_pdf, caminho_excel_saida, sexo="M", ambiente_operaci
                 worksheet.column_dimensions[next(iter(col)).column_letter].width = max_length + 4
 
     return texto_parecer
-
