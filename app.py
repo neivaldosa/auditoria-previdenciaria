@@ -1,7 +1,8 @@
 import streamlit as st
 from extrator_cnis import extrair_cnis_v5
 import pandas as pd
-
+import os
+import uuid
 st.set_page_config(page_title="Auditoria Previdenciaria & Planejamento", page_icon="⚖️", layout="wide")
 
 st.markdown("""
@@ -207,8 +208,101 @@ arquivo_pdf = st.file_uploader("Selecione ou arraste o arquivo PDF completo baix
 if arquivo_pdf is not None:
     if st.button("🚀 Executar Auditoria e Gerar Dossie Completo", type="primary"):
         with st.spinner("Processando vinculos, cruzando tetos historicos e auditando indicadores..."):
-            caminho_temp_pdf = "temp_upload_cnis.pdf"
-            caminho_temp_xlsx = "Dossie_Previdenciario_Completo.xlsx"
+                   with st.spinner("Processando vinculos, cruzando tetos historicos e auditando indicadores..."):
+            sessao_id = str(uuid.uuid4())
+            caminho_temp_pdf = f"temp_{sessao_id}.pdf"
+            caminho_temp_xlsx = f"dossie_{sessao_id}.xlsx"
+            caminho_pdf_relatorio = f"relatorio_{sessao_id}.pdf"
+
+            try:
+                with open(caminho_temp_pdf, "wb") as f:
+                    f.write(arquivo_pdf.getbuffer())
+
+                parecer_texto = extrair_cnis_v5(
+                    caminho_temp_pdf, caminho_temp_xlsx, sexo=sexo,
+                    ambiente_operacional=ambiente_operacional, possui_pcd=possui_pcd
+                )
+
+                abas = pd.read_excel(caminho_temp_xlsx, sheet_name=None)
+                df_res = abas["2_Tempo_Liquido_Resumo"]
+                df_fin = abas["5_Estimativa_Valor_RMI"]
+
+                tempo_liq = str(df_res.loc[df_res["Indicador"] == "TEMPO LIQUIDO DE CONTRIBUICAO (COMUM)", "Valor"].values.pop())
+                rmi_comum = str(df_fin.loc[df_fin["Metrica_Financeira"].str.contains("Regra Comum"), "Valor_Estimado"].values.pop())
+                rmi_pcd = str(df_fin.loc[df_fin["Metrica_Financeira"].str.contains("Aposentadoria PCD"), "Valor_Estimado"].values.pop())
+                dif_mensal = str(df_fin.loc[df_fin["Metrica_Financeira"].str.contains("Diferenca Mensal"), "Valor_Estimado"].values.pop())
+                tempo_card = tempo_liq.split("(").pop().replace(")", "") if "(" in tempo_liq else tempo_liq
+
+                st.markdown("<br>", unsafe_allow_html=True)
+                col1, col2, col3 = st.columns(3)
+                with col1:
+                    st.markdown(f'<div class="metric-card"><div class="metric-label">Tempo Liquido Apurado</div><div class="metric-value">{tempo_card}</div><div class="metric-sub">Periodos concomitantes ja descontados</div></div>', unsafe_allow_html=True)
+                with col2:
+                    st.markdown(f'<div class="metric-card"><div class="metric-label">Estimativa Regra Geral</div><div class="metric-value">{rmi_comum}</div><div class="metric-sub">Projecao com coeficiente atual</div></div>', unsafe_allow_html=True)
+                with col3:
+                    st.markdown(f'<div class="metric-card highlight"><div class="metric-label">Potencial Regra PCD (LC 142)</div><div class="metric-value">{rmi_pcd}</div><div class="metric-sub">{dif_mensal} vs. Regra Geral</div></div>', unsafe_allow_html=True)
+
+                st.markdown("<br>", unsafe_allow_html=True)
+                tab0, tab1, tab2, tab3, tab4, tab5 = st.tabs([
+                    "📄 Parecer Executivo", "📋 Auditoria de Vinculos", "⏱️ Resumo de Tempo",
+                    "🏭 Especial & GILRAT", "♿ Enquadramento PCD", "💰 Memoria Financeira"
+                ])
+
+                with tab0:
+                    st.text_area("Relatorio Tecnico Estruturado:", value=parecer_texto, height=400)
+                with tab1:
+                    st.dataframe(abas["1_CNIS_Extraido"], use_container_width=True)
+                with tab2:
+                    st.dataframe(abas["2_Tempo_Liquido_Resumo"], use_container_width=True)
+                with tab3:
+                    st.dataframe(abas["3_Aposentadoria_Especial_PPP"], use_container_width=True)
+                with tab4:
+                    st.dataframe(abas["4_Aposentadoria_PCD_LC142"], use_container_width=True)
+                with tab5:
+                    st.dataframe(abas["5_Estimativa_Valor_RMI"], use_container_width=True)
+
+                st.divider()
+                from gerador_pdf import criar_pdf_executivo
+                import urllib.parse
+
+                criar_pdf_executivo(
+                    caminho_pdf_relatorio,
+                    abas["2_Tempo_Liquido_Resumo"],
+                    abas["5_Estimativa_Valor_RMI"],
+                    parecer_texto
+                )
+
+                with open(caminho_pdf_relatorio, "rb") as f_pdf:
+                    bytes_pdf = f_pdf.read()
+                with open(caminho_temp_xlsx, "rb") as f_excel:
+                    bytes_excel = f_excel.read()
+
+                col_dl1, col_dl2, col_dl3 = st.columns(3)
+                with col_dl1:
+                    st.download_button(
+                        label="📑 Baixar Relatorio Executivo (.pdf)",
+                        data=bytes_pdf,
+                        file_name="Relatorio_Executivo_Previdenciario.pdf",
+                        mime="application/pdf",
+                        use_container_width=True
+                    )
+                with col_dl2:
+                    st.download_button(
+                        label="📊 Baixar Planilha Detalhada (.xlsx)",
+                        data=bytes_excel,
+                        file_name="Dossie_Auditoria_INSS.xlsx",
+                        mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                        use_container_width=True
+                    )
+                with col_dl3:
+                    msg_whats = urllib.parse.quote(f"Ola! Acabei de gerar minha Auditoria Previdenciaria (Tempo Liquido: {tempo_card} | Potencial PCD: {rmi_pcd}) e gostaria de agendar uma analise com o escritorio parceiro.")
+                    link_whats = f"https://wa.me{msg_whats}"
+                    st.link_button("⚖️ Enviar para Escritorio Parceiro", url=link_whats, use_container_width=True)
+
+            finally:
+                for arq in [caminho_temp_pdf, caminho_temp_xlsx, caminho_pdf_relatorio]:
+                    if os.path.exists(arq):
+                        os.remove(arq)
 
             with open(caminho_temp_pdf, "wb") as f:
                 f.write(arquivo_pdf.getbuffer())
