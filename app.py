@@ -601,55 +601,41 @@ st.markdown("""
 """.replace("__LINK_DOSSIE__", LINK_CHECKOUT_DOSSIE).replace("__LINK_PASSE__", LINK_CHECKOUT_PASSE), unsafe_allow_html=True)
 st.markdown("""
 <div class="faq-container">
-    <div class="faq-header">Perguntas Frequentes</div>
+<div class="faq-header">Perguntas Frequentes</div>
 
-    <details class="faq-item" open>
-        <summary>Por que é tão importante entender o seu CNIS e ajustar possíveis problemas antes de entrar com o pedido de aposentadoria?</summary>
-        <div class="faq-answer">
-            Obter acesso aos detalhes do seu CNIS e realizar uma auditoria prévia antes de dar entrada na aposentadoria é crucial para evitar indeferimentos, perda de tempo de contribuição ou cálculo de benefício menor do que você tem direito — garantindo tranquilidade em um momento em que o objetivo é descansar. Dependendo do caso, os relatórios da <strong>Inteligência Previdenciária &amp; Auditoria</strong> entregam o diagnóstico técnico mastigado por uma fração do custo de uma consulta particular.
-        </div>
-    </details>
+<details class="faq-item" open>
+<summary>Por que é tão importante entender o seu CNIS e ajustar possíveis problemas antes de entrar com o pedido de aposentadoria?</summary>
+<div class="faq-answer">Obter acesso aos detalhes do seu CNIS e realizar uma auditoria prévia antes de dar entrada na aposentadoria é crucial para evitar indeferimentos, perda de tempo de contribuição ou cálculo de benefício menor do que você tem direito — garantindo tranquilidade em um momento em que o objetivo é descansar. Dependendo do caso, os relatórios da <strong>Inteligência Previdenciária &amp; Auditoria</strong> entregam o diagnóstico técnico mastigado por uma fração do custo de uma consulta particular.</div>
+</details>
 
-    <details class="faq-item">
-        <summary>Qual a diferença entre Cálculo Previdenciário e Planejamento Previdenciário?</summary>
-        <div class="faq-answer">
-            O <strong>Cálculo Previdenciário</strong> apura o tempo líquido comprovado e estima o valor atual do benefício com base nos seus salários desde julho de 1994. Já o <strong>Planejamento Previdenciário</strong> compara diferentes regras e cenários (Regra Geral, Aposentadoria Especial por exposição a risco e Aposentadoria PCD pela LC 142/2013) para identificar qual caminho antecipa sua aposentadoria ou gera a maior renda mensal.
-        </div>
-    </details>
+<details class="faq-item">
+<summary>Qual a diferença entre Cálculo Previdenciário e Planejamento Previdenciário?</summary>
+<div class="faq-answer">O <strong>Cálculo Previdenciário</strong> apura o tempo líquido comprovado e estima o valor atual do benefício com base nos seus salários desde julho de 1994. Já o <strong>Planejamento Previdenciário</strong> compara diferentes regras e cenários (Regra Geral, Aposentadoria Especial por exposição a risco e Aposentadoria PCD pela LC 142/2013) para identificar qual caminho antecipa sua aposentadoria ou gera a maior renda mensal.</div>
+</details>
 
-    <details class="faq-item">
-        <summary>Onde encontro essas funcionalidades?</summary>
-        <div class="faq-answer">
-            Basta enviar o arquivo PDF do seu extrato CNIS no quadro de envio acima. Você pode adquirir o <strong>Dossiê Completo Avulso</strong> (análise definitiva de 1 extrato com downloads em PDF e Excel) ou contratar o <strong>Passe Ilimitado de 7 dias ou 30 dias</strong> para testar diferentes cenários e analisar extratos de familiares.
-        </div>
-    </details>
+<details class="faq-item">
+<summary>Onde encontro essas funcionalidades?</summary>
+<div class="faq-answer">Basta enviar o arquivo PDF do seu extrato CNIS no quadro de envio acima. Você pode adquirir o <strong>Dossiê Completo Avulso</strong> (análise definitiva de 1 extrato com downloads em PDF e Excel) ou contratar o <strong>Passe Ilimitado de 7 dias ou 30 dias</strong> para testar diferentes cenários e analisar extratos de familiares.</div>
+</details>
 
-    <details class="faq-item">
-        <summary>Preciso do CNIS para começar?</summary>
-        <div class="faq-answer">
-            Sim, esse é o único documento necessário (<strong>CNIS em PDF</strong> — <a href="#topo-pagina" style="color: #C59B27; font-weight: 700; text-decoration: underline;">saiba como emitir gratuitamente no Meu INSS clicando aqui</a>) para que nosso motor faça a leitura automática e entregue uma análise detalhada, explicando ponto a ponto o que você precisa fazer para regularizar pendências e seguir com sua aposentadoria.
-        </div>
-    </details>
+<details class="faq-item">
+<summary>Preciso do CNIS para começar?</summary>
+<div class="faq-answer">Sim, esse é o único documento necessário (<strong>CNIS em PDF</strong> — <a href="#topo-pagina" style="color: #C59B27; font-weight: 700; text-decoration: underline;">saiba como emitir gratuitamente no Meu INSS clicando aqui</a>) para que nosso motor faça a leitura automática e entregue uma análise detalhada, explicando ponto a ponto o que você precisa fazer para regularizar pendências e seguir com sua aposentadoria.</div>
+</details>
 
-    <details class="faq-item">
-        <summary>Posso obter uma demonstração gratuita para entender como o serviço funciona?</summary>
-        <div class="faq-answer">
-            Sim! Basta enviar seu PDF normalmente sem inserir nenhum código — o sistema executa automaticamente o <strong>Diagnóstico Inicial (Grátis)</strong>, exibindo seu tempo líquido de contribuição já descontados os períodos concomitantes e apontando se existem alertas ou pendências nos seus vínculos.
-        </div>
-    </details>
+<details class="faq-item">
+<summary>Posso obter uma demonstração gratuita para entender como o serviço funciona?</summary>
+<div class="faq-answer">Sim! Basta enviar seu PDF normalmente sem inserir nenhum código — o sistema executa automaticamente o <strong>Diagnóstico Inicial (Grátis)</strong>, exibindo seu tempo líquido de contribuição já descontados os períodos concomitantes e apontando se existem alertas ou pendências nos seus vínculos.</div>
+</details>
 
-    <details class="faq-item">
-        <summary>Tenho diagnóstico de TEA (Autismo) ou outra deficiência. O sistema calcula a regra PCD?</summary>
-        <div class="faq-answer">
-            Sim. Ao marcar a opção <strong>"Enquadramento PCD / TEA (LC 142/2013)"</strong> na barra lateral, o sistema simula automaticamente o tempo exigido para deficiência leve (como TEA Nível 1), moderada e grave — sem exigência de idade mínima — e calcula a média dos 80% maiores salários (100% da média), comparando o ganho financeiro em relação à Regra Geral.
-        </div>
-    </details>
+<details class="faq-item">
+<summary>Tenho diagnóstico de TEA (Autismo) ou outra deficiência. O sistema calcula a regra PCD?</summary>
+<div class="faq-answer">Sim. Ao marcar a opção <strong>"Enquadramento PCD / TEA (LC 142/2013)"</strong> na barra lateral, o sistema simula automaticamente o tempo exigido para deficiência leve (como TEA Nível 1), moderada e grave — sem exigência de idade mínima — e calcula a média dos 80% maiores salários (100% da média), comparando o ganho financeiro em relação à Regra Geral.</div>
+</details>
 
-    <details class="faq-item">
-        <summary>Meus dados pessoais e meu extrato CNIS ficam armazenados no site (LGPD)?</summary>
-        <div class="faq-answer">
-            Não. Todo o processamento é feito de forma isolada e temporária apenas durante os segundos necessários para gerar suas tabelas e relatórios. Assim que a tela é carregada, os arquivos temporários são excluídos automaticamente do servidor, em total conformidade com a Lei Geral de Proteção de Dados (LGPD).
-        </div>
-    </details>
+<details class="faq-item">
+<summary>Meus dados pessoais e meu extrato CNIS ficam armazenados no site (LGPD)?</summary>
+<div class="faq-answer">Não. Todo o processamento é feito de forma isolada e temporária apenas durante os segundos necessários para gerar suas tabelas e relatórios. Assim que a tela é carregada, os arquivos temporários são excluídos automaticamente do servidor, em total conformidade com a Lei Geral de Proteção de Dados (LGPD).</div>
+</details>
 </div>
 """, unsafe_allow_html=True)
