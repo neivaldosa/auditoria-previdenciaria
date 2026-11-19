@@ -921,6 +921,7 @@ corpo_suporte = urllib.parse.quote("Olá! Preciso de suporte técnico no site In
 params_sup = urllib.parse.urlencode({"phone": "5521968807955", "text": "Olá! Preciso de suporte técnico no site Inteligência Previdenciária & Auditoria."})
 dominio_sup = "web." + "whatsapp" + ".com"
 whats_suporte = f"https://{dominio_sup}/send?{params_sup}"
+url_gemini = "https://gemini." + "google" + ".com/app"
 
 st.markdown(f"""
 <style>
@@ -969,12 +970,12 @@ st.markdown(f"""
 </style>
 
 <div class="floating-container">
-    <a href="https://google.com" target="_blank" class="float-btn float-gemini">
-        <span>✨ Dúvidas INSS (IA)</span>
+    <a href="{url_gemini}" target="_blank" rel="noopener noreferrer" class="float-btn float-gemini">
+        <span>✨ Dúvidas INSS (Gemini IA)</span>
     </a>
     <div class="support-wrapper" tabindex="0">
         <div class="support-menu">
-            <a href="{whats_suporte}" target="_blank" class="support-item sup-wa">💬 Suporte via WhatsApp</a>
+            <a href="{whats_suporte}" target="_blank" rel="noopener noreferrer" class="support-item sup-wa">💬 Suporte via WhatsApp</a>
             <a href="mailto:{EMAIL_SUPORTE}?subject={assunto_suporte}&body={corpo_suporte}" class="support-item sup-mail">✉️ Suporte via E-mail</a>
             <div class="sup-tip">
                 <strong>💡 Dica de Entrega:</strong><br>
@@ -988,4 +989,3 @@ st.markdown(f"""
     </div>
 </div>
 """, unsafe_allow_html=True)
-
