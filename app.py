@@ -3,12 +3,72 @@ import uuid
 import urllib.parse
 import pandas as pd
 import streamlit as st
+from openpyxl import load_workbook
+from openpyxl.drawing.image import Image as XLImage
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from extrator_cnis import extrair_cnis_v5
 from gerador_pdf import criar_pdf_executivo
 
+def _achar_logo_oficial():
+    for nome in ["Logo.png", "logo.png", "LOGO.PNG", "Logo.jpg", "logo.jpg"]:
+        if os.path.exists(nome):
+            return nome
+    return None
+
+def aplicar_logo_todas_abas_excel(caminho_excel):
+    if not os.path.exists(caminho_excel):
+        return
+    wb = load_workbook(caminho_excel)
+    logo_path = _achar_logo_oficial()
+    fill_azul = PatternFill(start_color="0F293A", end_color="0F293A", fill_type="solid")
+    borda_dourada = Border(bottom=Side(style="medium", color="C59B27"))
+    font_titulo = Font(name="Calibri", size=13, bold=True, color="FFFFFF")
+    font_subtitulo = Font(name="Calibri", size=9.5, bold=True, color="C59B27")
+    font_contato = Font(name="Calibri", size=8.5, italic=True, color="E2E8F0")
+
+    for ws in wb.worksheets:
+        ws.insert_rows(1, amount=3)
+        ws.row_dimensions[1].height = 20
+        ws.row_dimensions[2].height = 17
+        ws.row_dimensions[3].height = 16
+        if (ws.column_dimensions["A"].width or 0) < 12:
+            ws.column_dimensions["A"].width = 12
+
+        max_col = max(ws.max_column, 8)
+        for r in range(1, 4):
+            for c in range(1, max_col + 1):
+                cel = ws.cell(row=r, column=c)
+                cel.fill = fill_azul
+                if r == 3:
+                    cel.border = borda_dourada
+
+        ws["B1"] = "INTELIGÊNCIA PREVIDENCIÁRIA & AUDITORIA"
+        ws["B1"].font = font_titulo
+        ws["B1"].alignment = Alignment(vertical="center", horizontal="left")
+
+        ws["B2"] = f"DOSSIÊ TÉCNICO DE AUDITORIA — ABA: {ws.title.upper()}"
+        ws["B2"].font = font_subtitulo
+        ws["B2"].alignment = Alignment(vertical="center", horizontal="left")
+
+        ws["B3"] = "WhatsApp: +55 21 96880-7965  |  E-mail: inteligenciaprevidenciariaaudi@gmail.com"
+        ws["B3"].font = font_contato
+        ws["B3"].alignment = Alignment(vertical="center", horizontal="left")
+
+        if logo_path:
+            img = XLImage(logo_path)
+            img.width = 58
+            img.height = 58
+            ws.add_image(img, "A1")
+
+        ws.freeze_panes = "A5"
+
+    wb.save(caminho_excel)
+
+LOGO_SITE = _achar_logo_oficial()
+
 st.set_page_config(
-    page_title="Auditoria Previdenciária & Planejamento - Análise Detalhada do CNIS",
-    page_icon="⚖️",
+    page_title="Inteligência Previdenciária & Auditoria - Análise Detalhada do CNIS",
+    page_icon=LOGO_SITE if LOGO_SITE else "⚖️",
     layout="wide"
 )
 
@@ -331,11 +391,27 @@ st.markdown("""
     }
 </style>
 """, unsafe_allow_html=True)
-st.markdown("""
-<div id="topo-pagina" class="hero-box">
-    <div class="hero-badge">Inteligência Previdenciária & Auditoria</div>
-    <h1 class="hero-title">Diagnóstico Estratégico de Aposentadoria e CNIS</h1>
-    <p class="hero-subtitle">Análise automatizada de vínculos, auditoria de pendências no INSS, enquadramento PCD (LC 142/2013) e projeção de renda.</p>
+
+import base64
+
+_logo_b64 = ""
+if LOGO_SITE and os.path.exists(LOGO_SITE):
+    with open(LOGO_SITE, "rb") as _f_logo:
+        _logo_b64 = base64.b64encode(_f_logo.read()).decode("utf-8")
+
+_img_hero_html = (
+    f'<img src="data:image/png;base64,{_logo_b64}" style="width:74px; height:74px; border-radius:12px; border:1.5px solid #C59B27; flex-shrink:0;" />'
+    if _logo_b64 else ""
+)
+
+st.markdown(f"""
+<div id="topo-pagina" class="hero-box" style="display:flex; align-items:center; gap:1.2rem;">
+    {_img_hero_html}
+    <div>
+        <div class="hero-badge">Inteligência Previdenciária & Auditoria</div>
+        <h1 class="hero-title">Diagnóstico Estratégico de Aposentadoria e CNIS</h1>
+        <p class="hero-subtitle">Análise automatizada de vínculos, auditoria de pendências no INSS, enquadramento PCD (LC 142/2013) e projeção de renda.</p>
+    </div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -428,6 +504,7 @@ if arquivo_pdf is not None:
                 )
 
                 abas_brutas = pd.read_excel(caminho_temp_xlsx, sheet_name=None, skiprows=1)
+                aplicar_logo_todas_abas_excel(caminho_temp_xlsx)
                 abas = {nome: df.dropna(how="all", axis=1) for nome, df in abas_brutas.items()}
                 df_vinculos = abas["1_CNIS_Extraido"]
                 df_res = abas["2_Tempo_Liquido_Resumo"]
