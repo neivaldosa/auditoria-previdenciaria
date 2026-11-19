@@ -48,7 +48,39 @@ def aplicar_logo_todas_abas_excel(caminho_excel):
     font_subtitulo = Font(name="Calibri", size=9.5, bold=True, color="C59B27")
     font_contato = Font(name="Calibri", size=8.5, italic=True, color="E2E8F0")
 
+    mapa_acentuacao = {
+        "Parecer_Tecnico_Completo": "Parecer Técnico Completo",
+        "Metrica_Financeira": "Métrica Financeira",
+        "Valor_Estimado": "Valor Estimado",
+        "Nome_Empresa": "Nome da Empresa",
+        "CNPJ_Codigo": "CNPJ / Código",
+        "Tipo_Filiacao": "Tipo de Filiação",
+        "Data_Inicio": "Data de Início",
+        "Data_Fim": "Data de Saída",
+        "Status_Auditoria": "Status da Auditoria",
+        "Plano_Acao_INSS": "Plano de Ação no INSS",
+        "Ultima_Remuneracao": "Última Remuneração",
+        "Dias_Brutos": "Dias Brutos",
+        "Dias_Liquidos": "Dias Líquidos",
+        "Periodo_Concomitante": "Período Concomitante",
+        "Criterio_Legal": "Critério Legal",
+        "Situacao_Atual": "Situação Atual",
+        "Tempo_Exigido": "Tempo Exigido",
+        "Tempo_Faltante": "Tempo Faltante",
+        "Observacao_Tecnica": "Observação Técnica",
+    }
+
     for ws in wb.worksheets:
+        # Corrige acentuação dos cabeçalhos das colunas antes de inserir o topo
+        for row in ws.iter_rows(min_row=1, max_row=ws.max_row):
+            for cell in row:
+                if isinstance(cell.value, str):
+                    val = cell.value.strip()
+                    if val in mapa_acentuacao:
+                        cell.value = mapa_acentuacao[val]
+                    elif "_" in val and not val.startswith("http"):
+                        cell.value = val.replace("_", " ")
+
         ws.insert_rows(1, amount=3)
         ws.row_dimensions[1].height = 20
         ws.row_dimensions[2].height = 17
@@ -85,6 +117,7 @@ def aplicar_logo_todas_abas_excel(caminho_excel):
         ws.freeze_panes = "A5"
 
     wb.save(caminho_excel)
+
 
 LOGO_SITE = _achar_logo_oficial()
 
