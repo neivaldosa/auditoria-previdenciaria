@@ -2,6 +2,7 @@ import re
 from datetime import datetime, timedelta
 import pandas as pd
 import pdfplumber
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 
 TETOS_INSS = {
     1994: 582.86, 1995: 832.66, 1996: 957.56, 1997: 1031.87, 1998: 1081.50,
@@ -348,18 +349,67 @@ def extrair_cnis_v5(caminho_pdf, caminho_excel_saida, sexo="M", ambiente_operaci
 
     df_parecer = pd.DataFrame([{"Parecer_Tecnico_Completo": texto_parecer}])
 
-    with pd.ExcelWriter(caminho_excel_saida, engine="openpyxl") as writer:
-        df_vinculos.to_excel(writer, index=False, sheet_name="1_CNIS_Extraido")
-        df_resumo.to_excel(writer, index=False, sheet_name="2_Tempo_Liquido_Resumo")
-        df_especial.to_excel(writer, index=False, sheet_name="3_Aposentadoria_Especial_PPP")
-        df_pcd.to_excel(writer, index=False, sheet_name="4_Aposentadoria_PCD_LC142")
-        df_financeiro.to_excel(writer, index=False, sheet_name="5_Estimativa_Valor_RMI")
-        df_parecer.to_excel(writer, index=False, sheet_name="6_Parecer_Final_Texto")
+       with pd.ExcelWriter(caminho_excel_saida, engine="openpyxl") as writer:
+        abas_dados = [
+            ("1_CNIS_Extraido", df_vinculos),
+            ("2_Tempo_Liquido_Resumo", df_resumo),
+            ("3_Aposentadoria_Especial_PPP", df_especial),
+            ("4_Aposentadoria_PCD_LC142", df_pcd),
+            ("5_Estimativa_Valor_RMI", df_financeiro),
+            ("6_Parecer_Final_Texto", df_parecer),
+        ]
 
-        for sheet_name in writer.sheets:
-            worksheet = writer.sheets[sheet_name]
-            for col in worksheet.columns:
-                max_length = max((min(len(str(cell.value or "")), 55) for cell in col), default=10)
-                worksheet.column_dimensions[next(iter(col)).column_letter].width = max_length + 4
+        fill_header = PatternFill(start_color="0F293A", end_color="0F293A", fill_type="solid")
+        font_header = Font(name="Calibri", size=11, bold=True, color="F3D06B")
+        fill_zebra = PatternFill(start_color="FFFDF5", end_color="FFFDF5", fill_type="solid")
+        font_dados = Font(name="Calibri", size=10, color="1E293B")
+        borda_fina = Side(border_style="thin", color="CBD5E1")
+        borda_grade = Border(left=borda_fina, right=borda_fina, top=borda_fina, bottom=borda_fina)
+
+        for nome_aba, df_atual in abas_dados:
+            df_atual.to_excel(writer, index=False, sheet_name=nome_aba, startrow=1, startcol=1)
+            ws = writer.sheets[nome_aba]
+            ws.views.sheetView[0].showGridLines = False
+            ws.column_dimensions["A"].width = 4
+            ws.row_dimensions[1].height = 14
+            ws.row_dimensions[2].height = 26
+
+            for col_idx in range(2, len(df_atual.columns) + 2):
+                cell_h = ws.cell(row=2, column=col_idx)
+                cell_h.fill = fill_header
+                cell_h.font = font_header
+                cell_h.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+                cell_h.border = borda_grade
+
+            for row_idx in range(3, len(df_atual) + 3):
+                max_linhas = 1
+                for col_idx in range(2, len(df_atual.columns) + 2):
+                    cell = ws.cell(row=row_idx, column=col_idx)
+                    cell.font = font_dados
+                    cell.border = borda_grade
+                    if row_idx % 2 == 1:
+                        cell.fill = fill_zebra
+                    alin_h = "left" if nome_aba == "6_Parecer_Final_Texto" else "center"
+                    cell.alignment = Alignment(horizontal=alin_h, vertical="center", wrap_text=True)
+
+                    texto_cel = str(cell.value or "")
+                    linhas_texto = texto_cel.count("\n") + 1 + (len(texto_cel) // 65)
+                    max_linhas = max(max_linhas, linhas_texto)
+
+                if nome_aba == "6_Parecer_Final_Texto":
+                    ws.row_dimensions[row_idx].height = max(220, max_linhas * 16)
+                else:
+                    ws.row_dimensions[row_idx].height = max(22, max_linhas * 16)
+
+            for col_idx in range(2, len(df_atual.columns) + 2):
+                col_letter = ws.cell(row=2, column=col_idx).column_letter
+                if nome_aba == "6_Parecer_Final_Texto":
+                    ws.column_dimensions[col_letter].width = 95
+                else:
+                    max_len = max(
+                        (len(str(ws.cell(row=r, column=col_idx).value or "")) for r in range(2, len(df_atual) + 3)),
+                        default=12
+                    )
+                    ws.column_dimensions[col_letter].width = min(max(max_len + 5, 16), 48)
 
     return texto_parecer
