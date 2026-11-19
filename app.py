@@ -12,13 +12,13 @@ st.set_page_config(
     layout="wide"
 )
 
-LINK_CHECKOUT_DOSSIE = "https://mercadopago.com.br"
-LINK_CHECKOUT_PASSE = "https://mercadopago.com.br"
-PIX_COPIA_E_COLA = "00020126580014br.gov.bcb.pix013638e9ae7e-de4d-4745-b4d5-b4f636bf843d5204000053039865802BR5924neivaldo barbosa de sa f6009Sao Paulo62220518daqr974708840724726304FFCA"
+LINK_MP_AVULSO_19 = "https://mpago.la"
+LINK_MP_PASSE_7D = "https://mpago.la"
+LINK_MP_PASSE_30D = "https://mpago.la"
 EMAIL_SUPORTE = "inteligenciaprevidenciariaaudi@gmail.com"
 
 CODIGOS_DOSSIE_AVULSO = {"DOSSIE2026", "VIP19"}
-CODIGOS_PASSE_ILIMITADO = {"ILIMITADO30", "PRO2026", "ADMIN777"}
+CODIGOS_PASSE_ILIMITADO = {"VIP7", "VIP30", "ILIMITADO30", "PRO2026", "ADMIN777"}
 
 if "plano_ativo" not in st.session_state:
     st.session_state["plano_ativo"] = "GRATUITO"
@@ -137,7 +137,7 @@ st.markdown("""
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
         gap: 0.9rem;
-        margin: 0.5rem 0 0.8rem 0;
+        margin: 0.5rem 0 1rem 0;
     }
     .plan-card {
         background: #FFFFFF;
@@ -193,11 +193,12 @@ st.markdown("""
     .plan-cta {
         display: block;
         text-align: center;
-        padding: 0.45rem 0.8rem;
+        padding: 0.48rem 0.8rem;
         border-radius: 6px;
         font-weight: 700;
         text-decoration: none !important;
         font-size: 0.84rem;
+        margin-top: 0.35rem;
     }
     .cta-outline {
         border: 1.5px solid #0F293A;
@@ -207,6 +208,11 @@ st.markdown("""
     .cta-gold {
         background-color: #C59B27;
         color: #0F293A !important;
+    }
+    .cta-gold-outline {
+        border: 1.5px solid #C59B27;
+        color: #F3D06B !important;
+        background-color: rgba(197, 155, 39, 0.12);
     }
     .feature-grid {
         display: grid;
@@ -350,8 +356,8 @@ with st.sidebar:
     st.caption("Marque se possui laudo médico de deficiência física, sensorial, intelectual ou TEA.")
     st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown('<div class="sidebar-card"><div class="sidebar-title">🔑 Já possui Código de Acesso?</div>', unsafe_allow_html=True)
-    codigo_digitado = st.text_input("Insira o código recebido após o Pix/Cartão:", placeholder="Ex: DOSSIE2026", label_visibility="collapsed").strip().upper()
+    st.markdown('<div class="sidebar-card"><div class="sidebar-title">🔑 Ativação de Acesso</div>', unsafe_allow_html=True)
+    codigo_digitado = st.text_input("Possui código promocional?", placeholder="Ex: DOSSIE2026", label_visibility="collapsed").strip().upper()
     if st.button("Ativar Código", use_container_width=True):
         if codigo_digitado in CODIGOS_PASSE_ILIMITADO:
             st.session_state["plano_ativo"] = "ILIMITADO"
@@ -376,7 +382,6 @@ with st.sidebar:
 
 st.markdown("#### 📤 Envie seu Extrato Oficial (CNIS)")
 arquivo_pdf = st.file_uploader("Selecione ou arraste o arquivo PDF completo baixado do Meu INSS:", type=["pdf"], label_visibility="collapsed")
-
 if arquivo_pdf is not None:
     label_btn = "🔍 Gerar Diagnóstico Gratuito (Prévia)" if st.session_state["plano_ativo"] == "GRATUITO" else "🚀 Executar Auditoria e Gerar Dossiê Completo"
     if st.button(label_btn, type="primary"):
@@ -428,14 +433,14 @@ if arquivo_pdf is not None:
                         f"2. AUDITORIA DE ALERTAS NO CNIS: Foram detectados {qtd_alertas} ponto(s) de atenção/pendência nos seus vínculos.\n"
                         f"   -> Os alertas estão listados na aba 'Alertas de Vínculos', mas o passo a passo de como resolver cada pendência no Meu INSS está retido na versão gratuita.\n\n"
                         f"3. CÁLCULOS FINANCEIROS, ESPECIAL E PCD: Bloqueados nesta prévia.\n"
-                        f"   -> Desbloqueie o Dossiê Completo por R$ 19,90 para liberar a solução de todas as pendências, a memória de cálculo desde 1994 e os downloads em PDF e Excel."
+                        f"   -> Desbloqueie o Dossiê Completo por R$ 19,90 (Pix ou Cartão) para liberar automaticamente a solução de todas as pendências, a memória de cálculo desde 1994 e os downloads em PDF e Excel."
                     )
 
                     st.markdown(f"""
                     <div class="upsell-banner">
-                        <h4 style="margin:0 0 0.3rem 0; color:#F3D06B;">⚠️ Encontramos {qtd_alertas} alerta(s) no seu CNIS — Saiba como corrigir e veja o valor do benefício</h4>
-                        <p style="margin:0 0 0.8rem 0; font-size:0.88rem; color:#E2E8F0;">O <strong>Plano de Ação no INSS (como resolver)</strong>, o cálculo desde 1994 e os arquivos <strong>PDF Executivo + Excel</strong> são exclusivos do Dossiê Completo.</p>
-                        <a href="{LINK_CHECKOUT_DOSSIE}" target="_blank" class="plan-cta cta-gold" style="display:inline-block; padding:0.55rem 1.3rem;">🔓 Desbloquear Dossiê Completo (Cartão ou Pix abaixo)</a>
+                        <h4 style="margin:0 0 0.3rem 0; color:#F3D06B;">⚠️ Encontramos {qtd_alertas} alerta(s) no seu CNIS — Desbloqueie agora e veja como corrigir + valor do benefício</h4>
+                        <p style="margin:0 0 0.8rem 0; font-size:0.88rem; color:#E2E8F0;">O <strong>Plano de Ação no INSS (como resolver)</strong>, o cálculo desde 1994 e os arquivos <strong>PDF Executivo + Excel</strong> são liberados automaticamente após o pagamento via Pix ou Cartão no Mercado Pago.</p>
+                        <a href="{LINK_MP_AVULSO_19}" target="_blank" class="plan-cta cta-gold" style="display:inline-block; padding:0.55rem 1.3rem;">🔓 Desbloquear Dossiê Completo Agora — R$ 19,90 (Pix ou Cartão)</a>
                     </div>
                     """, unsafe_allow_html=True)
 
@@ -505,9 +510,8 @@ if arquivo_pdf is not None:
                 for arq in [caminho_temp_pdf, caminho_temp_xlsx, caminho_pdf_relatorio]:
                     if os.path.exists(arq):
                         os.remove(arq)
-
 st.markdown("""
-<div style="font-size: 1.05rem; font-weight: 700; color: #0F293A; margin-top: 0.8rem;">💎 Escolha o Plano Ideal para sua Análise</div>
+<div style="font-size: 1.05rem; font-weight: 700; color: #0F293A; margin-top: 0.8rem;">💎 Escolha o Plano Ideal (Liberação Automática via Pix ou Cartão)</div>
 <div class="pricing-grid">
     <div class="plan-card">
         <div>
@@ -519,7 +523,7 @@ st.markdown("""
                 <li>❌ Como resolver erros, RMI e PDF/Excel</li>
             </ul>
         </div>
-        <div style="text-align:center; font-size:0.78rem; color:#64748B; font-weight:600; padding:0.4rem; background:#F1F5F9; border-radius:6px;">Ativo — Envie seu PDF acima</div>
+        <div style="text-align:center; font-size:0.78rem; color:#64748B; font-weight:600; padding:0.45rem; background:#F1F5F9; border-radius:6px;">Ativo — Envie seu PDF acima</div>
     </div>
     <div class="plan-card">
         <div>
@@ -531,7 +535,7 @@ st.markdown("""
                 <li>✅ Download PDF Executivo + Planilha Excel</li>
             </ul>
         </div>
-        <a href="__LINK_DOSSIE__" target="_blank" class="plan-cta cta-outline">💳 Cartão de Crédito (Mercado Pago)</a>
+        <a href="__LINK_19__" target="_blank" class="plan-cta cta-outline">⚡ Liberar Dossiê (Pix ou Cartão)</a>
     </div>
     <div class="plan-card featured">
         <div>
@@ -539,32 +543,20 @@ st.markdown("""
                 <span class="plan-name">Passe Ilimitado</span>
                 <span class="plan-badge">Mais Escolhido</span>
             </div>
-            <div class="plan-price" style="color:#F3D06B;">R$ 39,90 <span>/ 7 dias (ou R$ 69,90 / 30d)</span></div>
+            <div class="plan-price" style="color:#F3D06B;">R$ 39,90 <span>/ 7d ou R$ 69,90 / 30d</span></div>
             <ul class="plan-list" style="color:#E2E8F0;">
                 <li>✅ <strong>Simulações e PDFs/Excel ilimitados</strong></li>
                 <li>✅ Teste cenários (PCD, Especial, futuro)</li>
                 <li>✅ Analise também familiares ou clientes</li>
             </ul>
         </div>
-        <a href="__LINK_PASSE__" target="_blank" class="plan-cta cta-gold">💳 Cartão de Crédito (Mercado Pago)</a>
+        <div>
+            <a href="__LINK_7D__" target="_blank" class="plan-cta cta-gold">⚡ Passe 7 Dias — R$ 39,90 (Pix/Cartão)</a>
+            <a href="__LINK_30D__" target="_blank" class="plan-cta cta-gold-outline">👑 Passe 30 Dias — R$ 69,90 (Pix/Cartão)</a>
+        </div>
     </div>
 </div>
-""".replace("__LINK_DOSSIE__", LINK_CHECKOUT_DOSSIE).replace("__LINK_PASSE__", LINK_CHECKOUT_PASSE), unsafe_allow_html=True)
 
-with st.expander("💠 PREFERE PAGAR VIA PIX? CLIQUE AQUI PARA VER O QR CODE E CÓDIGO COPIA E COLA (R$ 19,90 OU R$ 39,90)"):
-    col_pix1, col_pix2 = st.columns([1, 2.3])
-    with col_pix1:
-        qr_url = f"https://qrserver.com{urllib.parse.quote(PIX_COPIA_E_COLA)}"
-        st.image(qr_url, caption="Escaneie no app do seu banco (Mercado Pago)", width=200)
-    with col_pix2:
-        st.markdown("**1. Copie o código Pix abaixo e cole no aplicativo do seu banco:**")
-        st.code(PIX_COPIA_E_COLA, language=None)
-        st.markdown("**2. Valores:** `R$ 19,90` (Dossiê Completo Avulso) | `R$ 39,90` (Passe 7 dias) | `R$ 69,90` (Passe 30 dias).")
-        st.caption(f"Após o pagamento, envie o comprovante para **{EMAIL_SUPORTE}** (ou clique no botão abaixo) para receber seu código de liberação imediata.")
-        assunto_pix = urllib.parse.quote("Comprovante Pix - Liberação Auditoria Previdenciária")
-        corpo_pix = urllib.parse.quote("Olá! Acabei de realizar o pagamento via Pix na Inteligência Previdenciária & Auditoria. Segue o comprovante em anexo para recebimento do código de acesso:")
-        st.link_button("✉️ Já fiz o Pix — Enviar Comprovante por E-mail", url=f"mailto:{EMAIL_SUPORTE}?subject={assunto_pix}&body={corpo_pix}", type="primary")
-st.markdown("""
 <div style="font-size: 1.05rem; font-weight: 700; color: #0F293A; margin-top: 0.4rem;">📋 O que está incluso no seu Dossiê Completo de Auditoria (6 Módulos):</div>
 <div class="feature-grid">
     <div class="feature-card">
@@ -592,7 +584,7 @@ st.markdown("""
         <p class="feature-desc">Atualiza salários desde 07/1994 e compara Regra Geral vs. 80% maiores na Regra PCD.</p>
     </div>
 </div>
-""", unsafe_allow_html=True)
+""".replace("__LINK_19__", LINK_MP_AVULSO_19).replace("__LINK_7D__", LINK_MP_PASSE_7D).replace("__LINK_30D__", LINK_MP_PASSE_30D), unsafe_allow_html=True)
 
 st.markdown('<h3 id="assistente-ia" style="text-align: center; color: #0F293A; margin-top: 1.8rem; margin-bottom: 0.3rem;">🤖 Assistente Virtual Previdenciário (IA Gemini)</h3>', unsafe_allow_html=True)
 st.markdown('<p style="text-align: center; color: #64748B; font-size: 0.9rem; margin-bottom: 1rem;">Tem dúvidas sobre regras do INSS, tempo de contribuição, PPP ou aposentadoria PCD (LC 142)? Pergunte abaixo:</p>', unsafe_allow_html=True)
@@ -675,4 +667,3 @@ st.markdown(f"""
     </a>
 </div>
 """, unsafe_allow_html=True)
-
