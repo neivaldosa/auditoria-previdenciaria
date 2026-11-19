@@ -20,7 +20,7 @@ class ParecerPrevidenciarioPDF(FPDF):
         super().__init__(orientation="P", unit="mm", format="A4")
         self.logo_path = _achar_logo()
         self.set_auto_page_break(auto=True, margin=22)
-        self.azul = (15, 41, 58)
+        self.azul = (24, 43, 58)  # Mesmo tom exato (#182B3A) do fundo do Logo.png
         self.dourado = (197, 155, 39)
         self.texto = (50, 58, 69)
         self.cinza = (244, 246, 249)
@@ -168,7 +168,8 @@ def _parse_texto(txt, dados):
         dados["texto_tempo"] = b1.group(1).strip()
         ml = re.search(r"hoje:\s*([^\.]+)", dados["texto_tempo"])
         if ml and not dados.get("tempo_liquido"):
-            dados["tempo_liquido"] = ml.group(1).strip()
+            limpo = ml.group(1).split(", já descontados")[0].strip()
+            dados["tempo_liquido"] = limpo
         mc = re.search(r"descontados\s+(\d+\s*dias)", dados["texto_tempo"])
         if mc and not dados.get("concomitantes"):
             dados["concomitantes"] = mc.group(1).strip()
