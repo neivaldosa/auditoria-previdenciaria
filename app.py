@@ -654,43 +654,36 @@ if arquivo_pdf is not None:
                         txt_b2 = b2.group(1).strip().replace("\n", "<br>") if b2 else "Nenhuma pendência crítica localizada."
                         txt_b3 = b3.group(1).strip().replace("\n", "<br>") if b3 else "-"
 
-                        st.markdown(f"""
-                        <div style="background:#FFFFFF; border:1px solid #CBD5E1; border-radius:12px; padding:1.2rem 1.4rem; margin-top:0.4rem; box-shadow:0 4px 12px rgba(15,41,58,0.05);">
-                            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; border-bottom:2px solid #C59B27; padding-bottom:0.75rem; margin-bottom:1rem;">
-                                <div>
-                                    <div style="font-size:0.75rem; font-weight:700; color:#C59B27; text-transform:uppercase; letter-spacing:0.5px;">Parecer Técnico Previdenciário & Auditoria de CNIS</div>
-                                    <div style="font-size:1.1rem; font-weight:800; color:#0F293A;">👤 {nome_seg}</div>
-                                </div>
-                                <div style="background:#0F293A; color:#F3D06B; padding:0.35rem 0.85rem; border-radius:20px; font-size:0.82rem; font-weight:700; border:1px solid #C59B27;">
-                                    Idade Atual: {idade_seg}
-                                </div>
-                            </div>
-
-                            <div style="background:#F3F6FA; border:1px solid #DCE3EC; border-left:5px solid #0F293A; border-radius:8px; padding:0.9rem 1.1rem; margin-bottom:0.85rem;">
-                                <div style="font-size:0.8rem; font-weight:800; color:#0F293A; margin-bottom:0.3rem; text-transform:uppercase;">
-                                    <span style="background:#0F293A; color:#FFFFFF; padding:2px 7px; border-radius:4px; font-size:0.7rem; margin-right:6px;">TEMPO COMPROVADO</span>
-                                    1. Tempo Líquido de Contribuição Apurado
-                                </div>
-                                <div style="font-size:0.88rem; color:#334155; line-height:1.5;">{txt_b1}</div>
-                            </div>
-
-                            <div style="background:#FDF5F5; border:1px solid #F5D0D0; border-left:5px solid #B92D2D; border-radius:8px; padding:0.9rem 1.1rem; margin-bottom:0.85rem;">
-                                <div style="font-size:0.8rem; font-weight:800; color:#B92D2D; margin-bottom:0.3rem; text-transform:uppercase;">
-                                    <span style="background:#B92D2D; color:#FFFFFF; padding:2px 7px; border-radius:4px; font-size:0.7rem; margin-right:6px;">AÇÃO NECESSÁRIA</span>
-                                    2. Pendências e Indicadores no Meu INSS
-                                </div>
-                                <div style="font-size:0.88rem; color:#334155; line-height:1.5;">{txt_b2}</div>
-                            </div>
-
-                            <div style="background:#FDFAF0; border:1px solid #EFE3B8; border-left:5px solid #C59B27; border-radius:8px; padding:0.9rem 1.1rem;">
-                                <div style="font-size:0.8rem; font-weight:800; color:#8A6810; margin-bottom:0.3rem; text-transform:uppercase;">
-                                    <span style="background:#C59B27; color:#0F293A; padding:2px 7px; border-radius:4px; font-size:0.7rem; margin-right:6px;">ENQUADRAMENTO ESTRATÉGICO</span>
-                                    3. Análise Especial e Regra PCD (LC 142/2013)
-                                </div>
-                                <div style="font-size:0.88rem; color:#334155; line-height:1.5;">{txt_b3}</div>
-                            </div>
-                        </div>
-                        """, unsafe_allow_html=True)
+                        html_parecer = (
+                            '<div style="background:#FFFFFF; border:1px solid #CBD5E1; border-radius:12px; padding:1.2rem 1.4rem; margin-top:0.4rem; box-shadow:0 4px 12px rgba(15,41,58,0.05);">'
+                            '<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; border-bottom:2px solid #C59B27; padding-bottom:0.75rem; margin-bottom:1rem;">'
+                            '<div>'
+                            '<div style="font-size:0.75rem; font-weight:700; color:#C59B27; text-transform:uppercase; letter-spacing:0.5px;">Parecer Técnico Previdenciário & Auditoria de CNIS</div>'
+                            f'<div style="font-size:1.1rem; font-weight:800; color:#0F293A;">👤 {nome_seg}</div>'
+                            '</div>'
+                            f'<div style="background:#0F293A; color:#F3D06B; padding:0.35rem 0.85rem; border-radius:20px; font-size:0.82rem; font-weight:700; border:1px solid #C59B27;">Idade Atual: {idade_seg}</div>'
+                            '</div>'
+                            '<div style="background:#F3F6FA; border:1px solid #DCE3EC; border-left:5px solid #0F293A; border-radius:8px; padding:0.9rem 1.1rem; margin-bottom:0.85rem;">'
+                            '<div style="font-size:0.8rem; font-weight:800; color:#0F293A; margin-bottom:0.3rem; text-transform:uppercase;">'
+                            '<span style="background:#0F293A; color:#FFFFFF; padding:2px 7px; border-radius:4px; font-size:0.7rem; margin-right:6px;">TEMPO COMPROVADO</span>'
+                            '1. Tempo Líquido de Contribuição Apurado</div>'
+                            f'<div style="font-size:0.88rem; color:#334155; line-height:1.5;">{txt_b1}</div>'
+                            '</div>'
+                            '<div style="background:#FDF5F5; border:1px solid #F5D0D0; border-left:5px solid #B92D2D; border-radius:8px; padding:0.9rem 1.1rem; margin-bottom:0.85rem;">'
+                            '<div style="font-size:0.8rem; font-weight:800; color:#B92D2D; margin-bottom:0.3rem; text-transform:uppercase;">'
+                            '<span style="background:#B92D2D; color:#FFFFFF; padding:2px 7px; border-radius:4px; font-size:0.7rem; margin-right:6px;">AÇÃO NECESSÁRIA</span>'
+                            '2. Pendências e Indicadores no Meu INSS</div>'
+                            f'<div style="font-size:0.88rem; color:#334155; line-height:1.5;">{txt_b2}</div>'
+                            '</div>'
+                            '<div style="background:#FDFAF0; border:1px solid #EFE3B8; border-left:5px solid #C59B27; border-radius:8px; padding:0.9rem 1.1rem;">'
+                            '<div style="font-size:0.8rem; font-weight:800; color:#8A6810; margin-bottom:0.3rem; text-transform:uppercase;">'
+                            '<span style="background:#C59B27; color:#0F293A; padding:2px 7px; border-radius:4px; font-size:0.7rem; margin-right:6px;">ENQUADRAMENTO ESTRATÉGICO</span>'
+                            '3. Análise Especial e Regra PCD (LC 142/2013)</div>'
+                            f'<div style="font-size:0.88rem; color:#334155; line-height:1.5;">{txt_b3}</div>'
+                            '</div>'
+                            '</div>'
+                        )
+                        st.markdown(html_parecer, unsafe_allow_html=True)
                     with tab1:
                         st.dataframe(df_vinculos, use_container_width=True)
                     with tab2:
