@@ -164,50 +164,52 @@ def gerar_relatorio_pdf(
 
     pdf.titulo_secao("1. RESUMO EXECUTIVO DO SEGURADO")
 
-    pdf.linha_tabela("Segurado:", dados.get("nome", "NÃO INFORMADO"))
+    pdf.linha_tabela("Segurado:", str(dados.get("nome", "NÃO INFORMADO")))
     pdf.linha_tabela(
-        "Data de Nascimento / Idade Atual:", dados.get("nascimento_idade", "-")
+        "Data de Nascimento / Idade Atual:", str(dados.get("nascimento_idade", "-"))
     )
     pdf.linha_tabela(
         "Ambiente de Trabalho Informado:",
-        dados.get("ambiente", "Administrativo / Escritório"),
+        str(dados.get("ambiente", "Administrativo / Escritório")),
     )
-    pdf.linha_tabela("Soma Bruta de Todos os Vínculos:", dados.get("soma_bruta", "-"))
     pdf.linha_tabela(
-        "Períodos Concomitantes Descontados:", dados.get("concomitantes", "0 dias")
+        "Soma Bruta de Todos os Vínculos:", str(dados.get("soma_bruta", "-"))
+    )
+    pdf.linha_tabela(
+        "Períodos Concomitantes Descontados:", str(dados.get("concomitantes", "0 dias"))
     )
     pdf.linha_tabela(
         "TEMPO LÍQUIDO DE CONTRIBUIÇÃO (COMUM):",
-        dados.get("tempo_liquido", "-"),
+        str(dados.get("tempo_liquido", "-")),
         destaque=True,
     )
 
     pdf.titulo_secao("2. PROJEÇÃO FINANCEIRA E COMPARATIVO DE REGRAS (BASE 2026)")
 
     pdf.linha_tabela(
-        "Competências Extraídas (Desde 07/1994):", dados.get("competencias", "-")
+        "Competências Extraídas (Desde 07/1994):", str(dados.get("competencias", "-"))
     )
     pdf.linha_tabela(
-        "Teto Oficial INSS Vigente (2026):", dados.get("teto_inss", "R$ 8.475,55")
+        "Teto Oficial INSS Vigente (2026):", str(dados.get("teto_inss", "R$ 8.475,55"))
     )
     pdf.linha_tabela(
-        "Média de 100% dos Salários (Regra Geral):", dados.get("media_100", "-")
+        "Média de 100% dos Salários (Regra Geral):", str(dados.get("media_100", "-"))
     )
     pdf.linha_tabela(
         "Média dos 80% Maiores Salários (Regra PCD LC 142):",
-        dados.get("media_80_pcd", "-"),
+        str(dados.get("media_80_pcd", "-")),
     )
     pdf.linha_tabela(
-        "Estimativa RMI Regra Comum (Coeficiente 60%):", dados.get("rmi_comum", "-")
+        "Estimativa RMI Regra Comum (Coeficiente 60%):", str(dados.get("rmi_comum", "-"))
     )
     pdf.linha_tabela(
         "Estimativa RMI Aposentadoria PCD (100% da Média):",
-        dados.get("rmi_pcd", "-"),
+        str(dados.get("rmi_pcd", "-")),
         destaque=True,
     )
     pdf.linha_tabela(
         "Diferença Mensal a Favor da Regra PCD:",
-        dados.get("diferenca_mensal", "-"),
+        str(dados.get("diferenca_mensal", "-")),
         destaque=True,
         cor_valor=(22, 130, 76),
     )
@@ -217,9 +219,11 @@ def gerar_relatorio_pdf(
     pdf.card_parecer(
         badge="TEMPO COMPROVADO",
         titulo="1. TEMPO LÍQUIDO DE CONTRIBUIÇÃO APURADO",
-        corpo_texto=dados.get(
-            "texto_tempo",
-            "Tempo líquido comprovado apurado conforme vínculos válidos no CNIS, já descontados os períodos concomitantes.",
+        corpo_texto=str(
+            dados.get(
+                "texto_tempo",
+                "Tempo líquido comprovado apurado conforme vínculos válidos no CNIS, já descontados os períodos concomitantes.",
+            )
         ),
         cor_destaque=(15, 41, 58),
         cor_fundo=(243, 246, 250),
@@ -228,9 +232,11 @@ def gerar_relatorio_pdf(
     pdf.card_parecer(
         badge="AÇÃO NECESSÁRIA",
         titulo="2. PENDÊNCIAS E INDICADORES NO MEU INSS",
-        corpo_texto=dados.get(
-            "texto_pendencias",
-            "Nenhuma pendência crítica impeditiva localizada nos vínculos extraídos.",
+        corpo_texto=str(
+            dados.get(
+                "texto_pendencias",
+                "Nenhuma pendência crítica impeditiva localizada nos vínculos extraídos.",
+            )
         ),
         cor_destaque=(185, 45, 45),
         cor_fundo=(253, 245, 245),
@@ -239,9 +245,11 @@ def gerar_relatorio_pdf(
     pdf.card_parecer(
         badge="ENQUADRAMENTO ESTRATÉGICO",
         titulo="3. ANÁLISE ESPECIAL E REGRA PCD (LC 142/2013)",
-        corpo_texto=dados.get(
-            "texto_especial_pcd",
-            "Análise comparativa entre conversão especial (PPP) e redução de tempo/cálculo integral pela LC 142/2013.",
+        corpo_texto=str(
+            dados.get(
+                "texto_especial_pcd",
+                "Análise comparativa entre conversão especial (PPP) e redução de tempo/cálculo integral pela LC 142/2013.",
+            )
         ),
         cor_destaque=(175, 132, 20),
         cor_fundo=(253, 250, 240),
@@ -251,28 +259,20 @@ def gerar_relatorio_pdf(
     return caminho_saida
 
 
-if __name__ == "__main__":
-    dados_exemplo = {
-        "nome": "NEIVALDO BARBOSA DE SA FILHO",
-        "nascimento_idade": "03/05/1985 (41 anos)",
-        "ambiente": "Administrativo / Escritório",
-        "soma_bruta": "7400 dias (20 anos, 3 meses e 4 dias)",
-        "concomitantes": "8 dias",
-        "tempo_liquido": "7392 dias (20 anos, 2 meses e 26 dias)",
-        "competencias": "246 meses",
-        "teto_inss": "R$ 8.475,55",
-        "media_100": "R$ 6.294,66",
-        "media_80_pcd": "R$ 7.386,93",
-        "rmi_comum": "R$ 3.776,80",
-        "rmi_pcd": "R$ 7.386,93",
-        "diferenca_mensal": "+ R$ 3.610,13 / mês",
-        "texto_tempo": "Tempo líquido comprovado hoje: 20 anos, 2 meses e 26 dias (7392 dias), já descontados 8 dias concomitantes.",
-        "texto_pendencias": "Vínculo 5 (RHBRASIL SERVICOS TEMPORARIOS LTDA): ERRO CRÍTICO: Sem Data de Saída. Ação: Solicitar Acerto de Vínculos e Remunerações no Meu INSS e anexar baixa na CTPS ou TRCT.",
-        "texto_especial_pcd": (
-            "- Conversão Especial (PPP): Perfil Administrativo/Escritório selecionado (sem acréscimo automático de insalubridade/periculosidade).\n"
-            "- Regra PCD (LC 142/2013): Direito à redução de tempo (25, 29 ou 33 anos H / 20, 24 ou 28 anos M) sem idade mínima e com média dos 80% maiores salários (100%), elevando a estimativa de R$ 3.776,80 para R$ 7.386,93 (+ R$ 3.610,13/mês)."
-        ),
-    }
+def criar_pdf_executivo(*args, **kwargs):
+    """
+    Função de compatibilidade com o app.py existente.
+    Aceita tanto (dados, caminho_saida) quanto parâmetros nomeados.
+    """
+    dados = kwargs.get("dados", {})
+    caminho_saida = kwargs.get("caminho_saida", "Dossie_Auditoria_Previdenciaria.pdf")
+    logo_path = kwargs.get("logo_path", "logo.png")
 
-    arquivo = gerar_relatorio_pdf(dados_exemplo)
-    print(f"PDF gerado com sucesso: {arquivo}")
+    if len(args) >= 1 and isinstance(args[0], dict):
+        dados = args[0]
+    if len(args) >= 2 and isinstance(args[1], str):
+        caminho_saida = args[1]
+
+    return gerar_relatorio_pdf(
+        dados=dados, caminho_saida=caminho_saida, logo_path=logo_path
+    )
