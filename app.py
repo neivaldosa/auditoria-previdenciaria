@@ -751,23 +751,11 @@ if "resultado_auditoria" in st.session_state:
             )
             msg_whats = urllib.parse.quote(texto_bruto)
             link_whats = f"https://whatsapp.com{msg_whats}"
-
-            sub_btn, sub_help = st.columns([0.84, 0.16], gap="small")
-            with sub_btn:
-                st.markdown(
-                    f'<a href="{link_whats}" target="_blank" rel="noopener noreferrer" '
-                    f'style="display:flex; align-items:center; justify-content:center; width:100%; '
-                    f'height:38.5px; background-color:#25D366; color:#FFFFFF !important; '
-                    f'font-weight:700; font-size:0.88rem; border-radius:0.5rem; text-decoration:none; '
-                    f'border:1px solid #1EBE5D; box-shadow:0 2px 6px rgba(37,211,102,0.25);">'
-                    f'⚖️ Enviar para Escritório Parceiro</a>',
-                    unsafe_allow_html=True,
-                )
-            with sub_help:
-                with st.popover("💡", help="Problemas ao abrir o WhatsApp? Clique para copiar o número e a mensagem"):
-                    st.markdown("**WhatsApp Oficial:** `+55 21 96880-7965`")
-                    st.caption("Se o navegador bloquear a abertura automática, copie a mensagem abaixo e anexe seu PDF/Excel:")
-                    st.code(texto_bruto, language=None)
+            st.link_button(
+                label="⚖️ Enviar para Escritório Parceiro",
+                url=link_whats,
+                use_container_width=True,
+            )
 
 st.markdown("""
 <div style="font-size: 1.05rem; font-weight: 700; color: #0F293A; margin-top: 0.8rem;">💎 Escolha o Plano Ideal (Liberação Automática via Pix ou Cartão)</div>
