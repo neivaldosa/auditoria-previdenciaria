@@ -349,7 +349,7 @@ def extrair_cnis_v5(caminho_pdf, caminho_excel_saida, sexo="M", ambiente_operaci
 
     df_parecer = pd.DataFrame([{"Parecer_Tecnico_Completo": texto_parecer}])
 
-       with pd.ExcelWriter(caminho_excel_saida, engine="openpyxl") as writer:
+    with pd.ExcelWriter(caminho_excel_saida, engine="openpyxl") as writer:
         abas_dados = [
             ("1_CNIS_Extraido", df_vinculos),
             ("2_Tempo_Liquido_Resumo", df_resumo),
