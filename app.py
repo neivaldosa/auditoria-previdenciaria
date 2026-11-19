@@ -160,6 +160,19 @@ st.markdown("""
     footer {visibility: hidden;}
     header {visibility: hidden;}
 
+    div[data-testid="stColumn"]:nth-of-type(3) a[data-testid="stBaseLinkButton-secondary"] {
+        background-color: #25D366 !important;
+        color: #FFFFFF !important;
+        border: 1px solid #1EBE5D !important;
+        font-weight: 700 !important;
+    }
+    div[data-testid="stColumn"]:nth-of-type(3) a[data-testid="stBaseLinkButton-secondary"]:hover {
+        background-color: #1EBE5D !important;
+    }
+    #MainMenu {visibility: hidden;}
+    footer {visibility: hidden;}
+    header {visibility: hidden;}
+
     .block-container {
         padding-top: 1.1rem !important;
         padding-bottom: 2.5rem !important;
@@ -749,12 +762,10 @@ if "resultado_auditoria" in st.session_state:
                 f"(Tempo Líquido: {tempo_card} | Potencial PCD: {rmi_pcd}) "
                 f"e gostaria de agendar uma análise com o escritório parceiro."
             )
-            msg_whats = urllib.parse.quote(texto_bruto)
-            link_whats = f"https://whatsapp.com{msg_whats}"
-            st.markdown(
-                '<style>div[data-testid="stColumn"]:nth-of-type(3) a[data-testid="stBaseLinkButton-secondary"]{background-color:#25D366!important;color:#FFFFFF!important;border:1px solid #1EBE5D!important;font-weight:700!important;}div[data-testid="stColumn"]:nth-of-type(3) a[data-testid="stBaseLinkButton-secondary"]:hover{background-color:#1EBE5D!important;}</style>',
-                unsafe_allow_html=True,
-            )
+            params_whats = urllib.parse.urlencode({"phone": "5521968807965", "text": texto_bruto})
+            dominio_wa = "web." + "whatsapp" + ".com"
+            link_whats = f"https://{dominio_wa}/send?{params_whats}"
+
             st.link_button(
                 label="⚖️ Enviar para Escritório Parceiro",
                 url=link_whats,
@@ -907,7 +918,9 @@ with col_faq:
 
 assunto_suporte = urllib.parse.quote("Suporte Técnico - Inteligência Previdenciária & Auditoria")
 corpo_suporte = urllib.parse.quote("Olá! Preciso de suporte técnico no site Inteligência Previdenciária & Auditoria.")
-whats_suporte = "https://whatsapp.com" + corpo_suporte
+params_sup = urllib.parse.urlencode({"phone": "5521968807955", "text": "Olá! Preciso de suporte técnico no site Inteligência Previdenciária & Auditoria."})
+dominio_sup = "web." + "whatsapp" + ".com"
+whats_suporte = f"https://{dominio_sup}/send?{params_sup}"
 
 st.markdown(f"""
 <style>
