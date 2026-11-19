@@ -614,158 +614,40 @@ if arquivo_pdf is not None:
                 abas_brutas = pd.read_excel(caminho_temp_xlsx, sheet_name=None, skiprows=1)
                 aplicar_logo_todas_abas_excel(caminho_temp_xlsx)
                 abas = {nome: df.dropna(how="all", axis=1) for nome, df in abas_brutas.items()}
-                df_vinculos = abas["1_CNIS_Extraido"]
                 df_res = abas["2_Tempo_Liquido_Resumo"]
                 df_fin = abas["5_Estimativa_Valor_RMI"]
 
-                tempo_liq = str(df_res.loc[df_res["Indicador"] == "TEMPO LÍQUIDO DE CONTRIBUIÇÃO (COMUM)", "Valor"].tolist().pop())
-                rmi_comum = str(df_fin.loc[df_fin["Metrica_Financeira"].str.contains("Regra Comum"), "Valor_Estimado"].tolist().pop())
-                rmi_pcd = str(df_fin.loc[df_fin["Metrica_Financeira"].str.contains("Aposentadoria PCD"), "Valor_Estimado"].tolist().pop())
-                dif_mensal = str(df_fin.loc[df_fin["Metrica_Financeira"].str.contains("Diferença Mensal"), "Valor_Estimado"].tolist().pop())
-                tempo_card = tempo_liq.split("(").pop().replace(")", "") if "(" in tempo_liq else tempo_liq
+                criar_pdf_executivo(caminho_pdf_relatorio, df_res, df_fin, parecer_texto)
 
-                modo_pago = st.session_state["plano_ativo"] in ("DOSSIE", "ILIMITADO", "BRINDE")
+                with open(caminho_pdf_relatorio, "rb") as f_pdf:
+                    bytes_pdf = f_pdf.read()
+                with open(caminho_temp_xlsx, "rb") as f_excel:
+                    bytes_excel = f_excel.read()
 
-                col1, col2, col3 = st.columns(3)
-                with col1:
-                    st.markdown(f'<div class="metric-card"><div class="metric-label">Tempo Líquido Apurado</div><div class="metric-value">{tempo_card}</div><div class="metric-sub">Períodos concomitantes já descontados</div></div>', unsafe_allow_html=True)
-                with col2:
-                    val_c2 = rmi_comum if modo_pago else "R$ ••••,••"
-                    sub_c2 = "Projeção com coeficiente atual" if modo_pago else "🔒 Disponível no Dossiê Completo"
-                    st.markdown(f'<div class="metric-card"><div class="metric-label">Estimativa Regra Geral</div><div class="metric-value">{val_c2}</div><div class="metric-sub">{sub_c2}</div></div>', unsafe_allow_html=True)
-                with col3:
-                    val_c3 = rmi_pcd if modo_pago else "R$ ••••,••"
-                    sub_c3 = f"{dif_mensal} vs. Regra Geral" if modo_pago else "🔒 Cálculo LC 142/2013 bloqueado"
-                    st.markdown(f'<div class="metric-card highlight"><div class="metric-label">Potencial Regra PCD (LC 142)</div><div class="metric-value">{val_c3}</div><div class="metric-sub">{sub_c3}</div></div>', unsafe_allow_html=True)
-
-                if not modo_pago:
-                    qtd_alertas = df_vinculos["Status_Auditoria"].str.contains("ERRO|ALERTA|ATENÇÃO").sum()
-                    parecer_gratuito = (
-                        f"DIAGNÓSTICO INICIAL (VERSÃO GRATUITA)\n\n"
-                        f"1. TEMPO LÍQUIDO APURADO: {tempo_liq}\n"
-                        f"2. AUDITORIA DE ALERTAS NO CNIS: Foram detectados {qtd_alertas} ponto(s) de atenção/pendência nos seus vínculos.\n"
-                        f"   -> Os alertas estão listados na aba 'Alertas de Vínculos', mas o passo a passo de como resolver cada pendência no Meu INSS está retido na versão gratuita.\n\n"
-                        f"3. CÁLCULOS FINANCEIROS, ESPECIAL E PCD: Bloqueados nesta prévia.\n"
-                        f"   -> Desbloqueie o Dossiê Completo por {preco_avulso_txt} (Pix ou Cartão) para liberar automaticamente a solução de todas as pendências, a memória de cálculo desde 1994 e os downloads em PDF e Excel."
-                    )
-
-                    st.markdown(f"""
-                    <div class="upsell-banner">
-                        <h4 style="margin:0 0 0.3rem 0; color:#F3D06B;">⚠️ Encontramos {qtd_alertas} alerta(s) no seu CNIS — Desbloqueie agora e veja como corrigir + valor do benefício</h4>
-                        <p style="margin:0 0 0.8rem 0; font-size:0.88rem; color:#E2E8F0;">O <strong>Plano de Ação no INSS (como resolver)</strong>, o cálculo desde 1994 e os arquivos <strong>PDF Executivo + Excel</strong> são liberados automaticamente após o pagamento via Pix ou Cartão no Mercado Pago.</p>
-                        <a href="{link_avulso_atual}" target="_blank" class="plan-cta cta-gold" style="display:inline-block; padding:0.55rem 1.3rem;">🔓 Desbloquear Dossiê Completo Agora — {preco_avulso_txt}</a>
-                    </div>
-                    """, unsafe_allow_html=True)
-
-                    tab0, tab1, tab2 = st.tabs(["📄 Parecer Executivo (Prévia)", "📋 Alertas de Vínculos", "⏱️ Resumo de Tempo"])
-                    with tab0:
-                        st.text_area("Diagnóstico Resumido:", value=parecer_gratuito, height=230)
-                    with tab1:
-                        df_vinculos_free = df_vinculos.copy()
-                        df_vinculos_free["Plano_Acao_INSS"] = f"🔒 Disponível no Dossiê Completo ({preco_avulso_txt})"
-                        st.dataframe(df_vinculos_free, use_container_width=True)
-                    with tab2:
-                        st.dataframe(df_res, use_container_width=True)
-                else:
-                    tab0, tab1, tab2, tab3, tab4, tab5 = st.tabs([
-                        "📄 Parecer Executivo", "📋 Auditoria de Vínculos", "⏱️ Resumo de Tempo",
-                        "🏭 Especial & GILRAT", "♿ Enquadramento PCD", "💰 Memória Financeira"
-                    ])
-
-                    with tab0:
-                        import re
-                        m_seg = re.search(r"Segurado\(a\):\s*([^|\n]+)", parecer_texto)
-                        m_idade = re.search(r"Idade Atual:\s*([^\n]+)", parecer_texto)
-                        nome_seg = m_seg.group(1).strip() if m_seg else "SEGURADO AUDITADO"
-                        idade_seg = m_idade.group(1).strip() if m_idade else "-"
-
-                        b1 = re.search(r"1\.\s*TEMPO LÍQUIDO DE CONTRIBUIÇÃO\s*\n(.*?)(?=\n\s*2\.|\Z)", parecer_texto, re.S)
-                        b2 = re.search(r"2\.\s*PENDÊNCIAS NO MEU INSS\s*\n(.*?)(?=\n\s*3\.|\Z)", parecer_texto, re.S)
-                        b3 = re.search(r"3\.\s*ANÁLISE ESPECIAL E PCD.*?\n(.*)", parecer_texto, re.S)
-
-                        txt_b1 = b1.group(1).strip().replace("\n", "<br>") if b1 else parecer_texto.replace("\n", "<br>")
-                        txt_b2 = b2.group(1).strip().replace("\n", "<br>") if b2 else "Nenhuma pendência crítica localizada."
-                        txt_b3 = b3.group(1).strip().replace("\n", "<br>") if b3 else "-"
-
-                        html_parecer = (
-                            '<div style="background:#FFFFFF; border:1px solid #CBD5E1; border-radius:12px; padding:1.2rem 1.4rem; margin-top:0.4rem; box-shadow:0 4px 12px rgba(15,41,58,0.05);">'
-                            '<div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:0.5rem; border-bottom:2px solid #C59B27; padding-bottom:0.75rem; margin-bottom:1rem;">'
-                            '<div>'
-                            '<div style="font-size:0.75rem; font-weight:700; color:#C59B27; text-transform:uppercase; letter-spacing:0.5px;">Parecer Técnico Previdenciário & Auditoria de CNIS</div>'
-                            f'<div style="font-size:1.1rem; font-weight:800; color:#0F293A;">👤 {nome_seg}</div>'
-                            '</div>'
-                            f'<div style="background:#0F293A; color:#F3D06B; padding:0.35rem 0.85rem; border-radius:20px; font-size:0.82rem; font-weight:700; border:1px solid #C59B27;">Idade Atual: {idade_seg}</div>'
-                            '</div>'
-                            '<div style="background:#F3F6FA; border:1px solid #DCE3EC; border-left:5px solid #0F293A; border-radius:8px; padding:0.9rem 1.1rem; margin-bottom:0.85rem;">'
-                            '<div style="font-size:0.8rem; font-weight:800; color:#0F293A; margin-bottom:0.3rem; text-transform:uppercase;">'
-                            '<span style="background:#0F293A; color:#FFFFFF; padding:2px 7px; border-radius:4px; font-size:0.7rem; margin-right:6px;">TEMPO COMPROVADO</span>'
-                            '1. Tempo Líquido de Contribuição Apurado</div>'
-                            f'<div style="font-size:0.88rem; color:#334155; line-height:1.5;">{txt_b1}</div>'
-                            '</div>'
-                            '<div style="background:#FDF5F5; border:1px solid #F5D0D0; border-left:5px solid #B92D2D; border-radius:8px; padding:0.9rem 1.1rem; margin-bottom:0.85rem;">'
-                            '<div style="font-size:0.8rem; font-weight:800; color:#B92D2D; margin-bottom:0.3rem; text-transform:uppercase;">'
-                            '<span style="background:#B92D2D; color:#FFFFFF; padding:2px 7px; border-radius:4px; font-size:0.7rem; margin-right:6px;">AÇÃO NECESSÁRIA</span>'
-                            '2. Pendências e Indicadores no Meu INSS</div>'
-                            f'<div style="font-size:0.88rem; color:#334155; line-height:1.5;">{txt_b2}</div>'
-                            '</div>'
-                            '<div style="background:#FDFAF0; border:1px solid #EFE3B8; border-left:5px solid #C59B27; border-radius:8px; padding:0.9rem 1.1rem;">'
-                            '<div style="font-size:0.8rem; font-weight:800; color:#8A6810; margin-bottom:0.3rem; text-transform:uppercase;">'
-                            '<span style="background:#C59B27; color:#0F293A; padding:2px 7px; border-radius:4px; font-size:0.7rem; margin-right:6px;">ENQUADRAMENTO ESTRATÉGICO</span>'
-                            '3. Análise Especial e Regra PCD (LC 142/2013)</div>'
-                            f'<div style="font-size:0.88rem; color:#334155; line-height:1.5;">{txt_b3}</div>'
-                            '</div>'
-                            '</div>'
-                        )
-                        st.markdown(html_parecer, unsafe_allow_html=True)
-                    with tab1:
-                        st.dataframe(df_vinculos, use_container_width=True)
-                    with tab2:
-                        st.dataframe(df_res, use_container_width=True)
-                    with tab3:
-                        st.dataframe(abas["3_Aposentadoria_Especial_PPP"], use_container_width=True)
-                    with tab4:
-                        st.dataframe(abas["4_Aposentadoria_PCD_LC142"], use_container_width=True)
-                    with tab5:
-                        st.dataframe(df_fin, use_container_width=True)
-
-                    criar_pdf_executivo(
-                        caminho_pdf_relatorio,
-                        df_res,
-                        df_fin,
-                        parecer_texto
-                    )
-
-                    with open(caminho_pdf_relatorio, "rb") as f_pdf:
-                        bytes_pdf = f_pdf.read()
-                    with open(caminho_temp_xlsx, "rb") as f_excel:
-                        bytes_excel = f_excel.read()
-
-                    col_dl1, col_dl2, col_dl3 = st.columns(3)
-                    with col_dl1:
-                        st.download_button(
-                            label="📑 Baixar Relatório Executivo (.pdf)",
-                            data=bytes_pdf,
-                            file_name="Relatorio_Executivo_Previdenciario.pdf",
-                            mime="application/pdf",
-                            use_container_width=True
-                        )
-                    with col_dl2:
-                        st.download_button(
-                            label="📊 Baixar Planilha Detalhada (.xlsx)",
-                            data=bytes_excel,
-                            file_name="Dossie_Auditoria_INSS.xlsx",
-                            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-                            use_container_width=True
-                        )
-                    with col_dl3:
-                        msg_whats = urllib.parse.quote(f"Olá! Acabei de gerar minha Auditoria Previdenciária (Tempo Líquido: {tempo_card} | Potencial PCD: {rmi_pcd}) e gostaria de agendar uma análise com o escritório parceiro.")
-                        link_whats = f"https://wa.me{msg_whats}"
-                        st.link_button("⚖️ Enviar para Escritório Parceiro", url=link_whats, use_container_width=True)
-
+                st.session_state["resultado_auditoria"] = {
+                    "parecer_texto": parecer_texto,
+                    "abas": abas,
+                    "bytes_pdf": bytes_pdf,
+                    "bytes_excel": bytes_excel,
+                }
             finally:
                 for arq in [caminho_temp_pdf, caminho_temp_xlsx, caminho_pdf_relatorio]:
                     if os.path.exists(arq):
                         os.remove(arq)
+else:
+    st.session_state.pop("resultado_auditoria", None)
+
+if "resultado_auditoria" in st.session_state:
+    res = st.session_state["resultado_auditoria"]
+    parecer_texto = res["parecer_texto"]
+    abas = res["abas"]
+    bytes_pdf = res["bytes_pdf"]
+    bytes_excel = res["bytes_excel"]
+
+    df_vinculos = abas["1_CNIS_Extraido"]
+    df_res = abas["2_Tempo_Liquido_Resumo"]
+    df_fin = abas["5_Estimativa_Valor_RMI"]
+
 st.markdown("""
 <div style="font-size: 1.05rem; font-weight: 700; color: #0F293A; margin-top: 0.8rem;">💎 Escolha o Plano Ideal (Liberação Automática via Pix ou Cartão)</div>
 <div class="pricing-grid">
