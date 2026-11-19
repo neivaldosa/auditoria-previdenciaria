@@ -366,7 +366,7 @@ with st.sidebar:
     st.markdown('</div>', unsafe_allow_html=True)
 
     st.markdown('<div class="sidebar-card"><div class="sidebar-title">🔑 Cupom ou Código de Acesso</div>', unsafe_allow_html=True)
-    codigo_digitado = st.text_input("Digite seu cupom ou código:", placeholder="Ex: DESC50 ou código", label_visibility="collapsed").strip().upper()
+        codigo_digitado = st.text_input("Digite seu cupom ou código:", placeholder="Insira seu cupom aqui...", label_visibility="collapsed").strip().upper()
     if st.button("Ativar Código", use_container_width=True):
         if codigo_digitado in CODIGOS_PASSE_ILIMITADO:
             st.session_state["plano_ativo"] = "ILIMITADO"
