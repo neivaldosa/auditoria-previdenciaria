@@ -12,9 +12,9 @@ st.set_page_config(
     layout="wide"
 )
 
-LINK_MP_AVULSO_19 = "https://mpago.la"
-LINK_MP_PASSE_7D = "https://mpago.la"
-LINK_MP_PASSE_30D = "https://mpago.la"
+LINK_MP_AVULSO_19 = "https://mpago.la/1XEo7nL"
+LINK_MP_PASSE_7D = "https://mpago.la/2aGyJn9"
+LINK_MP_PASSE_30D = "https://mpago.la/2iXqtct"
 EMAIL_SUPORTE = "inteligenciaprevidenciariaaudi@gmail.com"
 
 CODIGOS_DOSSIE_AVULSO = {"DOSSIE2026", "VIP19"}
