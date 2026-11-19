@@ -749,17 +749,14 @@ if "resultado_auditoria" in st.session_state:
                 f"(Tempo Líquido: {tempo_card} | Potencial PCD: {rmi_pcd}) "
                 f"e gostaria de agendar uma análise com o escritório parceiro."
             )
-            msg_whats = urllib.parse.quote(texto_bruto)
-            link_whats = f"https://whatsapp.com{msg_whats}"
-            st.markdown(
-                f'<a href="{link_whats}" target="_blank" rel="noopener noreferrer" '
-                f'style="display:flex; align-items:center; justify-content:center; width:100%; '
-                f'padding:0.46rem 0.75rem; background-color:#25D366; color:#FFFFFF !important; '
-                f'font-weight:700; font-size:0.9rem; border-radius:0.5rem; text-decoration:none; '
-                f'border:1px solid #1EBE5D; box-shadow:0 2px 6px rgba(37,211,102,0.25);">'
-                f'⚖️ Enviar para Escritório Parceiro</a>',
-                unsafe_allow_html=True,
-            )
+        msg_whats = urllib.parse.quote(texto_bruto)
+        link_whats = f"https://whatsapp.com{msg_whats}"
+        st.link_button(
+            label="⚖️ Enviar para Escritório Parceiro",
+            url=link_whats,
+            type="primary",
+            use_container_width=True,
+        )
 
         with st.expander("📱 Problemas ao abrir o WhatsApp? Clique aqui para copiar o contato e a mensagem"):
             st.markdown("**WhatsApp Oficial:** `+55 21 96880-7965` (anexe o PDF e o Excel baixados acima na conversa)")
