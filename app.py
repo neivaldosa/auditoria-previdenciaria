@@ -12,22 +12,31 @@ st.set_page_config(
     layout="wide"
 )
 
-LINK_MP_AVULSO_19 = "https://mpago.la/1XEo7nL"
-LINK_MP_PASSE_7D = "https://mpago.la/2aGyJn9"
-LINK_MP_PASSE_30D = "https://mpago.la/2iXqtct"
+LINK_MP_AVULSO_19 = "https://mpago.la"
+LINK_MP_DESCONTO_50 = "https://mpago.la"
+LINK_MP_PASSE_7D = "https://mpago.la"
+LINK_MP_PASSE_30D = "https://mpago.la"
 EMAIL_SUPORTE = "inteligenciaprevidenciariaaudi@gmail.com"
 
 CODIGOS_DOSSIE_AVULSO = {"DOSSIE2026", "VIP19"}
 CODIGOS_PASSE_ILIMITADO = {"VIP7", "VIP30", "ILIMITADO30", "PRO2026", "ADMIN777"}
+CODIGOS_DESCONTO_50 = {"DESC50", "METADE50", "PROMO50"}
+CODIGOS_BRINDE_GRATIS = {"BRINDE2026", "CORTESIAVIP", "AMIGO100"}
 
 if "plano_ativo" not in st.session_state:
     st.session_state["plano_ativo"] = "GRATUITO"
+if "desconto_50" not in st.session_state:
+    st.session_state["desconto_50"] = False
 
 param_acesso = st.query_params.get("acesso", "").strip().upper()
 if param_acesso in CODIGOS_PASSE_ILIMITADO:
     st.session_state["plano_ativo"] = "ILIMITADO"
 elif param_acesso in CODIGOS_DOSSIE_AVULSO:
     st.session_state["plano_ativo"] = "DOSSIE"
+elif param_acesso in CODIGOS_BRINDE_GRATIS:
+    st.session_state["plano_ativo"] = "BRINDE"
+elif param_acesso in CODIGOS_DESCONTO_50:
+    st.session_state["desconto_50"] = True
 
 st.markdown("""
 <style>
@@ -356,8 +365,8 @@ with st.sidebar:
     st.caption("Marque se possui laudo médico de deficiência física, sensorial, intelectual ou TEA.")
     st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown('<div class="sidebar-card"><div class="sidebar-title">🔑 Ativação de Acesso</div>', unsafe_allow_html=True)
-    codigo_digitado = st.text_input("Possui código promocional?", placeholder="Ex: DOSSIE2026", label_visibility="collapsed").strip().upper()
+    st.markdown('<div class="sidebar-card"><div class="sidebar-title">🔑 Cupom ou Código de Acesso</div>', unsafe_allow_html=True)
+    codigo_digitado = st.text_input("Digite seu cupom ou código:", placeholder="Ex: DESC50 ou código", label_visibility="collapsed").strip().upper()
     if st.button("Ativar Código", use_container_width=True):
         if codigo_digitado in CODIGOS_PASSE_ILIMITADO:
             st.session_state["plano_ativo"] = "ILIMITADO"
@@ -365,11 +374,26 @@ with st.sidebar:
         elif codigo_digitado in CODIGOS_DOSSIE_AVULSO:
             st.session_state["plano_ativo"] = "DOSSIE"
             st.success("Dossiê Completo ativado!")
+        elif codigo_digitado in CODIGOS_BRINDE_GRATIS:
+            st.session_state["plano_ativo"] = "BRINDE"
+            st.success("🎁 Cortesia de 1 Dossiê Completo ativada!")
+        elif codigo_digitado in CODIGOS_DESCONTO_50:
+            st.session_state["desconto_50"] = True
+            st.success("🎉 Cupom de 50% OFF aplicado!")
         else:
-            st.error("Código inválido ou expirado.")
+            st.error("Código ou cupom inválido.")
 
     plano_atual = st.session_state["plano_ativo"]
-    badge_plano = "🟢 Plano Gratuito (Prévia)" if plano_atual == "GRATUITO" else ("🟡 Dossiê Completo Liberado" if plano_atual == "DOSSIE" else "👑 Passe Ilimitado Ativo")
+    if plano_atual == "BRINDE":
+        badge_plano = "🎁 Cortesia VIP Liberada"
+    elif plano_atual == "DOSSIE":
+        badge_plano = "🟡 Dossiê Completo Liberado"
+    elif plano_atual == "ILIMITADO":
+        badge_plano = "👑 Passe Ilimitado Ativo"
+    elif st.session_state["desconto_50"]:
+        badge_plano = "🏷️ Cupom 50% OFF Ativo (R$ 9,95)"
+    else:
+        badge_plano = "🟢 Plano Gratuito (Prévia)"
     st.caption(f"Status atual: **{badge_plano}**")
     st.markdown('</div>', unsafe_allow_html=True)
 
@@ -382,6 +406,9 @@ with st.sidebar:
 
 st.markdown("#### 📤 Envie seu Extrato Oficial (CNIS)")
 arquivo_pdf = st.file_uploader("Selecione ou arraste o arquivo PDF completo baixado do Meu INSS:", type=["pdf"], label_visibility="collapsed")
+preco_avulso_txt = "R$ 9,95 (50% OFF)" if st.session_state["desconto_50"] else "R$ 19,90"
+link_avulso_atual = LINK_MP_DESCONTO_50 if st.session_state["desconto_50"] else LINK_MP_AVULSO_19
+
 if arquivo_pdf is not None:
     label_btn = "🔍 Gerar Diagnóstico Gratuito (Prévia)" if st.session_state["plano_ativo"] == "GRATUITO" else "🚀 Executar Auditoria e Gerar Dossiê Completo"
     if st.button(label_btn, type="primary"):
@@ -411,7 +438,7 @@ if arquivo_pdf is not None:
                 dif_mensal = str(df_fin.loc[df_fin["Metrica_Financeira"].str.contains("Diferença Mensal"), "Valor_Estimado"].tolist().pop())
                 tempo_card = tempo_liq.split("(").pop().replace(")", "") if "(" in tempo_liq else tempo_liq
 
-                modo_pago = st.session_state["plano_ativo"] in ("DOSSIE", "ILIMITADO")
+                modo_pago = st.session_state["plano_ativo"] in ("DOSSIE", "ILIMITADO", "BRINDE")
 
                 col1, col2, col3 = st.columns(3)
                 with col1:
@@ -433,14 +460,14 @@ if arquivo_pdf is not None:
                         f"2. AUDITORIA DE ALERTAS NO CNIS: Foram detectados {qtd_alertas} ponto(s) de atenção/pendência nos seus vínculos.\n"
                         f"   -> Os alertas estão listados na aba 'Alertas de Vínculos', mas o passo a passo de como resolver cada pendência no Meu INSS está retido na versão gratuita.\n\n"
                         f"3. CÁLCULOS FINANCEIROS, ESPECIAL E PCD: Bloqueados nesta prévia.\n"
-                        f"   -> Desbloqueie o Dossiê Completo por R$ 19,90 (Pix ou Cartão) para liberar automaticamente a solução de todas as pendências, a memória de cálculo desde 1994 e os downloads em PDF e Excel."
+                        f"   -> Desbloqueie o Dossiê Completo por {preco_avulso_txt} (Pix ou Cartão) para liberar automaticamente a solução de todas as pendências, a memória de cálculo desde 1994 e os downloads em PDF e Excel."
                     )
 
                     st.markdown(f"""
                     <div class="upsell-banner">
                         <h4 style="margin:0 0 0.3rem 0; color:#F3D06B;">⚠️ Encontramos {qtd_alertas} alerta(s) no seu CNIS — Desbloqueie agora e veja como corrigir + valor do benefício</h4>
                         <p style="margin:0 0 0.8rem 0; font-size:0.88rem; color:#E2E8F0;">O <strong>Plano de Ação no INSS (como resolver)</strong>, o cálculo desde 1994 e os arquivos <strong>PDF Executivo + Excel</strong> são liberados automaticamente após o pagamento via Pix ou Cartão no Mercado Pago.</p>
-                        <a href="{LINK_MP_AVULSO_19}" target="_blank" class="plan-cta cta-gold" style="display:inline-block; padding:0.55rem 1.3rem;">🔓 Desbloquear Dossiê Completo Agora — R$ 19,90 (Pix ou Cartão)</a>
+                        <a href="{link_avulso_atual}" target="_blank" class="plan-cta cta-gold" style="display:inline-block; padding:0.55rem 1.3rem;">🔓 Desbloquear Dossiê Completo Agora — {preco_avulso_txt}</a>
                     </div>
                     """, unsafe_allow_html=True)
 
@@ -449,7 +476,7 @@ if arquivo_pdf is not None:
                         st.text_area("Diagnóstico Resumido:", value=parecer_gratuito, height=230)
                     with tab1:
                         df_vinculos_free = df_vinculos.copy()
-                        df_vinculos_free["Plano_Acao_INSS"] = "🔒 Disponível no Dossiê Completo (R$ 19,90)"
+                        df_vinculos_free["Plano_Acao_INSS"] = f"🔒 Disponível no Dossiê Completo ({preco_avulso_txt})"
                         st.dataframe(df_vinculos_free, use_container_width=True)
                     with tab2:
                         st.dataframe(df_res, use_container_width=True)
@@ -528,7 +555,7 @@ st.markdown("""
     <div class="plan-card">
         <div>
             <div class="plan-top"><span class="plan-name" style="color:#0F293A;">Dossiê Completo Avulso</span></div>
-            <div class="plan-price" style="color:#0F293A;">R$ 19,90 <span>/ único</span></div>
+            <div class="plan-price" style="color:#0F293A;">__PRECO_19__ <span>/ único</span></div>
             <ul class="plan-list" style="color:#334155;">
                 <li>✅ Plano de ação (como corrigir erros)</li>
                 <li>✅ Cálculo RMI (1994–2026), Especial e PCD</li>
@@ -584,7 +611,7 @@ st.markdown("""
         <p class="feature-desc">Atualiza salários desde 07/1994 e compara Regra Geral vs. 80% maiores na Regra PCD.</p>
     </div>
 </div>
-""".replace("__LINK_19__", LINK_MP_AVULSO_19).replace("__LINK_7D__", LINK_MP_PASSE_7D).replace("__LINK_30D__", LINK_MP_PASSE_30D), unsafe_allow_html=True)
+""".replace("__PRECO_19__", preco_avulso_txt).replace("__LINK_19__", link_avulso_atual).replace("__LINK_7D__", LINK_MP_PASSE_7D).replace("__LINK_30D__", LINK_MP_PASSE_30D), unsafe_allow_html=True)
 
 st.markdown('<h3 id="assistente-ia" style="text-align: center; color: #0F293A; margin-top: 1.8rem; margin-bottom: 0.3rem;">🤖 Assistente Virtual Previdenciário (IA Gemini)</h3>', unsafe_allow_html=True)
 st.markdown('<p style="text-align: center; color: #64748B; font-size: 0.9rem; margin-bottom: 1rem;">Tem dúvidas sobre regras do INSS, tempo de contribuição, PPP ou aposentadoria PCD (LC 142)? Pergunte abaixo:</p>', unsafe_allow_html=True)
