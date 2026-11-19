@@ -427,7 +427,8 @@ if arquivo_pdf is not None:
                     ambiente_operacional=ambiente_operacional, possui_pcd=possui_pcd
                 )
 
-                abas = pd.read_excel(caminho_temp_xlsx, sheet_name=None)
+                abas_brutas = pd.read_excel(caminho_temp_xlsx, sheet_name=None, skiprows=1)
+                abas = {nome: df.dropna(how="all", axis=1) for nome, df in abas_brutas.items()}
                 df_vinculos = abas["1_CNIS_Extraido"]
                 df_res = abas["2_Tempo_Liquido_Resumo"]
                 df_fin = abas["5_Estimativa_Valor_RMI"]
