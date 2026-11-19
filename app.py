@@ -646,7 +646,7 @@ with col_faq:
 msg_suporte = urllib.parse.quote("Olá! Preciso de suporte técnico no site Inteligência Previdenciária & Auditoria.")
 st.markdown(f"""
 <div class="floating-container">
-    <a href="#assistente-ia" class="float-btn float-gemini">
+    <a href="https://google.com" target="_blank" class="float-btn float-gemini">
         <span>✨ Dúvidas INSS (IA)</span>
     </a>
     <a href="https://wa.me{msg_suporte}" target="_blank" class="float-btn float-whats">
