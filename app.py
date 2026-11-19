@@ -335,6 +335,59 @@ st.markdown("""
         font-size: 0.88rem;
         line-height: 1.55;
     }
+    .faq-container {
+    max-width: 900px;
+    margin: 2rem auto 2.5rem auto;
+}
+.faq-header {
+    text-align: center;
+    color: #0F293A;
+    font-size: 1.65rem;
+    font-weight: 800;
+    margin-bottom: 1.2rem;
+    letter-spacing: -0.4px;
+}
+details.faq-item {
+    background-color: #F8FAFC;
+    border: 1px solid #E2E8F0;
+    border-radius: 14px;
+    margin-bottom: 0.75rem;
+    padding: 1rem 1.4rem;
+    box-shadow: 0 2px 5px rgba(15, 41, 58, 0.03);
+}
+details.faq-item[open] {
+    background-color: #FFFDF5;
+    border-color: #C59B27;
+}
+details.faq-item summary {
+    font-weight: 700;
+    color: #0F293A;
+    font-size: 0.98rem;
+    cursor: pointer;
+    list-style: none;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+details.faq-item summary::-webkit-details-marker {
+    display: none;
+}
+details.faq-item summary::after {
+    content: "⌄";
+    font-size: 1.35rem;
+    color: #C59B27;
+    font-weight: 700;
+    line-height: 1;
+}
+details.faq-item[open] summary::after {
+    transform: rotate(180deg);
+}
+.faq-answer {
+    margin-top: 0.75rem;
+    color: #475569;
+    font-size: 0.9rem;
+    line-height: 1.55;
+}
 </style>
 """, unsafe_allow_html=True)
 st.markdown("""
@@ -601,41 +654,41 @@ st.markdown("""
 """.replace("__LINK_DOSSIE__", LINK_CHECKOUT_DOSSIE).replace("__LINK_PASSE__", LINK_CHECKOUT_PASSE), unsafe_allow_html=True)
 st.markdown("""
 <div class="faq-container">
-<div class="faq-header">Perguntas Frequentes</div>
+<div class="faq-header">Perguntas frequentes</div>
 
 <details class="faq-item" open>
 <summary>Por que é tão importante entender o seu CNIS e ajustar possíveis problemas antes de entrar com o pedido de aposentadoria?</summary>
-<div class="faq-answer">Obter acesso aos detalhes do seu CNIS e realizar uma auditoria prévia antes de dar entrada na aposentadoria é crucial para evitar indeferimentos, perda de tempo de contribuição ou cálculo de benefício menor do que você tem direito — garantindo tranquilidade em um momento em que o objetivo é descansar. Dependendo do caso, os relatórios da <strong>Inteligência Previdenciária &amp; Auditoria</strong> entregam o diagnóstico técnico mastigado por uma fração do custo de uma consulta particular.</div>
+<div class="faq-answer">Obter acesso aos detalhes do seu CNIS e realizar uma auditoria prévia antes de dar entrada na aposentadoria é crucial para evitar dor de cabeça, indeferimentos ou perda de tempo de contribuição em um momento em que você quer descansar. Dependendo do caso, os relatórios da <strong>Inteligência Previdenciária &amp; Auditoria</strong> entregam o diagnóstico técnico completo por uma fração do custo de uma consulta particular.</div>
 </details>
 
 <details class="faq-item">
-<summary>Qual a diferença entre Cálculo Previdenciário e Planejamento Previdenciário?</summary>
-<div class="faq-answer">O <strong>Cálculo Previdenciário</strong> apura o tempo líquido comprovado e estima o valor atual do benefício com base nos seus salários desde julho de 1994. Já o <strong>Planejamento Previdenciário</strong> compara diferentes regras e cenários (Regra Geral, Aposentadoria Especial por exposição a risco e Aposentadoria PCD pela LC 142/2013) para identificar qual caminho antecipa sua aposentadoria ou gera a maior renda mensal.</div>
+<summary>Qual é a diferença entre Cálculo Previdenciário e Planejamento Previdenciário?</summary>
+<div class="faq-answer">O <strong>Cálculo Previdenciário</strong> é voltado à apuração do tempo líquido e do valor estimado do benefício a partir dos seus salários desde julho de 1994. Já o <strong>Planejamento Previdenciário</strong> compara regras e cenários distintos (Regra Geral, Aposentadoria Especial por exposição a risco e Aposentadoria PCD pela LC 142/2013) para mostrar qual caminho é mais vantajoso para você.</div>
 </details>
 
 <details class="faq-item">
 <summary>Onde encontro essas funcionalidades?</summary>
-<div class="faq-answer">Basta enviar o arquivo PDF do seu extrato CNIS no quadro de envio acima. Você pode adquirir o <strong>Dossiê Completo Avulso</strong> (análise definitiva de 1 extrato com downloads em PDF e Excel) ou contratar o <strong>Passe Ilimitado de 7 dias ou 30 dias</strong> para testar diferentes cenários e analisar extratos de familiares.</div>
+<div class="faq-answer">Basta enviar o PDF do seu CNIS no quadro de envio acima. Você pode escolher o <strong>Dossiê Completo Avulso</strong> (para analisar 1 extrato com downloads em PDF e Excel) ou os <strong>Passes Ilimitados de 7 dias ou 30 dias</strong> para realizar simulações distintas conforme a sua situação.</div>
 </details>
 
 <details class="faq-item">
-<summary>Preciso do CNIS para começar?</summary>
-<div class="faq-answer">Sim, esse é o único documento necessário (<strong>CNIS em PDF</strong> — <a href="#topo-pagina" style="color: #C59B27; font-weight: 700; text-decoration: underline;">saiba como emitir gratuitamente no Meu INSS clicando aqui</a>) para que nosso motor faça a leitura automática e entregue uma análise detalhada, explicando ponto a ponto o que você precisa fazer para regularizar pendências e seguir com sua aposentadoria.</div>
+<summary>Preciso ter o CNIS para começar?</summary>
+<div class="faq-answer">Sim, esse é o único documento necessário (<strong>CNIS em PDF</strong> — <a href="#topo-pagina" style="color: #C59B27; font-weight: 700; text-decoration: underline;">saiba como emitir gratuitamente no Meu INSS clicando aqui</a>) para entregar uma análise detalhada, explicando ponto a ponto o que você precisa fazer para seguir com o processo de aposentadoria.</div>
 </details>
 
 <details class="faq-item">
-<summary>Posso obter uma demonstração gratuita para entender como o serviço funciona?</summary>
-<div class="faq-answer">Sim! Basta enviar seu PDF normalmente sem inserir nenhum código — o sistema executa automaticamente o <strong>Diagnóstico Inicial (Grátis)</strong>, exibindo seu tempo líquido de contribuição já descontados os períodos concomitantes e apontando se existem alertas ou pendências nos seus vínculos.</div>
+<summary>Posso obter uma demonstração para entender como o serviço funciona?</summary>
+<div class="faq-answer">Sim! Basta enviar seu PDF normalmente sem código de ativação — o sistema executa o <strong>Diagnóstico Inicial (Grátis)</strong>, calculando seu tempo líquido e apontando se há alertas nos seus vínculos.</div>
 </details>
 
 <details class="faq-item">
 <summary>Tenho diagnóstico de TEA (Autismo) ou outra deficiência. O sistema calcula a regra PCD?</summary>
-<div class="faq-answer">Sim. Ao marcar a opção <strong>"Enquadramento PCD / TEA (LC 142/2013)"</strong> na barra lateral, o sistema simula automaticamente o tempo exigido para deficiência leve (como TEA Nível 1), moderada e grave — sem exigência de idade mínima — e calcula a média dos 80% maiores salários (100% da média), comparando o ganho financeiro em relação à Regra Geral.</div>
+<div class="faq-answer">Sim. Ao marcar a opção <strong>"Enquadramento PCD / TEA (LC 142/2013)"</strong> na barra lateral, o sistema simula o tempo exigido para deficiência leve (como TEA Nível 1), moderada e grave — sem idade mínima — e calcula a média dos 80% maiores salários (100% da média).</div>
 </details>
 
 <details class="faq-item">
-<summary>Meus dados pessoais e meu extrato CNIS ficam armazenados no site (LGPD)?</summary>
-<div class="faq-answer">Não. Todo o processamento é feito de forma isolada e temporária apenas durante os segundos necessários para gerar suas tabelas e relatórios. Assim que a tela é carregada, os arquivos temporários são excluídos automaticamente do servidor, em total conformidade com a Lei Geral de Proteção de Dados (LGPD).</div>
+<summary>Meus dados pessoais e meu extrato CNIS estão seguros (LGPD)?</summary>
+<div class="faq-answer">Sim. O processamento ocorre de forma isolada e temporária apenas durante a leitura do arquivo. Assim que o relatório é exibido, os arquivos temporários são apagados automaticamente do servidor, em total conformidade com a LGPD.</div>
 </details>
 </div>
 """, unsafe_allow_html=True)
