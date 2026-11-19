@@ -19,24 +19,38 @@ class ParecerPrevidenciarioPDF(FPDF):
     def __init__(self):
         super().__init__(orientation="P", unit="mm", format="A4")
         self.logo_path = _achar_logo()
+        self.logo_transparente_path = self._preparar_logo_transparente()
         self.set_auto_page_break(auto=True, margin=22)
-        self.azul = self._extrair_cor_fundo_logo()
+        self.azul = (15, 41, 58)
         self.dourado = (197, 155, 39)
         self.texto = (50, 58, 69)
         self.cinza = (244, 246, 249)
         self.borda = (218, 223, 230)
 
-    def _extrair_cor_fundo_logo(self):
-        """Lê o RGB exato do pixel (2, 2) do Logo.png para fundir o cabeçalho 100% sem emendas."""
-        if self.logo_path:
-            try:
-                from PIL import Image
-                with Image.open(self.logo_path) as img:
-                    rgb = img.convert("RGB").getpixel((2, 2))
-                    return (int(rgb), int(rgb), int(rgb))
-            except Exception:
-                pass
-        return (28, 52, 68)
+    def _preparar_logo_transparente(self):
+        """Converte o fundo do Logo.png em transparente para o cabeçalho."""
+        if not self.logo_path:
+            return None
+        try:
+            from PIL import Image
+            import tempfile
+
+            with Image.open(self.logo_path) as img:
+                rgba = img.convert("RGBA")
+                dados = rgba.getdata()
+                r0, g0, b0, _ = rgba.getpixel((2, 2))
+                novos_pixels = []
+                for r, g, b, a in dados:
+                    if abs(r - r0) < 25 and abs(g - g0) < 25 and abs(b - b0) < 25:
+                        novos_pixels.append((r, g, b, 0))
+                    else:
+                        novos_pixels.append((r, g, b, a))
+                rgba.putdata(novos_pixels)
+                tmp = os.path.join(tempfile.gettempdir(), "logo_header_transp.png")
+                rgba.save(tmp, "PNG")
+                return tmp
+        except Exception:
+            return self.logo_path
 
     def _logo_vetorial(self, x, y, tam, fundo=False):
         if fundo:
@@ -79,10 +93,15 @@ class ParecerPrevidenciarioPDF(FPDF):
         self.set_x(15)
         self.set_font("Helvetica", "", 8.2)
         self.set_text_color(*self.dourado)
-        self.cell(150, 5, "DOSSIÊ TÉCNICO DE CNIS, ENQUADRAMENTO PCD (LC 142) E PROJEÇÃO DE RENDA", ln=True)
+        self.cell(
+            150,
+            5,
+            "DOSSIÊ TÉCNICO DE CNIS, ENQUADRAMENTO PCD (LC 142) E PROJEÇÃO DE RENDA",
+            ln=True,
+        )
 
-        if self.logo_path:
-            self.image(self.logo_path, x=174, y=3.5, w=21, h=21)
+        if self.logo_transparente_path and os.path.exists(self.logo_transparente_path):
+            self.image(self.logo_transparente_path, x=174, y=3.5, w=21, h=21)
         else:
             self._logo_vetorial(174, 3.5, 21, fundo=False)
         self.set_y(35)
