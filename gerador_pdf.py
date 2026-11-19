@@ -252,6 +252,7 @@ def gerar_relatorio_pdf(dados, caminho_saida="Dossie_Auditoria_Previdenciaria.pd
 
 def criar_pdf_executivo(*args, **kwargs):
     dados, caminho_saida, textos = {}, None, []
+
     for arg in args:
         if isinstance(arg, dict):
             dados.update(arg)
@@ -260,6 +261,37 @@ def criar_pdf_executivo(*args, **kwargs):
                 caminho_saida = arg
             else:
                 textos.append(arg)
+        elif hasattr(arg, "iterrows") and hasattr(arg, "columns"):
+            cols = list(arg.columns)
+            if len(cols) >= 2:
+                for _, row in arg.iterrows():
+                    chave = str(row[cols[0]]).strip()
+                    valor = str(row[cols[1]]).strip()
+                    if "Data de Nascimento" in chave or "Idade" in chave:
+                        dados["nascimento_idade"] = valor
+                    elif "Ambiente" in chave:
+                        dados["ambiente"] = valor
+                    elif "Soma Bruta" in chave:
+                        dados["soma_bruta"] = valor
+                    elif "Concomitante" in chave:
+                        dados["concomitantes"] = valor
+                    elif "TEMPO LÍQUIDO" in chave or "Tempo Líquido" in chave:
+                        dados["tempo_liquido"] = valor
+                    elif "Competências" in chave or "Competencias" in chave:
+                        dados["competencias"] = valor
+                    elif "Teto" in chave:
+                        dados["teto_inss"] = valor
+                    elif "100%" in chave and "Média" in chave or "100%" in chave and "Media" in chave:
+                        dados["media_100"] = valor
+                    elif "80%" in chave:
+                        dados["media_80_pcd"] = valor
+                    elif "Regra Comum" in chave:
+                        dados["rmi_comum"] = valor
+                    elif "Aposentadoria PCD" in chave:
+                        dados["rmi_pcd"] = valor
+                    elif "Diferença Mensal" in chave or "Diferenca Mensal" in chave:
+                        dados["diferenca_mensal"] = valor
+
     for k, v in kwargs.items():
         if isinstance(v, dict):
             dados.update(v)
@@ -267,17 +299,6 @@ def criar_pdf_executivo(*args, **kwargs):
             caminho_saida = v
         elif isinstance(v, str) and k != "caminho_saida":
             dados.setdefault(k, v)
-
-    mapa = {
-        "segurado": "nome", "nome_segurado": "nome", "data_nascimento": "nascimento_idade",
-        "ambiente_trabalho": "ambiente", "dias_brutos": "soma_bruta", "dias_concomitantes": "concomitantes",
-        "dias_liquidos": "tempo_liquido", "total_competencias": "competencias", "media_geral": "media_100",
-        "media_pcd": "media_80_pcd", "estimativa_comum": "rmi_comum", "estimativa_pcd": "rmi_pcd",
-        "ganho_mensal": "diferenca_mensal",
-    }
-    for orig, dest in mapa.items():
-        if orig in dados and dest not in dados:
-            dados[dest] = dados[orig]
 
     if textos:
         _parse_texto("\n".join(textos), dados)
