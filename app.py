@@ -751,6 +751,10 @@ if "resultado_auditoria" in st.session_state:
             )
             msg_whats = urllib.parse.quote(texto_bruto)
             link_whats = f"https://whatsapp.com{msg_whats}"
+            st.markdown(
+                '<style>div[data-testid="stColumn"]:nth-of-type(3) a[data-testid="stBaseLinkButton-secondary"]{background-color:#25D366!important;color:#FFFFFF!important;border:1px solid #1EBE5D!important;font-weight:700!important;}div[data-testid="stColumn"]:nth-of-type(3) a[data-testid="stBaseLinkButton-secondary"]:hover{background-color:#1EBE5D!important;}</style>',
+                unsafe_allow_html=True,
+            )
             st.link_button(
                 label="⚖️ Enviar para Escritório Parceiro",
                 url=link_whats,
@@ -903,14 +907,72 @@ with col_faq:
 
 assunto_suporte = urllib.parse.quote("Suporte Técnico - Inteligência Previdenciária & Auditoria")
 corpo_suporte = urllib.parse.quote("Olá! Preciso de suporte técnico no site Inteligência Previdenciária & Auditoria.")
+whats_suporte = "https://whatsapp.com" + corpo_suporte
 
 st.markdown(f"""
+<style>
+    .support-wrapper {{
+        position: relative;
+        display: inline-block;
+    }}
+    .support-menu {{
+        display: none;
+        position: absolute;
+        bottom: 48px;
+        right: 0;
+        background: #0F293A;
+        border: 1.5px solid #C59B27;
+        border-radius: 12px;
+        padding: 10px;
+        width: 245px;
+        box-shadow: 0 8px 20px rgba(0,0,0,0.35);
+        z-index: 10000;
+    }}
+    .support-wrapper:hover .support-menu,
+    .support-wrapper:focus-within .support-menu {{
+        display: block;
+    }}
+    .support-item {{
+        display: block;
+        padding: 8px 10px;
+        margin-bottom: 6px;
+        border-radius: 8px;
+        font-size: 0.82rem;
+        font-weight: 700;
+        text-decoration: none !important;
+        text-align: center;
+    }}
+    .sup-wa {{ background: #25D366; color: #FFFFFF !important; }}
+    .sup-mail {{ background: #C59B27; color: #0F293A !important; }}
+    .sup-tip {{
+        background: rgba(255,255,255,0.08);
+        color: #E2E8F0;
+        font-size: 0.74rem;
+        padding: 7px 9px;
+        border-radius: 8px;
+        border-left: 3px solid #C59B27;
+        line-height: 1.35;
+    }}
+</style>
+
 <div class="floating-container">
     <a href="https://google.com" target="_blank" class="float-btn float-gemini">
         <span>✨ Dúvidas INSS (IA)</span>
     </a>
-    <a href="mailto:{EMAIL_SUPORTE}?subject={assunto_suporte}&body={corpo_suporte}" class="float-btn float-support">
-        <span>✉️ Suporte Técnico</span>
-    </a>
+    <div class="support-wrapper" tabindex="0">
+        <div class="support-menu">
+            <a href="{whats_suporte}" target="_blank" class="support-item sup-wa">💬 Suporte via WhatsApp</a>
+            <a href="mailto:{EMAIL_SUPORTE}?subject={assunto_suporte}&body={corpo_suporte}" class="support-item sup-mail">✉️ Suporte via E-mail</a>
+            <div class="sup-tip">
+                <strong>💡 Dica de Entrega:</strong><br>
+                Se o navegador corporativo bloquear o WhatsApp, use o e-mail ou salve o número: <strong>+55 21 96880-7955</strong>.
+            </div>
+        </div>
+        <div class="float-btn float-support" style="cursor:pointer;">
+            <span>🛠️ Suporte Técnico</span>
+            <span style="background:#0F293A; color:#F3D06B; border-radius:50%; width:20px; height:20px; display:inline-flex; align-items:center; justify-content:center; font-size:0.75rem; margin-left:4px;" title="Opções de contato e ajuda na entrega">💡</span>
+        </div>
+    </div>
 </div>
 """, unsafe_allow_html=True)
+
