@@ -112,14 +112,23 @@ st.markdown("""
     }
 
     /* Barra lateral fixa em Azul-Petróleo com borda Dourada */
-    [data-testid="stSidebar"] {
+    /* Barra lateral fixa em Azul-Petróleo com borda Dourada */
+    section[data-testid="stSidebar"] {
         background: linear-gradient(180deg, #0F293A 0%, #16364D 100%) !important;
         border-right: 2px solid #C59B27 !important;
-        min-width: 310px !important;
-        max-width: 310px !important;
+        width: 315px !important;
+        min-width: 315px !important;
+        max-width: 315px !important;
+        transform: none !important;
+        visibility: visible !important;
     }
 
-    /* Remove o botão X de fechar e a seta de recolher a barra lateral */
+    section[data-testid="stSidebar"] > div {
+        width: 315px !important;
+        padding-top: 1.2rem !important;
+    }
+
+    /* Remove o botão de recolher a barra lateral */
     [data-testid="stSidebarCollapseButton"],
     [data-testid="collapsedControl"],
     button[kind="headerNoPadding"] {
@@ -431,14 +440,14 @@ if LOGO_SITE and os.path.exists(LOGO_SITE):
         _logo_b64 = base64.b64encode(_f_logo.read()).decode("utf-8")
 
 _img_hero_html = (
-    f'<img src="data:image/png;base64,{_logo_b64}" style="width:74px; height:74px; border-radius:12px; border:1.5px solid #C59B27; flex-shrink:0;" />'
+    f'<img src="data:image/png;base64,{_logo_b64}" style="width:76px; height:76px; border-radius:10px; border:1.5px solid #C59B27; flex-shrink:0;" />'
     if _logo_b64 else ""
 )
 
 st.markdown(f"""
-<div id="topo-pagina" class="hero-box" style="display:flex; align-items:center; gap:1.2rem;">
+<div id="topo-pagina" class="hero-box" style="display:flex; align-items:flex-start; justify-content:flex-start; gap:1rem; padding:1rem 1.4rem;">
     {_img_hero_html}
-    <div>
+    <div style="text-align:left;">
         <div class="hero-badge">Inteligência Previdenciária & Auditoria</div>
         <h1 class="hero-title">Diagnóstico Estratégico de Aposentadoria e CNIS</h1>
         <p class="hero-subtitle">Análise automatizada de vínculos, auditoria de pendências no INSS, enquadramento PCD (LC 142/2013) e projeção de renda.</p>
