@@ -744,9 +744,21 @@ if "resultado_auditoria" in st.session_state:
                 use_container_width=True
             )
         with col_dl3:
-            msg_whats = urllib.parse.quote(f"Olá! Acabei de gerar minha Auditoria Previdenciária (Tempo Líquido: {tempo_card} | Potencial PCD: {rmi_pcd}) e gostaria de agendar uma análise com o escritório parceiro.")
-            link_whats = f"https://wa.me{msg_whats}"
-            st.link_button("⚖️ Enviar para Escritório Parceiro", url=link_whats, use_container_width=True)
+            msg_whats = urllib.parse.quote(
+                f"Olá! Acabei de gerar minha Auditoria Previdenciária "
+                f"(Tempo Líquido: {tempo_card} | Potencial PCD: {rmi_pcd}) "
+                f"e gostaria de agendar uma análise com o escritório parceiro."
+            )
+            link_whats = f"https://whatsapp.com{msg_whats}"
+            st.markdown(
+                f'<a href="{link_whats}" target="_blank" rel="noopener noreferrer" '
+                f'style="display:flex; align-items:center; justify-content:center; width:100%; '
+                f'padding:0.46rem 0.75rem; background-color:#25D366; color:#FFFFFF !important; '
+                f'font-weight:700; font-size:0.9rem; border-radius:0.5rem; text-decoration:none; '
+                f'border:1px solid #1EBE5D; box-shadow:0 2px 6px rgba(37,211,102,0.25);">'
+                f'⚖️ Enviar para Escritório Parceiro</a>',
+                unsafe_allow_html=True,
+            )
 
 st.markdown("""
 <div style="font-size: 1.05rem; font-weight: 700; color: #0F293A; margin-top: 0.8rem;">💎 Escolha o Plano Ideal (Liberação Automática via Pix ou Cartão)</div>
