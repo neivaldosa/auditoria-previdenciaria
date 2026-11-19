@@ -69,7 +69,8 @@ LOGO_SITE = _achar_logo_oficial()
 st.set_page_config(
     page_title="Inteligência Previdenciária & Auditoria - Análise Detalhada do CNIS",
     page_icon=LOGO_SITE if LOGO_SITE else "⚖️",
-    layout="wide"
+    layout="wide",
+    initial_sidebar_state="expanded"
 )
 
 LINK_MP_AVULSO_19 = "https://mpago.la"
@@ -110,9 +111,39 @@ st.markdown("""
         max-width: 96% !important;
     }
 
+    /* Barra lateral fixa em Azul-Petróleo com borda Dourada */
     [data-testid="stSidebar"] {
-        background-color: #F4F6F9;
-        border-right: 1px solid #CBD5E1;
+        background: linear-gradient(180deg, #0F293A 0%, #16364D 100%) !important;
+        border-right: 2px solid #C59B27 !important;
+        min-width: 310px !important;
+        max-width: 310px !important;
+    }
+
+    /* Remove o botão X de fechar e a seta de recolher a barra lateral */
+    [data-testid="stSidebarCollapseButton"],
+    [data-testid="collapsedControl"],
+    button[kind="headerNoPadding"] {
+        display: none !important;
+        visibility: hidden !important;
+    }
+
+    /* Ajusta a cor dos títulos e textos fora dos cards brancos na sidebar */
+    [data-testid="stSidebar"] h1,
+    [data-testid="stSidebar"] h2,
+    [data-testid="stSidebar"] h3,
+    [data-testid="stSidebar"] > div > div > div > div > div > label,
+    [data-testid="stSidebar"] [data-testid="stWidgetLabel"] p {
+        color: #FFFFFF !important;
+    }
+
+    /* Mantém os textos dentro dos cards brancos (.sidebar-card) em azul escuro */
+    [data-testid="stSidebar"] .sidebar-card label,
+    [data-testid="stSidebar"] .sidebar-card p,
+    [data-testid="stSidebar"] .sidebar-card span {
+        color: #0F293A !important;
+    }
+    [data-testid="stSidebar"] .sidebar-card [data-testid="stCaptionContainer"] p {
+        color: #475569 !important;
     }
     .sidebar-card {
         background: linear-gradient(180deg, #FFFDF5 0%, #FFFFFF 100%);
@@ -423,6 +454,19 @@ with st.expander("📌 NÃO POSSUI O ARQUIVO PDF DO CNIS? CLIQUE AQUI PARA VER O
     """)
 
 with st.sidebar:
+    _img_side_html = (
+        f'<img src="data:image/png;base64,{_logo_b64}" style="width:54px; height:54px; border-radius:10px; border:1.5px solid #C59B27; flex-shrink:0;" />'
+        if _logo_b64 else ""
+    )
+    st.markdown(f"""
+    <div style="display:flex; align-items:center; gap:0.75rem; padding-bottom:0.85rem; margin-bottom:0.85rem; border-bottom:1.5px solid rgba(197, 155, 39, 0.45);">
+        {_img_side_html}
+        <div style="line-height:1.25;">
+            <div style="color:#F3D06B; font-size:0.72rem; font-weight:700; text-transform:uppercase; letter-spacing:0.5px;">Auditoria Oficial</div>
+            <div style="color:#FFFFFF; font-size:0.95rem; font-weight:800;">Inteligência Previdenciária</div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
     st.markdown("### ⚙️ Configure seu Perfil")
     sexo = st.selectbox("Sexo biológico (Regra INSS):", options=["M", "F"], format_func=lambda x: "Masculino" if x == "M" else "Feminino")
 
