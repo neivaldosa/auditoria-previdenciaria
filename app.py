@@ -108,14 +108,14 @@ st.markdown("""
         background: linear-gradient(90deg, #FFFDF5 0%, #FFFFFF 100%);
         border: 1.5px solid #C59B27;
         border-left: 5px solid #C59B27;
-        border-radius: 8px;
-        margin-bottom: 0.8rem;
+        border-radius: 10px;
+        margin-bottom: 0.65rem;
     }
     [data-testid="stExpander"] summary {
         font-weight: 700 !important;
         color: #0F293A !important;
-        font-size: 0.9rem !important;
-        padding: 0.45rem 0.8rem !important;
+        font-size: 0.94rem !important;
+        padding: 0.55rem 0.9rem !important;
     }
     [data-testid="stFileUploader"] section {
         background: linear-gradient(180deg, #FFFDF5 0%, #FFFFFF 100%);
@@ -211,7 +211,7 @@ st.markdown("""
         grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
         gap: 0.7rem;
         margin-top: 0.4rem;
-        margin-bottom: 0.8rem;
+        margin-bottom: 1.2rem;
     }
     .feature-card {
         background: linear-gradient(180deg, #FFFFFF 0%, #FFFDF5 100%);
@@ -279,115 +279,6 @@ st.markdown("""
         border-radius: 8px;
         font-size: 0.96rem;
     }
-        .faq-container {
-        max-width: 920px;
-        margin: 1.8rem auto 2rem auto;
-    }
-    .faq-header {
-        text-align: center;
-        color: #0F293A;
-        font-size: 1.45rem;
-        font-weight: 800;
-        margin-bottom: 1rem;
-    }
-    details.faq-item {
-        background-color: #FFFFFF;
-        border: 1px solid #CBD5E1;
-        border-left: 4px solid #C59B27;
-        border-radius: 10px;
-        margin-bottom: 0.65rem;
-        padding: 0.85rem 1.2rem;
-        box-shadow: 0 2px 6px rgba(15, 41, 58, 0.04);
-        transition: all 0.2s ease;
-    }
-    details.faq-item[open] {
-        background: linear-gradient(180deg, #FFFDF5 0%, #FFFFFF 100%);
-        border-color: #C59B27;
-    }
-    details.faq-item summary {
-        font-weight: 700;
-        color: #0F293A;
-        font-size: 0.96rem;
-        cursor: pointer;
-        list-style: none;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    details.faq-item summary::-webkit-details-marker {
-        display: none;
-    }
-    details.faq-item summary::after {
-        content: "⌄";
-        font-size: 1.3rem;
-        color: #C59B27;
-        font-weight: 800;
-        transition: transform 0.2s ease;
-    }
-    details.faq-item[open] summary::after {
-        transform: rotate(180deg);
-    }
-    .faq-answer {
-        margin-top: 0.65rem;
-        padding-top: 0.65rem;
-        border-top: 1px solid #E2E8F0;
-        color: #475569;
-        font-size: 0.88rem;
-        line-height: 1.55;
-    }
-    .faq-container {
-    max-width: 900px;
-    margin: 2rem auto 2.5rem auto;
-}
-.faq-header {
-    text-align: center;
-    color: #0F293A;
-    font-size: 1.65rem;
-    font-weight: 800;
-    margin-bottom: 1.2rem;
-    letter-spacing: -0.4px;
-}
-details.faq-item {
-    background-color: #F8FAFC;
-    border: 1px solid #E2E8F0;
-    border-radius: 14px;
-    margin-bottom: 0.75rem;
-    padding: 1rem 1.4rem;
-    box-shadow: 0 2px 5px rgba(15, 41, 58, 0.03);
-}
-details.faq-item[open] {
-    background-color: #FFFDF5;
-    border-color: #C59B27;
-}
-details.faq-item summary {
-    font-weight: 700;
-    color: #0F293A;
-    font-size: 0.98rem;
-    cursor: pointer;
-    list-style: none;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-details.faq-item summary::-webkit-details-marker {
-    display: none;
-}
-details.faq-item summary::after {
-    content: "⌄";
-    font-size: 1.35rem;
-    color: #C59B27;
-    font-weight: 700;
-    line-height: 1;
-}
-details.faq-item[open] summary::after {
-    transform: rotate(180deg);
-}
-.faq-answer {
-    margin-top: 0.75rem;
-    color: #475569;
-    font-size: 0.9rem;
-    line-height: 1.55;
-}
 </style>
 """, unsafe_allow_html=True)
 st.markdown("""
@@ -579,7 +470,6 @@ if arquivo_pdf is not None:
                 for arq in [caminho_temp_pdf, caminho_temp_xlsx, caminho_pdf_relatorio]:
                     if os.path.exists(arq):
                         os.remove(arq)
-
 st.markdown("""
 <div style="font-size: 1.05rem; font-weight: 700; color: #0F293A; margin-top: 0.8rem;">💎 Escolha o Plano Ideal para sua Análise</div>
 <div class="pricing-grid">
@@ -652,43 +542,27 @@ st.markdown("""
     </div>
 </div>
 """.replace("__LINK_DOSSIE__", LINK_CHECKOUT_DOSSIE).replace("__LINK_PASSE__", LINK_CHECKOUT_PASSE), unsafe_allow_html=True)
-st.markdown("""
-<div class="faq-container">
-<div class="faq-header">Perguntas frequentes</div>
 
-<details class="faq-item" open>
-<summary>Por que é tão importante entender o seu CNIS e ajustar possíveis problemas antes de entrar com o pedido de aposentadoria?</summary>
-<div class="faq-answer">Obter acesso aos detalhes do seu CNIS e realizar uma auditoria prévia antes de dar entrada na aposentadoria é crucial para evitar dor de cabeça, indeferimentos ou perda de tempo de contribuição em um momento em que você quer descansar. Dependendo do caso, os relatórios da <strong>Inteligência Previdenciária &amp; Auditoria</strong> entregam o diagnóstico técnico completo por uma fração do custo de uma consulta particular.</div>
-</details>
+st.markdown('<h3 style="text-align: center; color: #0F293A; margin-top: 1.5rem; margin-bottom: 1rem;">❓ Perguntas Frequentes</h3>', unsafe_allow_html=True)
 
-<details class="faq-item">
-<summary>Qual é a diferença entre Cálculo Previdenciário e Planejamento Previdenciário?</summary>
-<div class="faq-answer">O <strong>Cálculo Previdenciário</strong> é voltado à apuração do tempo líquido e do valor estimado do benefício a partir dos seus salários desde julho de 1994. Já o <strong>Planejamento Previdenciário</strong> compara regras e cenários distintos (Regra Geral, Aposentadoria Especial por exposição a risco e Aposentadoria PCD pela LC 142/2013) para mostrar qual caminho é mais vantajoso para você.</div>
-</details>
+with st.expander("Por que é tão importante entender o seu CNIS e ajustar possíveis problemas antes de entrar com o pedido de aposentadoria?", expanded=True):
+    st.markdown("Obter acesso aos detalhes do seu CNIS e realizar uma auditoria prévia antes de dar entrada na aposentadoria é crucial para evitar dor de cabeça, indeferimentos ou perda de tempo de contribuição em um momento em que você quer descansar. Dependendo do caso, os relatórios da **Inteligência Previdenciária & Auditoria** entregam o diagnóstico técnico completo por uma fração do custo de uma consulta particular.")
 
-<details class="faq-item">
-<summary>Onde encontro essas funcionalidades?</summary>
-<div class="faq-answer">Basta enviar o PDF do seu CNIS no quadro de envio acima. Você pode escolher o <strong>Dossiê Completo Avulso</strong> (para analisar 1 extrato com downloads em PDF e Excel) ou os <strong>Passes Ilimitados de 7 dias ou 30 dias</strong> para realizar simulações distintas conforme a sua situação.</div>
-</details>
+with st.expander("Qual é a diferença entre Cálculo Previdenciário e Planejamento Previdenciário?"):
+    st.markdown("O **Cálculo Previdenciário** é voltado à apuração do tempo líquido e do valor estimado do benefício a partir dos seus salários desde julho de 1994. Já o **Planejamento Previdenciário** compara regras e cenários distintos (Regra Geral, Aposentadoria Especial por exposição a risco e Aposentadoria PCD pela LC 142/2013) para mostrar qual caminho é mais vantajoso para você.")
 
-<details class="faq-item">
-<summary>Preciso ter o CNIS para começar?</summary>
-<div class="faq-answer">Sim, esse é o único documento necessário (<strong>CNIS em PDF</strong> — <a href="#topo-pagina" style="color: #C59B27; font-weight: 700; text-decoration: underline;">saiba como emitir gratuitamente no Meu INSS clicando aqui</a>) para entregar uma análise detalhada, explicando ponto a ponto o que você precisa fazer para seguir com o processo de aposentadoria.</div>
-</details>
+with st.expander("Onde encontro essas funcionalidades?"):
+    st.markdown("Basta enviar o PDF do seu CNIS no quadro de envio acima. Você pode escolher o **Dossiê Completo Avulso** (para analisar 1 extrato com downloads em PDF e Excel) ou os **Passes Ilimitados de 7 dias ou 30 dias** para realizar simulações distintas conforme a sua situação.")
 
-<details class="faq-item">
-<summary>Posso obter uma demonstração para entender como o serviço funciona?</summary>
-<div class="faq-answer">Sim! Basta enviar seu PDF normalmente sem código de ativação — o sistema executa o <strong>Diagnóstico Inicial (Grátis)</strong>, calculando seu tempo líquido e apontando se há alertas nos seus vínculos.</div>
-</details>
+with st.expander("Preciso ter o CNIS para começar?"):
+    st.markdown("Sim, esse é o único documento necessário (**CNIS em PDF** — [saiba como emitir gratuitamente no Meu INSS clicando aqui](#topo-pagina)) para entregar uma análise detalhada, explicando ponto a ponto o que você precisa fazer para seguir com o processo de aposentadoria.")
 
-<details class="faq-item">
-<summary>Tenho diagnóstico de TEA (Autismo) ou outra deficiência. O sistema calcula a regra PCD?</summary>
-<div class="faq-answer">Sim. Ao marcar a opção <strong>"Enquadramento PCD / TEA (LC 142/2013)"</strong> na barra lateral, o sistema simula o tempo exigido para deficiência leve (como TEA Nível 1), moderada e grave — sem idade mínima — e calcula a média dos 80% maiores salários (100% da média).</div>
-</details>
+with st.expander("Posso obter uma demonstração gratuita para entender como o serviço funciona?"):
+    st.markdown("Sim! Basta enviar seu PDF normalmente sem código de ativação — o sistema executa o **Diagnóstico Inicial (Grátis)**, calculando seu tempo líquido e apontando se há alertas nos seus vínculos.")
 
-<details class="faq-item">
-<summary>Meus dados pessoais e meu extrato CNIS estão seguros (LGPD)?</summary>
-<div class="faq-answer">Sim. O processamento ocorre de forma isolada e temporária apenas durante a leitura do arquivo. Assim que o relatório é exibido, os arquivos temporários são apagados automaticamente do servidor, em total conformidade com a LGPD.</div>
-</details>
-</div>
-""", unsafe_allow_html=True)
+with st.expander("Tenho diagnóstico de TEA (Autismo) ou outra deficiência. O sistema calcula a regra PCD?"):
+    st.markdown("Sim. Ao marcar a opção **\"Enquadramento PCD / TEA (LC 142/2013)\"** na barra lateral, o sistema simula o tempo exigido para deficiência leve (como TEA Nível 1), moderada e grave — sem idade mínima — e calcula a média dos 80% maiores salários (100% da média).")
+
+with st.expander("Meus dados pessoais e meu extrato CNIS estão seguros (LGPD)?"):
+    st.markdown("Sim. O processamento ocorre de forma isolada e temporária apenas durante a leitura do arquivo. Assim que o relatório é exibido, os arquivos temporários são apagados automaticamente do servidor, em total conformidade com a Lei Geral de Proteção de Dados (LGPD).")
+
