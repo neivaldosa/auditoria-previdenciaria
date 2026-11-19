@@ -744,11 +744,12 @@ if "resultado_auditoria" in st.session_state:
                 use_container_width=True
             )
         with col_dl3:
-            msg_whats = urllib.parse.quote(
+            texto_bruto = (
                 f"Olá! Acabei de gerar minha Auditoria Previdenciária "
                 f"(Tempo Líquido: {tempo_card} | Potencial PCD: {rmi_pcd}) "
                 f"e gostaria de agendar uma análise com o escritório parceiro."
             )
+            msg_whats = urllib.parse.quote(texto_bruto)
             link_whats = f"https://whatsapp.com{msg_whats}"
             st.markdown(
                 f'<a href="{link_whats}" target="_blank" rel="noopener noreferrer" '
@@ -759,6 +760,10 @@ if "resultado_auditoria" in st.session_state:
                 f'⚖️ Enviar para Escritório Parceiro</a>',
                 unsafe_allow_html=True,
             )
+
+        with st.expander("📱 Problemas ao abrir o WhatsApp? Clique aqui para copiar o contato e a mensagem"):
+            st.markdown("**WhatsApp Oficial:** `+55 21 96880-7965` (anexe o PDF e o Excel baixados acima na conversa)")
+            st.code(texto_bruto, language=None)
 
 st.markdown("""
 <div style="font-size: 1.05rem; font-weight: 700; color: #0F293A; margin-top: 0.8rem;">💎 Escolha o Plano Ideal (Liberação Automática via Pix ou Cartão)</div>
