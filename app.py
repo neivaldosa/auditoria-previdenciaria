@@ -279,6 +279,39 @@ st.markdown("""
         border-radius: 8px;
         font-size: 0.96rem;
     }
+        .floating-container {
+        position: fixed;
+        bottom: 22px;
+        right: 22px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        z-index: 9999;
+    }
+    .float-btn {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        border-radius: 50px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        text-decoration: none !important;
+        box-shadow: 0 6px 16px rgba(15, 41, 58, 0.25);
+        transition: transform 0.2s ease;
+    }
+    .float-btn:hover {
+        transform: translateY(-2px);
+    }
+    .float-gemini {
+        background: linear-gradient(135deg, #0F293A 0%, #1B3B52 100%);
+        color: #F3D06B !important;
+        border: 1.5px solid #C59B27;
+    }
+    .float-whats {
+        background-color: #25D366;
+        color: #FFFFFF !important;
+    }
 </style>
 """, unsafe_allow_html=True)
 st.markdown("""
@@ -543,26 +576,81 @@ st.markdown("""
 </div>
 """.replace("__LINK_DOSSIE__", LINK_CHECKOUT_DOSSIE).replace("__LINK_PASSE__", LINK_CHECKOUT_PASSE), unsafe_allow_html=True)
 
-st.markdown('<h3 style="text-align: center; color: #0F293A; margin-top: 1.5rem; margin-bottom: 1rem;">❓ Perguntas Frequentes</h3>', unsafe_allow_html=True)
+st.markdown('<h3 id="assistente-ia" style="text-align: center; color: #0F293A; margin-top: 1.8rem; margin-bottom: 0.3rem;">🤖 Assistente Virtual Previdenciário (IA Gemini)</h3>', unsafe_allow_html=True)
+st.markdown('<p style="text-align: center; color: #64748B; font-size: 0.9rem; margin-bottom: 1rem;">Tem dúvidas sobre regras do INSS, tempo de contribuição, PPP ou aposentadoria PCD (LC 142)? Pergunte abaixo:</p>', unsafe_allow_html=True)
 
-with st.expander("Por que é tão importante entender o seu CNIS e ajustar possíveis problemas antes de entrar com o pedido de aposentadoria?", expanded=True):
-    st.markdown("Obter acesso aos detalhes do seu CNIS e realizar uma auditoria prévia antes de dar entrada na aposentadoria é crucial para evitar dor de cabeça, indeferimentos ou perda de tempo de contribuição em um momento em que você quer descansar. Dependendo do caso, os relatórios da **Inteligência Previdenciária & Auditoria** entregam o diagnóstico técnico completo por uma fração do custo de uma consulta particular.")
+_, col_ia, _ = st.columns([1, 2.2, 1])
 
-with st.expander("Qual é a diferença entre Cálculo Previdenciário e Planejamento Previdenciário?"):
-    st.markdown("O **Cálculo Previdenciário** é voltado à apuração do tempo líquido e do valor estimado do benefício a partir dos seus salários desde julho de 1994. Já o **Planejamento Previdenciário** compara regras e cenários distintos (Regra Geral, Aposentadoria Especial por exposição a risco e Aposentadoria PCD pela LC 142/2013) para mostrar qual caminho é mais vantajoso para você.")
+with col_ia:
+    if "GEMINI_API_KEY" in st.secrets:
+        from google import genai
+        client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
 
-with st.expander("Onde encontro essas funcionalidades?"):
-    st.markdown("Basta enviar o PDF do seu CNIS no quadro de envio acima. Você pode escolher o **Dossiê Completo Avulso** (para analisar 1 extrato com downloads em PDF e Excel) ou os **Passes Ilimitados de 7 dias ou 30 dias** para realizar simulações distintas conforme a sua situação.")
+        if "mensagens_ia" not in st.session_state:
+            st.session_state["mensagens_ia"] = [
+                {"role": "assistant", "content": "Olá! Sou o assistente virtual da **Inteligência Previdenciária & Auditoria**. Qual é a sua dúvida sobre aposentadoria, CNIS ou regras do INSS?"}
+            ]
 
-with st.expander("Preciso ter o CNIS para começar?"):
-    st.markdown("Sim, esse é o único documento necessário (**CNIS em PDF** — [saiba como emitir gratuitamente no Meu INSS clicando aqui](#topo-pagina)) para entregar uma análise detalhada, explicando ponto a ponto o que você precisa fazer para seguir com o processo de aposentadoria.")
+        for msg in st.session_state["mensagens_ia"]:
+            with st.chat_message(msg["role"]):
+                st.markdown(msg["content"])
 
-with st.expander("Posso obter uma demonstração gratuita para entender como o serviço funciona?"):
-    st.markdown("Sim! Basta enviar seu PDF normalmente sem código de ativação — o sistema executa o **Diagnóstico Inicial (Grátis)**, calculando seu tempo líquido e apontando se há alertas nos seus vínculos.")
+        if pergunta_usuario := st.chat_input("Digite sua dúvida previdenciária aqui..."):
+            st.session_state["mensagens_ia"].append({"role": "user", "content": pergunta_usuario})
+            with st.chat_message("user"):
+                st.markdown(pergunta_usuario)
 
-with st.expander("Tenho diagnóstico de TEA (Autismo) ou outra deficiência. O sistema calcula a regra PCD?"):
-    st.markdown("Sim. Ao marcar a opção **\"Enquadramento PCD / TEA (LC 142/2013)\"** na barra lateral, o sistema simula o tempo exigido para deficiência leve (como TEA Nível 1), moderada e grave — sem idade mínima — e calcula a média dos 80% maiores salários (100% da média).")
+            with st.chat_message("assistant"):
+                with st.spinner("Consultando legislação previdenciária..."):
+                    prompt_sistema = (
+                        "Você é um assistente especialista em Direito Previdenciário Brasileiro (INSS, EC 103/2019, "
+                        "Aposentadoria Especial e LC 142/2013 PCD/TEA). Responda de forma clara, objetiva, educada e em "
+                        "português do Brasil. Sempre que fizer sentido, lembre o usuário de que ele pode enviar o PDF do "
+                        "CNIS no topo desta página para auditar o caso exato dele."
+                    )
+                    resposta = client.models.generate_content(
+                        model="gemini-2.5-flash",
+                        contents=f"{prompt_sistema}\n\nPergunta do usuário: {pergunta_usuario}"
+                    )
+                    st.markdown(resposta.text)
+                    st.session_state["mensagens_ia"].append({"role": "assistant", "content": resposta.text})
+    else:
+        st.info("💡 **Quer tirar dúvidas gerais sobre aposentadoria com Inteligência Artificial?** Clique abaixo para conversar com o Gemini ou use o botão verde no canto inferior direito para suporte técnico do site.")
+        st.link_button("✨ Tirar Dúvidas sobre Aposentadoria no Gemini", url="https://google.com", use_container_width=True)
+st.markdown('<h3 style="text-align: center; color: #0F293A; margin-top: 2rem; margin-bottom: 1rem;">❓ Perguntas Frequentes</h3>', unsafe_allow_html=True)
 
-with st.expander("Meus dados pessoais e meu extrato CNIS estão seguros (LGPD)?"):
-    st.markdown("Sim. O processamento ocorre de forma isolada e temporária apenas durante a leitura do arquivo. Assim que o relatório é exibido, os arquivos temporários são apagados automaticamente do servidor, em total conformidade com a Lei Geral de Proteção de Dados (LGPD).")
+_, col_faq, _ = st.columns([1, 2.2, 1])
 
+with col_faq:
+    with st.expander("Por que é tão importante entender o seu CNIS e ajustar possíveis problemas antes de entrar com o pedido de aposentadoria?", expanded=True):
+        st.markdown("Obter acesso aos detalhes do seu CNIS e realizar uma auditoria prévia antes de dar entrada na aposentadoria é crucial para evitar dor de cabeça, indeferimentos ou perda de tempo de contribuição em um momento em que você quer descansar. Dependendo do caso, os relatórios da **Inteligência Previdenciária & Auditoria** entregam o diagnóstico técnico completo por uma fração do custo de uma consulta particular.")
+
+    with st.expander("Qual é a diferença entre Cálculo Previdenciário e Planejamento Previdenciário?"):
+        st.markdown("O **Cálculo Previdenciário** é voltado à apuração do tempo líquido e do valor estimado do benefício a partir dos seus salários desde julho de 1994. Já o **Planejamento Previdenciário** compara regras e cenários distintos (Regra Geral, Aposentadoria Especial por exposição a risco e Aposentadoria PCD pela LC 142/2013) para mostrar qual caminho é mais vantajoso para você.")
+
+    with st.expander("Onde encontro essas funcionalidades?"):
+        st.markdown("Basta enviar o PDF do seu CNIS no quadro de envio acima. Você pode escolher o **Dossiê Completo Avulso** (para analisar 1 extrato com downloads em PDF e Excel) ou os **Passes Ilimitados de 7 dias ou 30 dias** para realizar simulações distintas conforme a sua situação.")
+
+    with st.expander("Preciso ter o CNIS para começar?"):
+        st.markdown("Sim, esse é o único documento necessário (**CNIS em PDF** — [saiba como emitir gratuitamente no Meu INSS clicando aqui](#topo-pagina)) para entregar uma análise detalhada, explicando ponto a ponto o que você precisa fazer para seguir com o processo de aposentadoria.")
+
+    with st.expander("Posso obter uma demonstração gratuita para entender como o serviço funciona?"):
+        st.markdown("Sim! Basta enviar seu PDF normalmente sem código de ativação — o sistema executa o **Diagnóstico Inicial (Grátis)**, calculando seu tempo líquido e apontando se há alertas nos seus vínculos.")
+
+    with st.expander("Tenho diagnóstico de TEA (Autismo) ou outra deficiência. O sistema calcula a regra PCD?"):
+        st.markdown("Sim. Ao marcar a opção **\"Enquadramento PCD / TEA (LC 142/2013)\"** na barra lateral, o sistema simula o tempo exigido para deficiência leve (como TEA Nível 1), moderada e grave — sem idade mínima — e calcula a média dos 80% maiores salários (100% da média).")
+
+    with st.expander("Meus dados pessoais e meu extrato CNIS estão seguros (LGPD)?"):
+        st.markdown("Sim. O processamento ocorre de forma isolada e temporária apenas durante a leitura do arquivo. Assim que o relatório é exibido, os arquivos temporários são apagados automaticamente do servidor, em total conformidade com a Lei Geral de Proteção de Dados (LGPD).")
+
+msg_suporte = urllib.parse.quote("Olá! Preciso de suporte técnico no site Inteligência Previdenciária & Auditoria.")
+st.markdown(f"""
+<div class="floating-container">
+    <a href="#assistente-ia" class="float-btn float-gemini">
+        <span>✨ Dúvidas INSS (IA)</span>
+    </a>
+    <a href="https://wa.me{msg_suporte}" target="_blank" class="float-btn float-whats">
+        <span>💬 Suporte Técnico</span>
+    </a>
+</div>
+""", unsafe_allow_html=True)
