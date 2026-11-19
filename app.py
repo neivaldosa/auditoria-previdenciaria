@@ -12,8 +12,10 @@ st.set_page_config(
     layout="wide"
 )
 
-LINK_CHECKOUT_DOSSIE = "https://mpago.la"
-LINK_CHECKOUT_PASSE = "https://mpago.la"
+LINK_CHECKOUT_DOSSIE = "https://mercadopago.com.br"
+LINK_CHECKOUT_PASSE = "https://mercadopago.com.br"
+PIX_COPIA_E_COLA = "00020126580014br.gov.bcb.pix013638e9ae7e-de4d-4745-b4d5-b4f636bf843d5204000053039865802BR5924neivaldo barbosa de sa f6009Sao Paulo62220518daqr974708840724726304FFCA"
+EMAIL_SUPORTE = "inteligenciaprevidenciariaaudi@gmail.com"
 
 CODIGOS_DOSSIE_AVULSO = {"DOSSIE2026", "VIP19"}
 CODIGOS_PASSE_ILIMITADO = {"ILIMITADO30", "PRO2026", "ADMIN777"}
@@ -35,7 +37,7 @@ st.markdown("""
 
     .block-container {
         padding-top: 1.1rem !important;
-        padding-bottom: 1.5rem !important;
+        padding-bottom: 2.5rem !important;
         max-width: 96% !important;
     }
 
@@ -135,7 +137,7 @@ st.markdown("""
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
         gap: 0.9rem;
-        margin: 0.5rem 0 1rem 0;
+        margin: 0.5rem 0 0.8rem 0;
     }
     .plan-card {
         background: #FFFFFF;
@@ -279,7 +281,7 @@ st.markdown("""
         border-radius: 8px;
         font-size: 0.96rem;
     }
-        .floating-container {
+    .floating-container {
         position: fixed;
         bottom: 22px;
         right: 22px;
@@ -308,9 +310,9 @@ st.markdown("""
         color: #F3D06B !important;
         border: 1.5px solid #C59B27;
     }
-    .float-whats {
-        background-color: #25D366;
-        color: #FFFFFF !important;
+    .float-support {
+        background-color: #C59B27;
+        color: #0F293A !important;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -433,7 +435,7 @@ if arquivo_pdf is not None:
                     <div class="upsell-banner">
                         <h4 style="margin:0 0 0.3rem 0; color:#F3D06B;">⚠️ Encontramos {qtd_alertas} alerta(s) no seu CNIS — Saiba como corrigir e veja o valor do benefício</h4>
                         <p style="margin:0 0 0.8rem 0; font-size:0.88rem; color:#E2E8F0;">O <strong>Plano de Ação no INSS (como resolver)</strong>, o cálculo desde 1994 e os arquivos <strong>PDF Executivo + Excel</strong> são exclusivos do Dossiê Completo.</p>
-                        <a href="{LINK_CHECKOUT_DOSSIE}" target="_blank" class="plan-cta cta-gold" style="display:inline-block; padding:0.55rem 1.3rem;">🔓 Desbloquear Dossiê Completo Agora (R$ 19,90)</a>
+                        <a href="{LINK_CHECKOUT_DOSSIE}" target="_blank" class="plan-cta cta-gold" style="display:inline-block; padding:0.55rem 1.3rem;">🔓 Desbloquear Dossiê Completo (Cartão ou Pix abaixo)</a>
                     </div>
                     """, unsafe_allow_html=True)
 
@@ -503,6 +505,7 @@ if arquivo_pdf is not None:
                 for arq in [caminho_temp_pdf, caminho_temp_xlsx, caminho_pdf_relatorio]:
                     if os.path.exists(arq):
                         os.remove(arq)
+
 st.markdown("""
 <div style="font-size: 1.05rem; font-weight: 700; color: #0F293A; margin-top: 0.8rem;">💎 Escolha o Plano Ideal para sua Análise</div>
 <div class="pricing-grid">
@@ -528,7 +531,7 @@ st.markdown("""
                 <li>✅ Download PDF Executivo + Planilha Excel</li>
             </ul>
         </div>
-        <a href="__LINK_DOSSIE__" target="_blank" class="plan-cta cta-outline">Adquirir Dossiê Avulso</a>
+        <a href="__LINK_DOSSIE__" target="_blank" class="plan-cta cta-outline">💳 Cartão de Crédito (Mercado Pago)</a>
     </div>
     <div class="plan-card featured">
         <div>
@@ -543,10 +546,25 @@ st.markdown("""
                 <li>✅ Analise também familiares ou clientes</li>
             </ul>
         </div>
-        <a href="__LINK_PASSE__" target="_blank" class="plan-cta cta-gold">Liberar Passe Ilimitado</a>
+        <a href="__LINK_PASSE__" target="_blank" class="plan-cta cta-gold">💳 Cartão de Crédito (Mercado Pago)</a>
     </div>
 </div>
+""".replace("__LINK_DOSSIE__", LINK_CHECKOUT_DOSSIE).replace("__LINK_PASSE__", LINK_CHECKOUT_PASSE), unsafe_allow_html=True)
 
+with st.expander("💠 PREFERE PAGAR VIA PIX? CLIQUE AQUI PARA VER O QR CODE E CÓDIGO COPIA E COLA (R$ 19,90 OU R$ 39,90)"):
+    col_pix1, col_pix2 = st.columns([1, 2.3])
+    with col_pix1:
+        qr_url = f"https://qrserver.com{urllib.parse.quote(PIX_COPIA_E_COLA)}"
+        st.image(qr_url, caption="Escaneie no app do seu banco (Mercado Pago)", width=200)
+    with col_pix2:
+        st.markdown("**1. Copie o código Pix abaixo e cole no aplicativo do seu banco:**")
+        st.code(PIX_COPIA_E_COLA, language=None)
+        st.markdown("**2. Valores:** `R$ 19,90` (Dossiê Completo Avulso) | `R$ 39,90` (Passe 7 dias) | `R$ 69,90` (Passe 30 dias).")
+        st.caption(f"Após o pagamento, envie o comprovante para **{EMAIL_SUPORTE}** (ou clique no botão abaixo) para receber seu código de liberação imediata.")
+        assunto_pix = urllib.parse.quote("Comprovante Pix - Liberação Auditoria Previdenciária")
+        corpo_pix = urllib.parse.quote("Olá! Acabei de realizar o pagamento via Pix na Inteligência Previdenciária & Auditoria. Segue o comprovante em anexo para recebimento do código de acesso:")
+        st.link_button("✉️ Já fiz o Pix — Enviar Comprovante por E-mail", url=f"mailto:{EMAIL_SUPORTE}?subject={assunto_pix}&body={corpo_pix}", type="primary")
+st.markdown("""
 <div style="font-size: 1.05rem; font-weight: 700; color: #0F293A; margin-top: 0.4rem;">📋 O que está incluso no seu Dossiê Completo de Auditoria (6 Módulos):</div>
 <div class="feature-grid">
     <div class="feature-card">
@@ -574,7 +592,7 @@ st.markdown("""
         <p class="feature-desc">Atualiza salários desde 07/1994 e compara Regra Geral vs. 80% maiores na Regra PCD.</p>
     </div>
 </div>
-""".replace("__LINK_DOSSIE__", LINK_CHECKOUT_DOSSIE).replace("__LINK_PASSE__", LINK_CHECKOUT_PASSE), unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 
 st.markdown('<h3 id="assistente-ia" style="text-align: center; color: #0F293A; margin-top: 1.8rem; margin-bottom: 0.3rem;">🤖 Assistente Virtual Previdenciário (IA Gemini)</h3>', unsafe_allow_html=True)
 st.markdown('<p style="text-align: center; color: #64748B; font-size: 0.9rem; margin-bottom: 1rem;">Tem dúvidas sobre regras do INSS, tempo de contribuição, PPP ou aposentadoria PCD (LC 142)? Pergunte abaixo:</p>', unsafe_allow_html=True)
@@ -615,8 +633,9 @@ with col_ia:
                     st.markdown(resposta.text)
                     st.session_state["mensagens_ia"].append({"role": "assistant", "content": resposta.text})
     else:
-        st.info("💡 **Quer tirar dúvidas gerais sobre aposentadoria com Inteligência Artificial?** Clique abaixo para conversar com o Gemini ou use o botão verde no canto inferior direito para suporte técnico do site.")
+        st.info("💡 **Quer tirar dúvidas gerais sobre aposentadoria com Inteligência Artificial?** Clique abaixo para conversar com o Gemini ou use o botão dourado no canto inferior direito para suporte técnico do site.")
         st.link_button("✨ Tirar Dúvidas sobre Aposentadoria no Gemini", url="https://google.com", use_container_width=True)
+
 st.markdown('<h3 style="text-align: center; color: #0F293A; margin-top: 2rem; margin-bottom: 1rem;">❓ Perguntas Frequentes</h3>', unsafe_allow_html=True)
 
 _, col_faq, _ = st.columns([1, 2.2, 1])
@@ -643,14 +662,17 @@ with col_faq:
     with st.expander("Meus dados pessoais e meu extrato CNIS estão seguros (LGPD)?"):
         st.markdown("Sim. O processamento ocorre de forma isolada e temporária apenas durante a leitura do arquivo. Assim que o relatório é exibido, os arquivos temporários são apagados automaticamente do servidor, em total conformidade com a Lei Geral de Proteção de Dados (LGPD).")
 
-msg_suporte = urllib.parse.quote("Olá! Preciso de suporte técnico no site Inteligência Previdenciária & Auditoria.")
+assunto_suporte = urllib.parse.quote("Suporte Técnico - Inteligência Previdenciária & Auditoria")
+corpo_suporte = urllib.parse.quote("Olá! Preciso de suporte técnico no site Inteligência Previdenciária & Auditoria.")
+
 st.markdown(f"""
 <div class="floating-container">
     <a href="https://google.com" target="_blank" class="float-btn float-gemini">
         <span>✨ Dúvidas INSS (IA)</span>
     </a>
-    <a href="https://wa.me{msg_suporte}" target="_blank" class="float-btn float-whats">
-        <span>💬 Suporte Técnico</span>
+    <a href="mailto:{EMAIL_SUPORTE}?subject={assunto_suporte}&body={corpo_suporte}" class="float-btn float-support">
+        <span>✉️ Suporte Técnico</span>
     </a>
 </div>
 """, unsafe_allow_html=True)
+
