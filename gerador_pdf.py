@@ -255,23 +255,45 @@ def gerar_relatorio_pdf(
         cor_fundo=(253, 250, 240),
     )
 
+    pasta = os.path.dirname(caminho_saida)
+    if pasta and not os.path.exists(pasta):
+        os.makedirs(pasta, exist_ok=True)
+
     pdf.output(caminho_saida)
     return caminho_saida
 
 
 def criar_pdf_executivo(*args, **kwargs):
     """
-    Função de compatibilidade com o app.py existente.
-    Aceita tanto (dados, caminho_saida) quanto parâmetros nomeados.
+    Detecta automaticamente os argumentos vindos do app.py (em qualquer ordem),
+    evitando FileNotFoundError e mapeando dados do CNIS/Parecer.
     """
-    dados = kwargs.get("dados", {})
-    caminho_saida = kwargs.get("caminho_saida", "Dossie_Auditoria_Previdenciaria.pdf")
+    dados = {}
+    caminho_saida = None
     logo_path = kwargs.get("logo_path", "logo.png")
+    textos_soltos = []
 
-    if len(args) >= 1 and isinstance(args[0], dict):
-        dados = args[0]
-    if len(args) >= 2 and isinstance(args[1], str):
-        caminho_saida = args[1]
+    for arg in args:
+        if isinstance(arg, dict):
+            dados.update(arg)
+        elif isinstance(arg, str):
+            if arg.lower().endswith(".pdf"):
+                caminho_saida = arg
+            else:
+                textos_soltos.append(arg)
+
+    for k, v in kwargs.items():
+        if isinstance(v, dict):
+            dados.update(v)
+        elif isinstance(v, str) and v.lower().endswith(".pdf") and not caminho_saida:
+            caminho_saida = v
+
+    if not caminho_saida:
+        caminho_saida = "Dossie_Auditoria_Previdenciaria.pdf"
+
+    if textos_soltos and "texto_tempo" not in dados:
+        parecer_completo = "\n".join(textos_soltos)
+        dados.setdefault("texto_tempo", parecer_completo)
 
     return gerar_relatorio_pdf(
         dados=dados, caminho_saida=caminho_saida, logo_path=logo_path
