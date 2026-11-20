@@ -118,7 +118,34 @@ def aplicar_logo_todas_abas_excel(caminho_excel):
 
         ws.freeze_panes = "A5"
 
+        # Adiciona o card dourado de dica 2 linhas abaixo da tabela na Aba 1 (colunas C a F)
+        if idx_aba == 0:
+            linha_ini = ws.max_row + 3
+            linha_fim = linha_ini + 2
+            ws.merge_cells(start_row=linha_ini, start_column=3, end_row=linha_fim, end_column=6)
+
+            cel_dica = ws.cell(row=linha_ini, column=3)
+            cel_dica.value = (
+                "💡 DICA DE NAVEGAÇÃO: Esta planilha possui 6 ABAS COLORIDAS na barra inferior "
+                "(Tempo Líquido, Especial, PCD, Valor RMI e Parecer Final). Clique nas guias lá embaixo para ver seu dossiê completo!"
+            )
+            cel_dica.fill = PatternFill(start_color="FEF3C7", end_color="FEF3C7", fill_type="solid")
+            cel_dica.font = Font(name="Calibri", size=11, bold=True, color="92400E")
+            cel_dica.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+
+            borda_ouro = Side(style="medium", color="C59B27")
+            for r_dica in range(linha_ini, linha_fim + 1):
+                ws.row_dimensions[r_dica].height = 20
+                for c_dica in range(3, 7):
+                    ws.cell(row=r_dica, column=c_dica).border = Border(
+                        left=borda_ouro if c_dica == 3 else None,
+                        right=borda_ouro if c_dica == 6 else None,
+                        top=borda_ouro if r_dica == linha_ini else None,
+                        bottom=borda_ouro if r_dica == linha_fim else None,
+                    )
+
     wb.save(caminho_excel)
+
 
 LOGO_SITE = _achar_logo_oficial()
 
