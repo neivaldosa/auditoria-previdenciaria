@@ -70,7 +70,7 @@ def aplicar_logo_todas_abas_excel(caminho_excel):
         "Observacao_Tecnica": "Observação Técnica",
     }
 
-    for ws in wb.worksheets:
+    for idx_aba, ws in enumerate(wb.worksheets):
         # Corrige acentuação dos cabeçalhos das colunas antes de inserir o topo
         for row in ws.iter_rows(min_row=1, max_row=ws.max_row):
             for cell in row:
@@ -85,6 +85,8 @@ def aplicar_logo_todas_abas_excel(caminho_excel):
         ws.row_dimensions[1].height = 20
         ws.row_dimensions[2].height = 17
         ws.row_dimensions[3].height = 16
+        if idx_aba == 0:
+            ws.row_dimensions[4].height = 34
         if (ws.column_dimensions["A"].width or 0) < 12:
             ws.column_dimensions["A"].width = 12
 
@@ -115,6 +117,8 @@ def aplicar_logo_todas_abas_excel(caminho_excel):
             ws.add_image(img, "A1")
 
         ws.freeze_panes = "A5"
+
+    wb.save(caminho_excel)
 
 LOGO_SITE = _achar_logo_oficial()
 
@@ -624,8 +628,8 @@ if arquivo_pdf is not None:
                 abas_brutas = pd.read_excel(caminho_temp_xlsx, sheet_name=None, skiprows=1)
                 aplicar_logo_todas_abas_excel(caminho_temp_xlsx)
                 abas = {nome: df.dropna(how="all", axis=1) for nome, df in abas_brutas.items()}
-                df_res = abas["2_Tempo_Liquido_Resumo"]
-                df_fin = abas["5_Estimativa_Valor_RMI"]
+                df_res = abas["2. ⏱️ TEMPO LÍQUIDO"]
+                df_fin = abas["5. 💰 VALOR ESTIMADO (RMI)"]
 
                 criar_pdf_executivo(caminho_pdf_relatorio, df_res, df_fin, parecer_texto)
 
@@ -653,13 +657,9 @@ if "resultado_auditoria" in st.session_state:
     abas = res["abas"]
     bytes_pdf = res["bytes_pdf"]
     bytes_excel = res["bytes_excel"]
-    df_vinculos = abas["1_CNIS_Extraido"]
-    df_res = abas["2_Tempo_Liquido_Resumo"]
-    df_fin = abas["5_Estimativa_Valor_RMI"]
-    tempo_liq = str(df_res.loc[df_res["Indicador"] == "TEMPO LÍQUIDO DE CONTRIBUIÇÃO (COMUM)", "Valor"].tolist().pop())
-    rmi_comum = str(df_fin.loc[df_fin["Metrica_Financeira"].str.contains("Regra Comum"), "Valor_Estimado"].tolist().pop())
-    rmi_pcd = str(df_fin.loc[df_fin["Metrica_Financeira"].str.contains("Aposentadoria PCD"), "Valor_Estimado"].tolist().pop())
-    dif_mensal = str(df_fin.loc[df_fin["Metrica_Financeira"].str.contains("Diferença Mensal"), "Valor_Estimado"].tolist().pop())
+    df_vinculos = abas["1. 📋 CNIS EXTRAÍDO"]
+    df_res = abas["2. ⏱️ TEMPO LÍQUIDO"]
+    df_fin = abas["5. 💰 VALOR ESTIMADO (RMI)"]
     tempo_card = tempo_liq.split("(").pop().replace(")", "") if "(" in tempo_liq else tempo_liq
 
     modo_pago = st.session_state["plano_ativo"] in ("DOSSIE", "ILIMITADO", "BRINDE")
@@ -730,9 +730,9 @@ if "resultado_auditoria" in st.session_state:
         with tab2:
             st.dataframe(df_res, use_container_width=True)
         with tab3:
-            st.dataframe(abas["3_Aposentadoria_Especial_PPP"], use_container_width=True)
+            st.dataframe(abas["3. ⚠️ APOSENT. ESPECIAL"], use_container_width=True)
         with tab4:
-            st.dataframe(abas["4_Aposentadoria_PCD_LC142"], use_container_width=True)
+            st.dataframe(abas["4. ♿ REGRA PCD (LC 142)"], use_container_width=True)
         with tab5:
             st.dataframe(df_fin, use_container_width=True)
 
@@ -752,6 +752,9 @@ if "resultado_auditoria" in st.session_state:
                 file_name="Dossie_Auditoria_INSS.xlsx",
                 mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                 use_container_width=True
+            )
+            st.caption("💡 Dica: Ao abrir a planilha no Excel, clique nas **6 abas coloridas** na parte inferior da tela para ver cada módulo.")
+
             )
         with col_dl3:
             texto_bruto = (
