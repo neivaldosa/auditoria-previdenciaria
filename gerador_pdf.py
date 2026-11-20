@@ -1,7 +1,11 @@
 import os
 import re
+import tempfile
 from datetime import datetime
 from fpdf import FPDF
+from fpdf.fonts import FontFace
+
+_CACHE_LOGO_TRANSP = None
 
 
 def _achar_logo():
@@ -15,11 +19,36 @@ def _achar_logo():
     return None
 
 
+def _obter_logo_transparente_cache(logo_path):
+    global _CACHE_LOGO_TRANSP
+    if _CACHE_LOGO_TRANSP and os.path.exists(_CACHE_LOGO_TRANSP):
+        return _CACHE_LOGO_TRANSP
+    if not logo_path:
+        return None
+    try:
+        from PIL import Image
+
+        with Image.open(logo_path) as img:
+            rgba = img.convert("RGBA")
+            r0, g0, b0, _ = rgba.getpixel((2, 2))
+            novos_pixels = [
+                (r, g, b, 0) if (abs(r - r0) < 25 and abs(g - g0) < 25 and abs(b - b0) < 25) else (r, g, b, a)
+                for r, g, b, a in rgba.getdata()
+            ]
+            rgba.putdata(novos_pixels)
+            tmp = os.path.join(tempfile.gettempdir(), "logo_header_transp_cache.png")
+            rgba.save(tmp, "PNG")
+            _CACHE_LOGO_TRANSP = tmp
+            return tmp
+    except Exception:
+        return logo_path
+
+
 class ParecerPrevidenciarioPDF(FPDF):
     def __init__(self):
         super().__init__(orientation="P", unit="mm", format="A4")
         self.logo_path = _achar_logo()
-        self.logo_transparente_path = self._preparar_logo_transparente()
+        self.logo_transparente_path = _obter_logo_transparente_cache(self.logo_path)
         self.set_auto_page_break(auto=True, margin=22)
         self.azul = (15, 41, 58)
         self.dourado = (197, 155, 39)
@@ -27,30 +56,6 @@ class ParecerPrevidenciarioPDF(FPDF):
         self.cinza = (244, 246, 249)
         self.borda = (218, 223, 230)
 
-    def _preparar_logo_transparente(self):
-        """Converte o fundo do Logo.png em transparente para o cabeçalho."""
-        if not self.logo_path:
-            return None
-        try:
-            from PIL import Image
-            import tempfile
-
-            with Image.open(self.logo_path) as img:
-                rgba = img.convert("RGBA")
-                dados = rgba.getdata()
-                r0, g0, b0, _ = rgba.getpixel((2, 2))
-                novos_pixels = []
-                for r, g, b, a in dados:
-                    if abs(r - r0) < 25 and abs(g - g0) < 25 and abs(b - b0) < 25:
-                        novos_pixels.append((r, g, b, 0))
-                    else:
-                        novos_pixels.append((r, g, b, a))
-                rgba.putdata(novos_pixels)
-                tmp = os.path.join(tempfile.gettempdir(), "logo_header_transp.png")
-                rgba.save(tmp, "PNG")
-                return tmp
-        except Exception:
-            return self.logo_path
 
     def _logo_vetorial(self, x, y, tam, fundo=False):
         if fundo:
@@ -181,6 +186,52 @@ class ParecerPrevidenciarioPDF(FPDF):
         self.set_text_color(*self.texto)
         self.multi_cell(larg - 10.5, 4.2, corpo)
         self.set_y(y0 + alt + 2.5)
+    def adicionar_tabela_detalhada(self, titulo_secao, df):
+        if df is None or df.empty:
+            return
+        self.add_page(orientation="L")
+        self.secao(titulo_secao)
+
+        df_limpo = df.fillna("-").astype(str)
+        colunas = [str(c).replace("_", " ") for c in df_limpo.columns]
+        num_cols = len(colunas)
+        larg_util = self.w - 30
+
+        pesos = []
+        for idx_c in range(num_cols):
+            tam_cab = len(colunas[idx_c])
+            tam_dados = int(df_limpo.iloc[:, idx_c].str.len().quantile(0.85)) if len(df_limpo) > 0 else 10
+            pesos.append(min(max(tam_cab, tam_dados, 8), 55))
+        soma_pesos = sum(pesos) or 1
+        larguras = tuple((p / soma_pesos) * larg_util for p in pesos)
+
+        estilo_cab = FontFace(emphasis="BOLD", color=(243, 208, 107), fill_color=self.azul, size_pt=7.5)
+        estilo_zebra = FontFace(fill_color=(250, 251, 253))
+
+        self.set_font("Helvetica", "", 7.2)
+        self.set_text_color(*self.texto)
+        self.set_draw_color(*self.borda)
+
+        with self.table(
+            borders_layout="ALL",
+            cell_fill_color=estilo_zebra,
+            cell_fill_mode="ROWS",
+            col_widths=larguras,
+            headings_style=estilo_cab,
+            line_height=4.0,
+            padding=1.5,
+            text_align="LEFT" if num_cols >= 5 else "CENTER",
+            width=larg_util,
+        ) as tabela:
+            row_h = tabela.row()
+            for nome_c in colunas:
+                row_h.cell(nome_c)
+
+            for _, linha_df in df_limpo.iterrows():
+                row_d = tabela.row()
+                for val in linha_df:
+                    row_d.cell(val)
+
 def _parse_texto(txt, dados):
     if not txt:
         return
@@ -215,7 +266,7 @@ def _parse_texto(txt, dados):
             dados.setdefault("diferenca_mensal", mv.group(3).strip())
 
 
-def gerar_relatorio_pdf(dados, caminho_saida="Dossie_Auditoria_Previdenciaria.pdf"):
+def gerar_relatorio_pdf(dados, caminho_saida="Dossie_Auditoria_Previdenciaria.pdf", abas_completas=None):
     pdf = ParecerPrevidenciarioPDF()
     pdf.alias_nb_pages()
     pdf.set_margins(15, 15, 15)
@@ -243,19 +294,34 @@ def gerar_relatorio_pdf(dados, caminho_saida="Dossie_Auditoria_Previdenciaria.pd
     pdf.card("AÇÃO NECESSÁRIA", "2. PENDÊNCIAS E INDICADORES NO MEU INSS", str(dados.get("texto_pendencias", "Nenhuma pendência crítica.")), (185, 45, 45), (253, 245, 245))
     pdf.card("ENQUADRAMENTO ESTRATÉGICO", "3. ANÁLISE ESPECIAL E REGRA PCD (LC 142/2013)", str(dados.get("texto_especial_pcd", "-")), (175, 132, 20), (253, 250, 240))
 
+    if abas_completas and isinstance(abas_completas, dict):
+        mapa_secoes = [
+            ("1. 📋 CNIS EXTRAÍDO", "ANEXO I — AUDITORIA DETALHADA DE VÍNCULOS E PENDÊNCIAS DO CNIS"),
+            ("2. ⏱️ TEMPO LÍQUIDO", "ANEXO II — APURAÇÃO DE TEMPO LÍQUIDO DE CONTRIBUIÇÃO"),
+            ("3. ⚠️ APOSENT. ESPECIAL", "ANEXO III — ANÁLISE DE APOSENTADORIA ESPECIAL E GILRAT/PPP"),
+            ("4. ♿ REGRA PCD (LC 142)", "ANEXO IV — SIMULAÇÃO DE ENQUADRAMENTO PCD (LC 142/2013)"),
+            ("5. 💰 VALOR ESTIMADO (RMI)", "ANEXO V — MEMÓRIA DE CÁLCULO FINANCEIRO (RMI DESDE 07/1994)"),
+        ]
+        for chave_aba, titulo_anexo in mapa_secoes:
+            if chave_aba in abas_completas:
+                pdf.adicionar_tabela_detalhada(titulo_anexo, abas_completas[chave_aba])
+
     pasta = os.path.dirname(caminho_saida)
     if pasta and not os.path.exists(pasta):
         os.makedirs(pasta, exist_ok=True)
     pdf.output(caminho_saida)
     return caminho_saida
 
-
 def criar_pdf_executivo(*args, **kwargs):
     dados, caminho_saida, textos = {}, None, []
+    abas_completas = kwargs.pop("abas_completas", None)
 
     for arg in args:
         if isinstance(arg, dict):
-            dados.update(arg)
+            if any(hasattr(v, "iterrows") for v in arg.values()):
+                abas_completas = arg
+            else:
+                dados.update(arg)
         elif isinstance(arg, str):
             if arg.lower().endswith(".pdf"):
                 caminho_saida = arg
@@ -265,8 +331,8 @@ def criar_pdf_executivo(*args, **kwargs):
             cols = list(arg.columns)
             if len(cols) >= 2:
                 for _, row in arg.iterrows():
-                    chave = str(row[cols[0]]).strip()
-                    valor = str(row[cols[1]]).strip()
+                    chave = str(row[cols]).strip()
+                    valor = str(row[cols]).strip()
                     if "Data de Nascimento" in chave or "Idade" in chave:
                         dados["nascimento_idade"] = valor
                     elif "Ambiente" in chave:
@@ -303,4 +369,8 @@ def criar_pdf_executivo(*args, **kwargs):
     if textos:
         _parse_texto("\n".join(textos), dados)
 
-    return gerar_relatorio_pdf(dados, caminho_saida or "Dossie_Auditoria_Previdenciaria.pdf")
+    return gerar_relatorio_pdf(
+        dados,
+        caminho_saida or "Dossie_Auditoria_Previdenciaria.pdf",
+        abas_completas=abas_completas,
+    )
