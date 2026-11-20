@@ -867,29 +867,6 @@ with col_ia:
             with st.chat_message(msg["role"]):
                 st.markdown(msg["content"])
 
-        if pergunta_usuario := st.chat_input("Digite sua dúvida previdenciária aqui..."):
-            st.session_state["mensagens_ia"].append({"role": "user", "content": pergunta_usuario})
-            with st.chat_message("user"):
-                st.markdown(pergunta_usuario)
-
-            with st.chat_message("assistant"):
-                with st.spinner("Consultando legislação previdenciária..."):
-                    prompt_sistema = (
-                        "Você é um assistente especialista em Direito Previdenciário Brasileiro (INSS, EC 103/2019, "
-                        "Aposentadoria Especial e LC 142/2013 PCD/TEA). Responda de forma clara, objetiva, educada e em "
-                        "português do Brasil. Sempre que fizer sentido, lembre o usuário de que ele pode enviar o PDF do "
-                        "CNIS no topo desta página para auditar o caso exato dele."
-                    )
-                    resposta = client.models.generate_content(
-                        model="gemini-2.5-flash",
-                        contents=f"{prompt_sistema}\n\nPergunta do usuário: {pergunta_usuario}"
-                    )
-                    st.markdown(resposta.text)
-                    st.session_state["mensagens_ia"].append({"role": "assistant", "content": resposta.text})
-    else:
-        st.info("💡 **Quer tirar dúvidas gerais sobre aposentadoria com Inteligência Artificial?** Clique abaixo para conversar com o Gemini ou use o botão dourado no canto inferior direito para suporte técnico do site.")
-        st.link_button("✨ Tirar Dúvidas sobre Aposentadoria no Gemini", url="https://google.com", use_container_width=True)
-
 st.markdown('<h3 style="text-align: center; color: #0F293A; margin-top: 2rem; margin-bottom: 1rem;">❓ Perguntas Frequentes</h3>', unsafe_allow_html=True)
 
 _, col_faq, _ = st.columns([1, 2.2, 1])
