@@ -155,6 +155,26 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+if st.query_params.get("pagina", "").strip().lower() == "obrigado":
+    cod_vip = st.query_params.get("acesso", "DOSSIE2026").strip().upper()
+    plano_txt = "Passe Ilimitado VIP" if cod_vip in ("VIP7", "VIP30", "ILIMITADO30", "PRO2026") else "Dossiê Completo Avulso"
+    st.markdown(f"""
+    <div style="max-width:620px; margin:2.5rem auto; background:linear-gradient(135deg,#0F293A 0%,#1B3B52 100%); border:2px solid #C59B27; border-radius:14px; padding:2.2rem 2rem; text-align:center; color:#FFFFFF; box-shadow:0 10px 25px rgba(15,41,58,0.25);">
+        <div style="display:inline-block; background:#25D366; color:#0F293A; font-weight:800; font-size:0.78rem; padding:4px 14px; border-radius:20px; text-transform:uppercase; margin-bottom:1rem;">✅ Pagamento Confirmado com Sucesso</div>
+        <div style="font-size:1.75rem; font-weight:800; color:#F3D06B; margin-bottom:0.6rem;">Obrigado por escolher a Inteligência Previdenciária!</div>
+        <p style="font-size:1rem; color:#E2E8F0; line-height:1.55; margin-bottom:1.4rem;">
+            Seu acesso ao <strong>{plano_txt}</strong> já está liberado.<br>
+            Clique no botão dourado abaixo para acessar o sistema com todos os cálculos e downloads desbloqueados.
+        </p>
+        <div style="background:rgba(255,255,255,0.08); border:1.5px dashed #C59B27; border-radius:8px; padding:0.8rem 1rem; margin-bottom:1.5rem; font-size:0.92rem; color:#F3D06B;">
+            🔑 Seu Código de Acesso VIP: <strong>{cod_vip}</strong>
+        </div>
+        <a href="/?acesso={cod_vip}" target="_self" style="display:inline-block; background:#C59B27; color:#0F293A !important; font-weight:800; font-size:1.05rem; padding:0.85rem 2rem; border-radius:8px; text-decoration:none !important;">
+            🚀 Acessar Meu Dossiê Completo Agora
+        </a>
+    </div>
+    """, unsafe_allow_html=True)
+    st.stop()
 
 LINK_MP_AVULSO_19 = "https://mpago.la/1XEo7nL"
 LINK_MP_DESCONTO_50 = LINK_MP_AVULSO_19
