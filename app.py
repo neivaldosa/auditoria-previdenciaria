@@ -848,8 +848,10 @@ st.markdown("""
 </div>
 """.replace("__PRECO_19__", preco_avulso_txt).replace("__LINK_19__", link_avulso_atual).replace("__LINK_7D__", LINK_MP_PASSE_7D).replace("__LINK_30D__", LINK_MP_PASSE_30D), unsafe_allow_html=True)
 
-st.markdown('<h3 id="assistente-ia" style="text-align: center; color: #0F293A; margin-top: 1.8rem; margin-bottom: 0.3rem;">🤖 Assistente Virtual Previdenciário (IA Gemini)</h3>', unsafe_allow_html=True)
-st.markdown('<p style="text-align: center; color: #64748B; font-size: 0.9rem; margin-bottom: 1rem;">Tem dúvidas sobre regras do INSS, tempo de contribuição, PPP ou aposentadoria PCD (LC 142)? Pergunte abaixo:</p>', unsafe_allow_html=True)
+st.markdown("---")  # (ou o fechamento da seção anterior, se houver)
+
+st.markdown("<h3 style='text-align: center; color: #0F293A; margin-top: 2rem; margin-bottom: 1rem;'>❓ Perguntas Frequentes</h3>", unsafe_allow_html=True)
+
 
 _, col_ia, _ = st.columns([1, 2.2, 1])
 
