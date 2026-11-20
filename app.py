@@ -115,49 +115,6 @@ def aplicar_logo_todas_abas_excel(caminho_excel):
             ws.add_image(img, "A1")
 
         ws.freeze_panes = "A5"
-from openpyxl.styles import PatternFill, Font, Alignment, Border, Side
-
-# 1. Configuração visual de cada aba (Nome em destaque + Cor vibrante na guia inferior)
-config_abas = [
-    ("1. 📋 CNIS EXTRAÍDO", "0F293A"),        # Azul-Petróleo (Identidade principal)
-    ("2. ⏱️ TEMPO LÍQUIDO", "C59B27"),        # Dourado (Resumo principal)
-    ("3. ⚠️ APOSENT. ESPECIAL", "D97706"),    # Laranja/Âmbar (Alerta PPP/Insalubridade)
-    ("4. ♿ REGRA PCD (LC 142)", "1D4ED8"),   # Azul Royal (Regra PCD)
-    ("5. 💰 VALOR ESTIMADO (RMI)", "15803D"), # Verde Esmeralda (Cálculo financeiro)
-    ("6. ✅ PARECER FINAL", "7F1D1D"),        # Bordô/Vinho (Diagnóstico conclusivo)
-]
-
-# Aplica automaticamente nas abas na ordem em que foram criadas
-for idx, (novo_nome, cor_hex) in enumerate(config_abas):
-    if idx < len(wb.worksheets):
-        aba = wb.worksheets[idx]
-        aba.title = novo_nome
-        aba.sheet_properties.tabColor = cor_hex
-
-# 2. Cria uma faixa de aviso visual no topo da primeira aba (1. 📋 CNIS EXTRAÍDO)
-# Insere uma linha no topo (Linha 1) empurrando o conteúdo existente para baixo sem apagar nada
-    aba_principal = wb.worksheets
-    aba_principal.merge_cells("B4:H4")
-
-    celula_aviso = aba_principal["B4"]
-    celula_aviso.value = (
-        "💡 DICA DE NAVEGAÇÃO: Esta planilha possui 6 ABAS COLORIDAS na barra inferior "
-        "(Tempo Líquido, Especial, PCD, Valor RMI e Parecer Final). Clique nas guias lá embaixo para ver seu dossiê completo!"
-    )
-    celula_aviso.fill = PatternFill(start_color="FEF3C7", end_color="FEF3C7", fill_type="solid")
-    celula_aviso.font = Font(name="Calibri", size=11, bold=True, color="92400E")
-    celula_aviso.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
-
-    borda_dourada = Side(style="medium", color="C59B27")
-    celula_aviso.border = Border(left=borda_dourada, right=borda_dourada, top=borda_dourada, bottom=borda_dourada)
-    aba_principal.row_dimensions.height = 34
-
-# 3. Define qual aba abre primeiro quando o cliente abrir o arquivo no Excel
-# (Índice 1 = "2. ⏱️ TEMPO LÍQUIDO" | Se preferir abrir na primeira aba, mude o [1] para)
-if len(wb.worksheets) > 1:
-    wb.active = wb.worksheets[1]
-
-    wb.save(caminho_excel)
 
 LOGO_SITE = _achar_logo_oficial()
 
