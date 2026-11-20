@@ -660,6 +660,10 @@ if "resultado_auditoria" in st.session_state:
     df_vinculos = abas["1. 📋 CNIS EXTRAÍDO"]
     df_res = abas["2. ⏱️ TEMPO LÍQUIDO"]
     df_fin = abas["5. 💰 VALOR ESTIMADO (RMI)"]
+    tempo_liq = str(df_res.loc[df_res["Indicador"] == "TEMPO LÍQUIDO DE CONTRIBUIÇÃO (COMUM)", "Valor"].tolist().pop())
+    rmi_comum = str(df_fin.loc[df_fin["Metrica_Financeira"].str.contains("Regra Comum"), "Valor_Estimado"].tolist().pop())
+    rmi_pcd = str(df_fin.loc[df_fin["Metrica_Financeira"].str.contains("Aposentadoria PCD"), "Valor_Estimado"].tolist().pop())
+    dif_mensal = str(df_fin.loc[df_fin["Metrica_Financeira"].str.contains("Diferença Mensal"), "Valor_Estimado"].tolist().pop())
     tempo_card = tempo_liq.split("(").pop().replace(")", "") if "(" in tempo_liq else tempo_liq
 
     modo_pago = st.session_state["plano_ativo"] in ("DOSSIE", "ILIMITADO", "BRINDE")
