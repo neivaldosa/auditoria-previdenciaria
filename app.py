@@ -754,7 +754,6 @@ if "resultado_auditoria" in st.session_state:
                 use_container_width=True
             )
             st.caption("💡 Dica: Ao abrir a planilha no Excel, clique nas **6 abas coloridas** na parte inferior da tela para ver cada módulo.")
-            )
         with col_dl3:
             texto_bruto = (
                 f"Olá! Acabei de gerar minha Auditoria Previdenciária "
