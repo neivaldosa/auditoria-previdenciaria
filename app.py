@@ -205,6 +205,12 @@ elif param_acesso in CODIGOS_DESCONTO_50:
 st.markdown("""
 <style>
     #MainMenu {visibility: hidden;}
+    [data-testid="stToolbar"] {display: none !important;}
+    [data-testid="stDecoration"] {display: none !important;}
+    [data-testid="stStatusWidget"] {display: none !important;}
+    [class^="viewerBadge_"] {display: none !important;}
+    div[class*="StatusWidget"] {display: none !important;}
+
     footer {visibility: hidden;}
     header {visibility: hidden;}
 
