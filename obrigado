@@ -1,0 +1,93 @@
+import streamlit as st
+
+st.set_page_config(
+    page_title="Pagamento Confirmado - Inteligência Previdenciária & Auditoria",
+    page_icon="✅",
+    layout="centered",
+    initial_sidebar_state="collapsed"
+)
+
+# Lê qual plano o cliente comprou pela URL (padrão DOSSIE2026)
+codigo = st.query_params.get("acesso", "DOSSIE2026").strip().upper()
+
+if codigo in ("VIP7", "VIP30", "ILIMITADO30", "PRO2026"):
+    nome_plano = "Passe Ilimitado VIP"
+else:
+    nome_plano = "Dossiê Completo Avulso"
+
+st.markdown("""
+<style>
+    #MainMenu, footer, header, [data-testid="stSidebar"] {display: none !important;}
+    .thank-card {
+        background: linear-gradient(135deg, #0F293A 0%, #1B3B52 100%);
+        border: 2px solid #C59B27;
+        border-radius: 14px;
+        padding: 2.2rem 2rem;
+        text-align: center;
+        color: #FFFFFF;
+        box-shadow: 0 10px 25px rgba(15, 41, 58, 0.25);
+        margin-top: 2rem;
+    }
+    .thank-badge {
+        display: inline-block;
+        background-color: #25D366;
+        color: #0F293A;
+        font-weight: 800;
+        font-size: 0.78rem;
+        padding: 4px 14px;
+        border-radius: 20px;
+        text-transform: uppercase;
+        margin-bottom: 1rem;
+    }
+    .thank-title {
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: #F3D06B;
+        margin-bottom: 0.6rem;
+    }
+    .thank-text {
+        font-size: 1rem;
+        color: #E2E8F0;
+        line-height: 1.55;
+        margin-bottom: 1.5rem;
+    }
+    .code-box {
+        background: rgba(255, 255, 255, 0.08);
+        border: 1.5px dashed #C59B27;
+        border-radius: 8px;
+        padding: 0.8rem 1rem;
+        margin-bottom: 1.6rem;
+        font-size: 0.92rem;
+        color: #F3D06B;
+    }
+    .btn-acessar {
+        display: inline-block;
+        background-color: #C59B27;
+        color: #0F293A !important;
+        font-weight: 800;
+        font-size: 1.05rem;
+        padding: 0.85rem 2rem;
+        border-radius: 8px;
+        text-decoration: none !important;
+        box-shadow: 0 4px 12px rgba(197, 155, 39, 0.4);
+    }
+</style>
+""", unsafe_allow_html=True)
+
+st.markdown(f"""
+<div class="thank-card">
+    <div class="thank-badge">✅ Pagamento Confirmado com Sucesso</div>
+    <div class="thank-title">Obrigado por escolher a Inteligência Previdenciária!</div>
+    <p class="thank-text">
+        Seu acesso ao <strong>{nome_plano}</strong> já está liberado.<br>
+        Clique no botão dourado abaixo para voltar ao sistema com todos os cálculos, pareceres e downloads em PDF e Excel desbloqueados.
+    </p>
+    <div class="code-box">
+        🔑 Seu Código de Acesso VIP: <strong>{codigo}</strong><br>
+        <span style="font-size: 0.78rem; color: #CBD5E1;">(Guarde este código caso precise reativar seu acesso em outro navegador)</span>
+    </div>
+    <a href="/?acesso={codigo}" target="_self" class="btn-acessar">
+        🚀 Acessar Meu Dossiê Completo Agora
+    </a>
+</div>
+""", unsafe_allow_html=True)
