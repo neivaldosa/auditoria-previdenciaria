@@ -427,6 +427,7 @@ def extrair_cnis_v5(caminho_pdf, caminho_excel_saida, sexo="M", ambiente_operaci
                 writer.sheets[titulo_aba].sheet_properties.tabColor = cor_hex
 
         # Define a aba de Tempo Líquido como a primeira a abrir no Excel
-        writer.book.active = writer.sheets["2. ⏱️ TEMPO LÍQUIDO"]
+        writer.book.active = writer.sheets["1. 📋 CNIS EXTRAÍDO"]
+
 
     return texto_parecer
