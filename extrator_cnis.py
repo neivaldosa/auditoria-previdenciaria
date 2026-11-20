@@ -426,22 +426,6 @@ def extrair_cnis_v5(caminho_pdf, caminho_excel_saida, sexo="M", ambiente_operaci
             if titulo_aba in writer.sheets:
                 writer.sheets[titulo_aba].sheet_properties.tabColor = cor_hex
 
-        # Faixa de alerta na Linha 1 (B1:H1) da primeira aba (logo acima da tabela que começa na linha 2)
-        ws_primeira = writer.sheets["1. 📋 CNIS EXTRAÍDO"]
-        ws_primeira.merge_cells("B1:H1")
-        celula_aviso = ws_primeira["B1"]
-        celula_aviso.value = (
-            "💡 DICA DE NAVEGAÇÃO: Esta planilha possui 6 ABAS COLORIDAS na barra inferior "
-            "(Tempo Líquido, Especial, PCD, Valor RMI e Parecer Final). Clique nas guias lá embaixo para ver seu dossiê completo!"
-        )
-        celula_aviso.fill = PatternFill(start_color="FEF3C7", end_color="FEF3C7", fill_type="solid")
-        celula_aviso.font = Font(name="Calibri", size=11, bold=True, color="92400E")
-        celula_aviso.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
-
-        borda_dourada = Side(style="medium", color="C59B27")
-        celula_aviso.border = Border(left=borda_dourada, right=borda_dourada, top=borda_dourada, bottom=borda_dourada)
-        ws_primeira.row_dimensions[1].height = 34
-
         # Define a aba de Tempo Líquido como a primeira a abrir no Excel
         writer.book.active = writer.sheets["2. ⏱️ TEMPO LÍQUIDO"]
 
