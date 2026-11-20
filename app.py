@@ -228,20 +228,48 @@ st.markdown("""
     }
 
     /* Barra lateral fixa em Azul-Petróleo com borda Dourada */
-    /* Barra lateral fixa em Azul-Petróleo com borda Dourada */
+    /* Barra lateral em Azul-Petróleo com borda Dourada */
     section[data-testid="stSidebar"] {
         background: linear-gradient(180deg, #0F293A 0%, #16364D 100%) !important;
         border-right: 2px solid #C59B27 !important;
-        width: 315px !important;
-        min-width: 315px !important;
-        max-width: 315px !important;
-        transform: none !important;
-        visibility: visible !important;
     }
 
-    section[data-testid="stSidebar"] > div {
-        width: 315px !important;
-        padding-top: 1.2rem !important;
+    /* No COMPUTADOR (telas maiores que 768px): mantém fixa em 315px */
+    @media (min-width: 769px) {
+        section[data-testid="stSidebar"] {
+            width: 315px !important;
+            min-width: 315px !important;
+            max-width: 315px !important;
+            transform: none !important;
+            visibility: visible !important;
+        }
+        section[data-testid="stSidebar"] > div {
+            width: 315px !important;
+            padding-top: 1.2rem !important;
+        }
+        [data-testid="stSidebarCollapseButton"],
+        [data-testid="collapsedControl"] {
+            display: none !important;
+        }
+    }
+
+    /* No CELULAR (telas até 768px): deixa o botão dourado visível para abrir/fechar */
+    @media (max-width: 768px) {
+        header[data-testid="stHeader"] {
+            visibility: visible !important;
+            background: transparent !important;
+        }
+        [data-testid="stSidebarCollapseButton"],
+        [data-testid="collapsedControl"] {
+            display: flex !important;
+            visibility: visible !important;
+            background-color: #C59B27 !important;
+            color: #0F293A !important;
+            border-radius: 8px !important;
+            margin: 6px !important;
+        }
+    }
+
     }
 
     /* Remove o botão de recolher a barra lateral */
