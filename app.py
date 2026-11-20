@@ -848,11 +848,6 @@ st.markdown("""
 </div>
 """.replace("__PRECO_19__", preco_avulso_txt).replace("__LINK_19__", link_avulso_atual).replace("__LINK_7D__", LINK_MP_PASSE_7D).replace("__LINK_30D__", LINK_MP_PASSE_30D), unsafe_allow_html=True)
 
-st.markdown("---")  # (ou o fechamento da seção anterior, se houver)
-
-st.markdown("<h3 style='text-align: center; color: #0F293A; margin-top: 2rem; margin-bottom: 1rem;'>❓ Perguntas Frequentes</h3>", unsafe_allow_html=True)
-
-
 _, col_ia, _ = st.columns([1, 2.2, 1])
 
 with col_ia:
