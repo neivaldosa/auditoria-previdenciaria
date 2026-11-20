@@ -350,14 +350,14 @@ def extrair_cnis_v5(caminho_pdf, caminho_excel_saida, sexo="M", ambiente_operaci
     df_parecer = pd.DataFrame([{"Parecer_Tecnico_Completo": texto_parecer}])
 
     with pd.ExcelWriter(caminho_excel_saida, engine="openpyxl") as writer:
-        abas_dados = [
-            ("1_CNIS_Extraido", df_vinculos),
-            ("2_Tempo_Liquido_Resumo", df_resumo),
-            ("3_Aposentadoria_Especial_PPP", df_especial),
-            ("4_Aposentadoria_PCD_LC142", df_pcd),
-            ("5_Estimativa_Valor_RMI", df_financeiro),
-            ("6_Parecer_Final_Texto", df_parecer),
-        ]
+    abas_dados = [
+        ("1. 📋 CNIS EXTRAÍDO", df_vinculos),
+        ("2. ⏱️ TEMPO LÍQUIDO", df_resumo),
+        ("3. ⚠️ APOSENT. ESPECIAL", df_especial),
+        ("4. ♿ REGRA PCD (LC 142)", df_pcd),
+        ("5. 💰 VALOR ESTIMADO (RMI)", df_financeiro),
+        ("6. ✅ PARECER FINAL", df_parecer),
+    ]
 
         fill_header = PatternFill(start_color="0F293A", end_color="0F293A", fill_type="solid")
         font_header = Font(name="Calibri", size=11, bold=True, color="F3D06B")
@@ -389,21 +389,21 @@ def extrair_cnis_v5(caminho_pdf, caminho_excel_saida, sexo="M", ambiente_operaci
                     cell.border = borda_grade
                     if row_idx % 2 == 1:
                         cell.fill = fill_zebra
-                    alin_h = "left" if nome_aba == "6_Parecer_Final_Texto" else "center"
+                    alin_h = "left" if nome_aba == "6. ✅ PARECER FINAL" else "center"
                     cell.alignment = Alignment(horizontal=alin_h, vertical="center", wrap_text=True)
 
                     texto_cel = str(cell.value or "")
                     linhas_texto = texto_cel.count("\n") + 1 + (len(texto_cel) // 65)
                     max_linhas = max(max_linhas, linhas_texto)
 
-                if nome_aba == "6_Parecer_Final_Texto":
+                if nome_aba == "6. ✅ PARECER FINAL":
                     ws.row_dimensions[row_idx].height = max(220, max_linhas * 16)
                 else:
                     ws.row_dimensions[row_idx].height = max(22, max_linhas * 16)
 
             for col_idx in range(2, len(df_atual.columns) + 2):
                 col_letter = ws.cell(row=2, column=col_idx).column_letter
-                if nome_aba == "6_Parecer_Final_Texto":
+                if nome_aba == "6. ✅ PARECER FINAL":
                     ws.column_dimensions[col_letter].width = 95
                 else:
                     max_len = max(
@@ -411,5 +411,37 @@ def extrair_cnis_v5(caminho_pdf, caminho_excel_saida, sexo="M", ambiente_operaci
                         default=12
                     )
                     ws.column_dimensions[col_letter].width = min(max(max_len + 5, 16), 48)
+    # Colorir as abas inferiores e destacar o dossiê
+    cores_abas = {
+        "1. 📋 CNIS EXTRAÍDO": "0F293A",        # Azul-Petróleo
+        "2. ⏱️ TEMPO LÍQUIDO": "C59B27",        # Dourado
+        "3. ⚠️ APOSENT. ESPECIAL": "D97706",    # Laranja/Âmbar
+        "4. ♿ REGRA PCD (LC 142)": "1D4ED8",   # Azul Royal
+        "5. 💰 VALOR ESTIMADO (RMI)": "15803D", # Verde Esmeralda
+        "6. ✅ PARECER FINAL": "7F1D1D",        # Bordô/Vinho
+    }
+
+    for titulo_aba, cor_hex in cores_abas.items():
+        if titulo_aba in writer.sheets:
+            writer.sheets[titulo_aba].sheet_properties.tabColor = cor_hex
+
+    # Faixa de alerta na Linha 1 (B1:H1) da primeira aba (logo acima da tabela que começa na linha 2)
+    ws_primeira = writer.sheets["1. 📋 CNIS EXTRAÍDO"]
+    ws_primeira.merge_cells("B1:H1")
+    celula_aviso = ws_primeira["B1"]
+    celula_aviso.value = (
+        "💡 DICA DE NAVEGAÇÃO: Esta planilha possui 6 ABAS COLORIDAS na barra inferior "
+        "(Tempo Líquido, Especial, PCD, Valor RMI e Parecer Final). Clique nas guias lá embaixo para ver seu dossiê completo!"
+    )
+    celula_aviso.fill = PatternFill(start_color="FEF3C7", end_color="FEF3C7", fill_type="solid")
+    celula_aviso.font = Font(name="Calibri", size=11, bold=True, color="92400E")
+    celula_aviso.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+
+    borda_dourada = Side(style="medium", color="C59B27")
+    celula_aviso.border = Border(left=borda_dourada, right=borda_dourada, top=borda_dourada, bottom=borda_dourada)
+    ws_primeira.row_dimensions[1].height = 34
+
+    # Define a aba de Tempo Líquido como a primeira a abrir no Excel
+    writer.book.active = writer.sheets["2. ⏱️ TEMPO LÍQUIDO"]
 
     return texto_parecer
