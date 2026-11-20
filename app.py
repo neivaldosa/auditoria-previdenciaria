@@ -261,14 +261,21 @@ st.markdown("""
         color: #FFFFFF !important;
     }
 
-    /* Mantém os textos dentro dos cards brancos (.sidebar-card) em azul escuro */
-    [data-testid="stSidebar"] .sidebar-card label,
-    [data-testid="stSidebar"] .sidebar-card p,
-    [data-testid="stSidebar"] .sidebar-card span {
-        color: #0F293A !important;
+    /* Deixa os textos de rádio, checkbox e legendas legíveis na barra lateral azul-petróleo */
+    [data-testid="stSidebar"] [data-testid="stRadio"] label,
+    [data-testid="stSidebar"] [data-testid="stRadio"] p,
+    [data-testid="stSidebar"] [data-testid="stRadio"] span,
+    [data-testid="stSidebar"] [data-testid="stCheckbox"] label,
+    [data-testid="stSidebar"] [data-testid="stCheckbox"] p,
+    [data-testid="stSidebar"] [data-testid="stCheckbox"] span {
+        color: #FFFFFF !important;
+        font-weight: 500 !important;
     }
-    [data-testid="stSidebar"] .sidebar-card [data-testid="stCaptionContainer"] p {
-        color: #475569 !important;
+
+    [data-testid="stSidebar"] [data-testid="stCaptionContainer"] p {
+        color: #CBD5E1 !important;
+    }
+
     }
     .sidebar-card {
         background: linear-gradient(180deg, #FFFDF5 0%, #FFFFFF 100%);
