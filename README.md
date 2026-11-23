@@ -69,7 +69,7 @@ A plataforma processa o PDF completo do CNIS emitido pelo Meu INSS, cruza os dad
 1. **Clone o repositório:**
    Baixe uma cópia completa dos arquivos do projeto do GitHub para o seu computador e entre na pasta raiz criada.
 ```bash
-git clone [https://github.com/neivaldosa/auditoria-previdenciaria.git](https://github.com/neivaldosa/auditoria-previdenciaria.git)
+git clone https://github.com/neivaldosa/auditoria-previdenciaria.git
 cd auditoria-previdenciaria
 ```
 
