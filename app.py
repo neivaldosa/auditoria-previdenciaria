@@ -323,7 +323,7 @@ st.markdown("""
     .sidebar-title {
         font-size: 0.85rem;
         font-weight: 700;
-        color: #0F293A;
+        color: #F3D06B !important;
         margin-bottom: 0.3rem;
         text-transform: uppercase;
         letter-spacing: 0.4px;
