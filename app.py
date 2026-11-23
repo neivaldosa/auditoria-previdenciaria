@@ -1,13 +1,18 @@
+import io
 import os
-import uuid
+import re
+import base64
+import tempfile
 import urllib.parse
 import pandas as pd
 import streamlit as st
+import streamlit.components.v1 as components
 from openpyxl import load_workbook
 from openpyxl.drawing.image import Image as XLImage
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from extrator_cnis import extrair_cnis_v5
 from gerador_pdf import criar_pdf_executivo
+
 
 def _achar_logo_oficial():
     for nome in ["Logo.png", "logo.png", "LOGO.PNG", "Logo.jpg", "logo.jpg"]:
@@ -15,14 +20,14 @@ def _achar_logo_oficial():
             return nome
     return None
 
-def _gerar_logo_transparente_excel():
+
+@st.cache_data
+def _gerar_bytes_logo_transparente():
     logo_path = _achar_logo_oficial()
     if not logo_path:
         return None
     try:
         from PIL import Image
-        import tempfile
-
         with Image.open(logo_path) as img:
             rgba = img.convert("RGBA")
             r0, g0, b0, _ = rgba.getpixel((2, 2))
@@ -31,17 +36,19 @@ def _gerar_logo_transparente_excel():
                 for r, g, b, a in rgba.getdata()
             ]
             rgba.putdata(novos)
-            tmp = os.path.join(tempfile.gettempdir(), "logo_excel_transp.png")
-            rgba.save(tmp, "PNG")
-            return tmp
+            buf = io.BytesIO()
+            rgba.save(buf, format="PNG")
+            return buf.getvalue()
     except Exception:
-        return logo_path
+        with open(logo_path, "rb") as f:
+            return f.read()
 
-def aplicar_logo_todas_abas_excel(caminho_excel):
-    if not os.path.exists(caminho_excel):
-        return
-    wb = load_workbook(caminho_excel)
-    logo_transp = _gerar_logo_transparente_excel()
+
+def aplicar_logo_todas_abas_excel(buffer_excel):
+    buffer_excel.seek(0)
+    wb = load_workbook(buffer_excel)
+    bytes_logo_transp = _gerar_bytes_logo_transparente()
+
     fill_azul = PatternFill(start_color="0F293A", end_color="0F293A", fill_type="solid")
     borda_dourada = Border(bottom=Side(style="medium", color="C59B27"))
     font_titulo = Font(name="Calibri", size=13, bold=True, color="FFFFFF")
@@ -71,7 +78,6 @@ def aplicar_logo_todas_abas_excel(caminho_excel):
     }
 
     for idx_aba, ws in enumerate(wb.worksheets):
-        # Corrige acentuação dos cabeçalhos das colunas antes de inserir o topo
         for row in ws.iter_rows(min_row=1, max_row=ws.max_row):
             for cell in row:
                 if isinstance(cell.value, str):
@@ -110,15 +116,14 @@ def aplicar_logo_todas_abas_excel(caminho_excel):
         ws["B3"].font = font_contato
         ws["B3"].alignment = Alignment(vertical="center", horizontal="left")
 
-        if logo_transp and os.path.exists(logo_transp):
-            img = XLImage(logo_transp)
+        if bytes_logo_transp:
+            img = XLImage(io.BytesIO(bytes_logo_transp))
             img.width = 58
             img.height = 58
             ws.add_image(img, "A1")
 
         ws.freeze_panes = "A5"
 
-        # Adiciona o card dourado de dica 2 linhas abaixo da tabela na Aba 1 (colunas C a F)
         if idx_aba == 0:
             linha_ini = ws.max_row + 3
             linha_fim = linha_ini + 2
@@ -144,7 +149,10 @@ def aplicar_logo_todas_abas_excel(caminho_excel):
                         bottom=borda_ouro if r_dica == linha_fim else None,
                     )
 
-    wb.save(caminho_excel)
+    saida_final = io.BytesIO()
+    wb.save(saida_final)
+    saida_final.seek(0)
+    return saida_final.getvalue()
 
 
 LOGO_SITE = _achar_logo_oficial()
@@ -156,11 +164,17 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-import streamlit.components.v1 as components
+# Carregamento seguro dos códigos via st.secrets (.streamlit/secrets.toml)
+_secrets_acesso = st.secrets.get("codigos_acesso", {})
+CODIGOS_DOSSIE_AVULSO = {c.strip().upper() for c in _secrets_acesso.get("dossie_avulso", [])}
+CODIGOS_PASSE_ILIMITADO = {c.strip().upper() for c in _secrets_acesso.get("passe_ilimitado", [])}
+CODIGOS_DESCONTO_50 = {c.strip().upper() for c in _secrets_acesso.get("desconto_50", [])}
+CODIGOS_BRINDE_GRATIS = {c.strip().upper() for c in _secrets_acesso.get("brinde_gratis", [])}
+TODOS_CODIGOS_PAGOS = CODIGOS_DOSSIE_AVULSO | CODIGOS_PASSE_ILIMITADO
 
 acesso_url = st.query_params.get("acesso", "").strip().upper()
 pagina_url = st.query_params.get("pagina", "").strip().lower()
-is_conversao_paga = (pagina_url == "obrigado") or (acesso_url in {"DOSSIE2026", "VIP19", "VIP7", "VIP30", "ILIMITADO30", "PRO2026"})
+is_conversao_paga = (pagina_url == "obrigado") or (acesso_url in TODOS_CODIGOS_PAGOS)
 
 script_evento_compra = ""
 if is_conversao_paga:
@@ -193,9 +207,9 @@ components.html(f"""
 </script>
 """, height=0, width=0)
 
-if st.query_params.get("pagina", "").strip().lower() == "obrigado":
-    cod_vip = st.query_params.get("acesso", "DOSSIE2026").strip().upper()
-    plano_txt = "Passe Ilimitado VIP" if cod_vip in ("VIP7", "VIP30", "ILIMITADO30", "PRO2026") else "Dossiê Completo Avulso"
+if pagina_url == "obrigado":
+    cod_vip = acesso_url
+    plano_txt = "Passe Ilimitado VIP" if cod_vip in CODIGOS_PASSE_ILIMITADO else "Dossiê Completo Avulso"
     st.markdown(f"""
     <div style="max-width:620px; margin:2.5rem auto; background:linear-gradient(135deg,#0F293A 0%,#1B3B52 100%); border:2px solid #C59B27; border-radius:14px; padding:2.2rem 2rem; text-align:center; color:#FFFFFF; box-shadow:0 10px 25px rgba(15,41,58,0.25);">
         <div style="display:inline-block; background:#25D366; color:#0F293A; font-weight:800; font-size:0.78rem; padding:4px 14px; border-radius:20px; text-transform:uppercase; margin-bottom:1rem;">✅ Pagamento Confirmado com Sucesso</div>
@@ -220,24 +234,18 @@ LINK_MP_PASSE_7D = "https://mpago.la/2aGyJn9"
 LINK_MP_PASSE_30D = "https://mpago.la/2iXqtct"
 EMAIL_SUPORTE = "inteligenciaprevidenciariaaudi@gmail.com"
 
-CODIGOS_DOSSIE_AVULSO = {"DOSSIE2026", "VIP19"}
-CODIGOS_PASSE_ILIMITADO = {"VIP7", "VIP30", "ILIMITADO30", "PRO2026", "ADMIN777"}
-CODIGOS_DESCONTO_50 = {"DESC50", "METADE50", "PROMO50"}
-CODIGOS_BRINDE_GRATIS = {"BRINDE2026", "CORTESIAVIP", "AMIGO100"}
-
 if "plano_ativo" not in st.session_state:
     st.session_state["plano_ativo"] = "GRATUITO"
 if "desconto_50" not in st.session_state:
     st.session_state["desconto_50"] = False
 
-param_acesso = st.query_params.get("acesso", "").strip().upper()
-if param_acesso in CODIGOS_PASSE_ILIMITADO:
+if acesso_url in CODIGOS_PASSE_ILIMITADO:
     st.session_state["plano_ativo"] = "ILIMITADO"
-elif param_acesso in CODIGOS_DOSSIE_AVULSO:
+elif acesso_url in CODIGOS_DOSSIE_AVULSO:
     st.session_state["plano_ativo"] = "DOSSIE"
-elif param_acesso in CODIGOS_BRINDE_GRATIS:
+elif acesso_url in CODIGOS_BRINDE_GRATIS:
     st.session_state["plano_ativo"] = "BRINDE"
-elif param_acesso in CODIGOS_DESCONTO_50:
+elif acesso_url in CODIGOS_DESCONTO_50:
     st.session_state["desconto_50"] = True
 
 st.markdown("""
@@ -266,9 +274,6 @@ st.markdown("""
     div[data-testid="stColumn"]:nth-of-type(3) a[data-testid="stBaseLinkButton-secondary"]:hover {
         background-color: #1EBE5D !important;
     }
-    #MainMenu {visibility: hidden;}
-    footer {visibility: hidden;}
-    header {visibility: hidden;}
 
     .block-container {
         padding-top: 1.1rem !important;
@@ -276,14 +281,11 @@ st.markdown("""
         max-width: 96% !important;
     }
 
-    /* Barra lateral fixa em Azul-Petróleo com borda Dourada */
-    /* Barra lateral em Azul-Petróleo com borda Dourada */
     section[data-testid="stSidebar"] {
         background: linear-gradient(180deg, #0F293A 0%, #16364D 100%) !important;
         border-right: 2px solid #C59B27 !important;
     }
 
-    /* No COMPUTADOR (telas maiores que 768px): mantém fixa em 315px */
     @media (min-width: 769px) {
         section[data-testid="stSidebar"] {
             width: 315px !important;
@@ -302,7 +304,6 @@ st.markdown("""
         }
     }
 
-    /* No CELULAR (telas até 768px): deixa o botão dourado visível para abrir/fechar */
     @media (max-width: 768px) {
         header[data-testid="stHeader"] {
             visibility: visible !important;
@@ -319,17 +320,6 @@ st.markdown("""
         }
     }
 
-    }
-
-    /* Remove o botão de recolher a barra lateral */
-    [data-testid="stSidebarCollapseButton"],
-    [data-testid="collapsedControl"],
-    button[kind="headerNoPadding"] {
-        display: none !important;
-        visibility: hidden !important;
-    }
-
-    /* Ajusta a cor dos títulos e textos fora dos cards brancos na sidebar */
     [data-testid="stSidebar"] h1,
     [data-testid="stSidebar"] h2,
     [data-testid="stSidebar"] h3,
@@ -338,7 +328,6 @@ st.markdown("""
         color: #FFFFFF !important;
     }
 
-    /* Deixa os textos de rádio, checkbox e legendas legíveis na barra lateral azul-petróleo */
     [data-testid="stSidebar"] [data-testid="stRadio"] label,
     [data-testid="stSidebar"] [data-testid="stRadio"] p,
     [data-testid="stSidebar"] [data-testid="stRadio"] span,
@@ -353,7 +342,6 @@ st.markdown("""
         color: #CBD5E1 !important;
     }
 
-    }
     .sidebar-card {
         background: linear-gradient(180deg, #FFFDF5 0%, #FFFFFF 100%);
         padding: 0.75rem 0.9rem;
@@ -634,11 +622,8 @@ st.markdown("""
             display: none !important;
         }
     }
-
 </style>
 """, unsafe_allow_html=True)
-
-import base64
 
 _logo_b64 = ""
 if LOGO_SITE and os.path.exists(LOGO_SITE):
@@ -735,9 +720,10 @@ with st.sidebar:
     st.markdown("""
     <div class="security-badge">
         <strong>🔒 Privacidade & Segurança LGPD</strong><br>
-        Processamento isolado em memória. Nenhum dado pessoal ou PDF fica armazenado após a análise.
+        Processamento 100% isolado em memória. Nenhum dado pessoal ou PDF fica gravado em disco.
     </div>
     """, unsafe_allow_html=True)
+
 with st.container(key="menu_celular"):
     with st.expander("⚙️ CONFIGURAR PERFIL (SEXO, AMBIENTE, PCD) OU DIGITAR CUPOM"):
         sexo_mob = st.selectbox(
@@ -790,7 +776,7 @@ with st.container(key="menu_celular"):
         st.markdown("""
         <div class="security-badge">
             <strong>🔒 Privacidade & Segurança LGPD</strong><br>
-            Processamento isolado em memória. Nenhum dado pessoal ou PDF fica armazenado após a análise.
+            Processamento 100% isolado em memória. Nenhum dado pessoal ou PDF fica gravado em disco.
         </div>
         """, unsafe_allow_html=True)
 
@@ -803,43 +789,45 @@ if arquivo_pdf is not None:
     label_btn = "🔍 Gerar Diagnóstico Gratuito (Prévia)" if st.session_state["plano_ativo"] == "GRATUITO" else "🚀 Executar Auditoria e Gerar Dossiê Completo"
     if st.button(label_btn, type="primary"):
         with st.spinner("Processando vínculos, cruzando tetos históricos e auditando indicadores..."):
-            sessao_id = str(uuid.uuid4())
-            caminho_temp_pdf = f"temp_{sessao_id}.pdf"
-            caminho_temp_xlsx = f"dossie_{sessao_id}.xlsx"
-            caminho_pdf_relatorio = f"relatorio_{sessao_id}.pdf"
+            # Leitura do PDF e geração do Excel 100% em memória (sem gravar CNIS no disco)
+            pdf_em_memoria = io.BytesIO(arquivo_pdf.getvalue())
+            excel_bruto_mem = io.BytesIO()
+
+            parecer_texto = extrair_cnis_v5(
+                pdf_em_memoria,
+                excel_bruto_mem,
+                sexo=sexo,
+                ambiente_operacional=ambiente_operacional,
+                possui_pcd=possui_pcd
+            )
+
+            excel_bruto_mem.seek(0)
+            abas_brutas = pd.read_excel(excel_bruto_mem, sheet_name=None, skiprows=1)
+            bytes_excel = aplicar_logo_todas_abas_excel(excel_bruto_mem)
+
+            abas = {nome: df.dropna(how="all", axis=1) for nome, df in abas_brutas.items()}
+            df_res = abas["2. ⏱️ TEMPO LÍQUIDO"]
+            df_fin = abas["5. 💰 VALOR ESTIMADO (RMI)"]
+
+            # Gera o PDF executivo via ficheiro temporário seguro com limpeza garantida
+            tmp_pdf = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)
+            caminho_pdf_relatorio = tmp_pdf.name
+            tmp_pdf.close()
 
             try:
-                with open(caminho_temp_pdf, "wb") as f:
-                    f.write(arquivo_pdf.getbuffer())
-
-                parecer_texto = extrair_cnis_v5(
-                    caminho_temp_pdf, caminho_temp_xlsx, sexo=sexo,
-                    ambiente_operacional=ambiente_operacional, possui_pcd=possui_pcd
-                )
-
-                abas_brutas = pd.read_excel(caminho_temp_xlsx, sheet_name=None, skiprows=1)
-                aplicar_logo_todas_abas_excel(caminho_temp_xlsx)
-                abas = {nome: df.dropna(how="all", axis=1) for nome, df in abas_brutas.items()}
-                df_res = abas["2. ⏱️ TEMPO LÍQUIDO"]
-                df_fin = abas["5. 💰 VALOR ESTIMADO (RMI)"]
-
                 criar_pdf_executivo(caminho_pdf_relatorio, df_res, df_fin, parecer_texto)
-
                 with open(caminho_pdf_relatorio, "rb") as f_pdf:
                     bytes_pdf = f_pdf.read()
-                with open(caminho_temp_xlsx, "rb") as f_excel:
-                    bytes_excel = f_excel.read()
-
-                st.session_state["resultado_auditoria"] = {
-                    "parecer_texto": parecer_texto,
-                    "abas": abas,
-                    "bytes_pdf": bytes_pdf,
-                    "bytes_excel": bytes_excel,
-                }
             finally:
-                for arq in [caminho_temp_pdf, caminho_temp_xlsx, caminho_pdf_relatorio]:
-                    if os.path.exists(arq):
-                        os.remove(arq)
+                if os.path.exists(caminho_pdf_relatorio):
+                    os.remove(caminho_pdf_relatorio)
+
+            st.session_state["resultado_auditoria"] = {
+                "parecer_texto": parecer_texto,
+                "abas": abas,
+                "bytes_pdf": bytes_pdf,
+                "bytes_excel": bytes_excel,
+            }
 else:
     st.session_state.pop("resultado_auditoria", None)
 
@@ -901,7 +889,6 @@ if "resultado_auditoria" in st.session_state:
         ])
 
         with tab0:
-            import re
             m_seg = re.search(r"Segurado\(a\):\s*([^|\n]+)", parecer_texto)
             m_idade = re.search(r"Idade Atual:\s*([^\n]+)", parecer_texto)
             nome_seg = m_seg.group(1).strip() if m_seg else "SEGURADO AUDITADO"
@@ -1084,7 +1071,7 @@ with col_faq:
         st.markdown("Sim. Ao marcar a opção **\"Enquadramento PCD / TEA (LC 142/2013)\"** na barra lateral, o sistema simula o tempo exigido para deficiência leve (como TEA Nível 1), moderada e grave — sem idade mínima — e calcula a média dos 80% maiores salários (100% da média).")
 
     with st.expander("Meus dados pessoais e meu extrato CNIS estão seguros (LGPD)?"):
-        st.markdown("Sim. O processamento ocorre de forma isolada e temporária apenas durante a leitura do arquivo. Assim que o relatório é exibido, os arquivos temporários são apagados automaticamente do servidor, em total conformidade com a Lei Geral de Proteção de Dados (LGPD).")
+        st.markdown("Sim. O processamento ocorre de forma isolada e 100% em memória apenas durante a leitura do ficheiro. Nenhum PDF enviado fica gravado no disco do servidor, em total conformidade com a Lei Geral de Proteção de Dados (LGPD).")
 
 assunto_suporte = urllib.parse.quote("Suporte Técnico - Inteligência Previdenciária & Auditoria")
 corpo_suporte = urllib.parse.quote("Olá! Preciso de suporte técnico no site Inteligência Previdenciária & Auditoria.")
@@ -1149,7 +1136,7 @@ st.markdown(f"""
             <a href="mailto:{EMAIL_SUPORTE}?subject={assunto_suporte}&body={corpo_suporte}" class="support-item sup-mail">✉️ Suporte via E-mail</a>
             <div class="sup-tip">
                 <strong>💡 Dica de Entrega:</strong><br>
-                Se o navegador corporativo bloquear o WhatsApp, use o e-mail ou salve o número: <strong>+55 21 96880-7955</strong>.
+                Se o navegador corporativo bloquear o WhatsApp, use o e-mail ou salve o número: <strong>+55 21 96880-7965</strong>.
             </div>
         </div>
         <div class="float-btn float-support" style="cursor:pointer;">
