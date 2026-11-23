@@ -242,6 +242,11 @@ elif param_acesso in CODIGOS_DESCONTO_50:
 
 st.markdown("""
 <style>
+    @media (min-width: 769px) {
+        [data-testid="stExpander"]:nth-of-type(2) {
+            display: none !important;
+        }
+    }
     #MainMenu {visibility: hidden;}
     [data-testid="stToolbar"] {display: none !important;}
     [data-testid="stDecoration"] {display: none !important;}
@@ -1007,8 +1012,9 @@ st.markdown("""
         </div>
     </div>
 </div>
-st.info("💡 **Pagou via Pix?** Após concluir o pagamento no app do seu banco, aguarde a tela verde de confirmação do Mercado Pago ou clique em **\"Voltar para o site\"** para liberar o Dossiê Completo automaticamente.")
-
+<div style="background-color:#EFF6FF; border:1px solid #BFDBFE; border-left:4px solid #0F293A; color:#0F293A; padding:0.65rem 0.9rem; border-radius:8px; font-size:0.83rem; margin-bottom:0.8rem;">
+    💡 <strong>Pagou via Pix?</strong> Após concluir o pagamento no app do seu banco, aguarde a tela verde de confirmação no Mercado Pago ou clique em <strong>"Voltar para o site"</strong> para liberar o Dossiê Completo automaticamente.
+</div>
 <div style="font-size: 1.05rem; font-weight: 700; color: #0F293A; margin-top: 0.4rem;">📋 O que está incluso no seu Dossiê Completo de Auditoria (6 Módulos):</div>
 <div class="feature-grid">
     <div class="feature-card">
