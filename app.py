@@ -159,11 +159,23 @@ st.set_page_config(
 import streamlit.components.v1 as components
 
 components.html("""
-<script async src="https://googletagmanager.com/gtm.js?id=GTM-5296H925"></script>
 <script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
+  try {
+    var parentDoc = window.parent.document;
+    if (!parentDoc.getElementById('gtm-script-5296H925')) {
+      var s = parentDoc.createElement('script');
+      s.id = 'gtm-script-5296H925';
+      s.async = true;
+      s.src = 'https://googletagmanager.com';
+      parentDoc.head.appendChild(s);
+
+      window.parent.dataLayer = window.parent.dataLayer || [];
+      function gtag(){window.parent.dataLayer.push(arguments);}
+      gtag('js', new Date());
+    }
+  } catch (e) {
+    console.log(e);
+  }
 </script>
 """, height=0, width=0)
 
