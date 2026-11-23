@@ -1007,6 +1007,7 @@ st.markdown("""
         </div>
     </div>
 </div>
+st.info("💡 **Pagou via Pix?** Após concluir o pagamento no app do seu banco, aguarde a tela verde de confirmação do Mercado Pago ou clique em **\"Voltar para o site\"** para liberar o Dossiê Completo automaticamente.")
 
 <div style="font-size: 1.05rem; font-weight: 700; color: #0F293A; margin-top: 0.4rem;">📋 O que está incluso no seu Dossiê Completo de Auditoria (6 Módulos):</div>
 <div class="feature-grid">
