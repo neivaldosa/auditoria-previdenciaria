@@ -158,24 +158,38 @@ st.set_page_config(
 
 import streamlit.components.v1 as components
 
-components.html("""
+acesso_url = st.query_params.get("acesso", "").strip().upper()
+pagina_url = st.query_params.get("pagina", "").strip().lower()
+is_conversao_paga = (pagina_url == "obrigado") or (acesso_url in {"DOSSIE2026", "VIP19", "VIP7", "VIP30", "ILIMITADO30", "PRO2026"})
+
+script_evento_compra = ""
+if is_conversao_paga:
+    script_evento_compra = """
+      window.parent.gtag('event', 'conversion', {
+          'send_to': 'AW-18585331316/Fwq0CLj10L0dEPTMlp5F',
+          'transaction_id': ''
+      });
+    """
+
+components.html(f"""
 <script>
-  try {
+  try {{
     var parentDoc = window.parent.document;
-    if (!parentDoc.getElementById('gtm-script-5296H925')) {
+    if (!parentDoc.getElementById('gtm-script-5296H925')) {{
       var s = parentDoc.createElement('script');
       s.id = 'gtm-script-5296H925';
       s.async = true;
-      s.src = 'https://googletagmanager.com';
+      s.src = 'https://googletagmanager.com/gtm.js?id=GTM-5296H925';
       parentDoc.head.appendChild(s);
-
       window.parent.dataLayer = window.parent.dataLayer || [];
-      function gtag(){window.parent.dataLayer.push(arguments);}
-      gtag('js', new Date());
-    }
-  } catch (e) {
+      window.parent.gtag = function(){{window.parent.dataLayer.push(arguments);}};
+      window.parent.gtag('js', new Date());
+      window.parent.gtag('config', 'AW-18585331316');
+      {script_evento_compra}
+    }}
+  }} catch (e) {{
     console.log(e);
-  }
+  }}
 </script>
 """, height=0, width=0)
 
