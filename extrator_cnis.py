@@ -1,3 +1,4 @@
+import io
 import re
 from datetime import datetime, timedelta
 import pandas as pd
@@ -63,20 +64,24 @@ def formatar_ymd(dias_totais):
     return f"{anos} anos, {meses} meses e {dias} dias"
 
 
-def extrair_cnis_v5(caminho_pdf, caminho_excel_saida, sexo="M", ambiente_operacional=False, possui_pcd=True):
+def extrair_cnis_v5(fonte_pdf, destino_excel, sexo="M", ambiente_operacional=False, possui_pcd=True):
+    """
+    fonte_pdf: caminho (str) ou objeto io.BytesIO contendo o PDF do CNIS.
+    destino_excel: caminho (str) ou objeto io.BytesIO onde o Excel será gravado.
+    """
     vinculos = []
     remuneracoes_dict = {}
     vinculo_atual = None
     data_nascimento = ""
     nome_segurado = ""
 
-    with pdfplumber.open(caminho_pdf) as pdf:
+    with pdfplumber.open(fonte_pdf) as pdf:
         for pagina in pdf.pages:
             texto = pagina.extract_text(layout=True)
             if not texto:
                 continue
 
-            for i, linha in enumerate(texto.split("\n")):
+            for linha in texto.split("\n"):
                 linha_limpa = " ".join(linha.split())
                 if not linha_limpa:
                     continue
@@ -176,6 +181,7 @@ def extrair_cnis_v5(caminho_pdf, caminho_excel_saida, sexo="M", ambiente_operaci
 
     if vinculo_atual:
         vinculos.append(vinculo_atual)
+
     max_seq_clt = max((x["Seq"] for x in vinculos if "Empregado" in x["Tipo_Filiado"]), default=0)
     dt_reforma = datetime(2019, 11, 13)
 
@@ -296,7 +302,7 @@ def extrair_cnis_v5(caminho_pdf, caminho_excel_saida, sexo="M", ambiente_operaci
     piso_2026 = 1621.00
     salarios_corrigidos = []
 
-    for comp, val_orig in sorted(remuneracoes_dict.items(), key=lambda x: list(reversed(next(iter(x)).split("/")))):
+    for comp, val_orig in sorted(remuneracoes_dict.items(), key=lambda x: list(reversed(x[0].split("/")))):
         mes_c, ano_c = map(int, comp.split("/"))
         teto_epoca = TETOS_INSS.get(ano_c, teto_2026)
         val_limitado = min(val_orig, teto_epoca)
@@ -349,7 +355,7 @@ def extrair_cnis_v5(caminho_pdf, caminho_excel_saida, sexo="M", ambiente_operaci
 
     df_parecer = pd.DataFrame([{"Parecer_Tecnico_Completo": texto_parecer}])
 
-    with pd.ExcelWriter(caminho_excel_saida, engine="openpyxl") as writer:
+    with pd.ExcelWriter(destino_excel, engine="openpyxl") as writer:
         abas_dados = [
             ("1. 📋 CNIS EXTRAÍDO", df_vinculos),
             ("2. ⏱️ TEMPO LÍQUIDO", df_resumo),
@@ -412,22 +418,19 @@ def extrair_cnis_v5(caminho_pdf, caminho_excel_saida, sexo="M", ambiente_operaci
                     )
                     ws.column_dimensions[col_letter].width = min(max(max_len + 5, 16), 48)
 
-        # Colorir as abas inferiores e destacar o dossiê
         cores_abas = {
-            "1. 📋 CNIS EXTRAÍDO": "0F293A",        # Azul-Petróleo
-            "2. ⏱️ TEMPO LÍQUIDO": "C59B27",        # Dourado
-            "3. ⚠️ APOSENT. ESPECIAL": "D97706",    # Laranja/Âmbar
-            "4. ♿ REGRA PCD (LC 142)": "1D4ED8",   # Azul Royal
-            "5. 💰 VALOR ESTIMADO (RMI)": "15803D", # Verde Esmeralda
-            "6. ✅ PARECER FINAL": "7F1D1D",        # Bordô/Vinho
+            "1. 📋 CNIS EXTRAÍDO": "0F293A",
+            "2. ⏱️ TEMPO LÍQUIDO": "C59B27",
+            "3. ⚠️ APOSENT. ESPECIAL": "D97706",
+            "4. ♿ REGRA PCD (LC 142)": "1D4ED8",
+            "5. 💰 VALOR ESTIMADO (RMI)": "15803D",
+            "6. ✅ PARECER FINAL": "7F1D1D",
         }
 
         for titulo_aba, cor_hex in cores_abas.items():
             if titulo_aba in writer.sheets:
                 writer.sheets[titulo_aba].sheet_properties.tabColor = cor_hex
 
-        # Define a aba de Tempo Líquido como a primeira a abrir no Excel
         writer.book.active = writer.sheets["1. 📋 CNIS EXTRAÍDO"]
-
 
     return texto_parecer
