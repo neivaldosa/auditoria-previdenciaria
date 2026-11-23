@@ -696,7 +696,7 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 st.markdown('<div class="apenas-celular">', unsafe_allow_html=True)
-with st.expander("⚙️ CONFIGURAR PERFIL (SEXO, AMBIENTE, PCD) OU DIGITAR CUPOM", expanded=False):
+with st.expander("⚙️ CONFIGURAR PERFIL (SEXO, AMBIENTE, PCD) OU DIGITAR CUPOM"):
     sexo_mob = st.selectbox(
         "Sexo biológico (Regra INSS):",
         options=["M", "F"],
@@ -704,39 +704,52 @@ with st.expander("⚙️ CONFIGURAR PERFIL (SEXO, AMBIENTE, PCD) OU DIGITAR CUPO
         format_func=lambda x: "Masculino" if x == "M" else "Feminino",
         key="mob_sexo"
     )
-    ambiente_mob = st.radio(
+    if sexo_mob != sexo:
+        sexo = sexo_mob
+
+    st.markdown("**1. AMBIENTE DE TRABALHO**")
+    amb_mob = st.radio(
         "Ambiente de Trabalho predominante:",
         options=["Administrativo / Escritório", "Operacional / Área de Risco (Insalubridade/Periculosidade)"],
-        index=0 if not ambiente_operacional else 1,
-        key="mob_ambiente"
+        index=1 if ambiente_operacional else 0,
+        label_visibility="collapsed",
+        key="mob_amb"
     )
-    possui_pcd_mob = st.checkbox(
-        "Possui deficiência / TEA (LC 142/2013)?",
-        value=possui_pcd,
-        key="mob_pcd"
-    )
-    cupom_mob = st.text_input("Cupom ou Código VIP:", placeholder="Insira seu cupom aqui...", key="mob_cupom").strip().upper()
-    if st.button("Ativar Código VIP", key="btn_mob_cupom", use_container_width=True):
-        if cupom_mob in CODIGOS_PASSE_ILIMITADO:
-            st.session_state["plano_ativo"] = "ILIMITADO"
-            st.success("👑 Passe Ilimitado ativado!")
-        elif cupom_mob in CODIGOS_DOSSIE_AVULSO:
-            st.session_state["plano_ativo"] = "DOSSIE"
-            st.success("🟡 Dossiê Completo ativado!")
-        elif cupom_mob in CODIGOS_BRINDE_GRATIS:
-            st.session_state["plano_ativo"] = "BRINDE"
-            st.success("🎁 Cortesia VIP ativada!")
-        elif cupom_mob in CODIGOS_DESCONTO_50:
-            st.session_state["desconto_50"] = True
-            st.success("🎉 Cupom 50% OFF aplicado!")
-        else:
-            st.error("Código inválido.")
+    ambiente_operacional = (amb_mob == "Operacional / Área de Risco (Insalubridade/Periculosidade)")
 
-# Sincroniza as escolhas caso o usuário esteja no celular
-sexo = sexo_mob
-ambiente_operacional = (ambiente_mob == "Operacional / Área de Risco (Insalubridade/Periculosidade)")
-possui_pcd = possui_pcd_mob
-st.markdown('</div>', unsafe_allow_html=True)
+    st.markdown("**2. ENQUADRAMENTO PCD / TEA**")
+    possui_pcd = st.checkbox("Possui deficiência / TEA (LC 142/2013)?", value=possui_pcd, key="mob_pcd")
+    st.caption("Marque se possui laudo médico de deficiência física, sensorial, intelectual ou TEA.")
+
+    st.markdown("**🔑 CUPOM OU CÓDIGO DE ACESSO**")
+    cod_mob = st.text_input("Cupom ou Código VIP:", placeholder="Insira seu cupom aqui...", label_visibility="collapsed", key="mob_cod").strip().upper()
+    if st.button("Ativar Código VIP", use_container_width=True, key="mob_btn"):
+        if cod_mob in CODIGOS_PASSE_ILIMITADO:
+            st.session_state["plano_ativo"] = "ILIMITADO"
+            st.success("Passe Ilimitado ativado!")
+            st.rerun()
+        elif cod_mob in CODIGOS_DOSSIE_AVULSO:
+            st.session_state["plano_ativo"] = "DOSSIE"
+            st.success("Dossiê Completo ativado!")
+            st.rerun()
+        elif cod_mob in CODIGOS_BRINDE_GRATIS:
+            st.session_state["plano_ativo"] = "BRINDE"
+            st.success("🎁 Cortesia de 1 Dossiê Completo ativada!")
+            st.rerun()
+        elif cod_mob in CODIGOS_DESCONTO_50:
+            st.session_state["desconto_50"] = True
+            st.success("🎉 Cupom de 50% OFF aplicado!")
+            st.rerun()
+        else:
+            st.error("Código ou cupom inválido.")
+
+    st.caption(f"Status atual: **{badge_plano}**")
+    st.markdown("""
+    <div class="security-badge">
+        <strong>🔒 Privacidade & Segurança LGPD</strong><br>
+        Processamento isolado em memória. Nenhum dado pessoal ou PDF fica armazenado após a análise.
+    </div>
+    """, unsafe_allow_html=True)
 
 st.markdown("#### 📤 Envie seu Extrato Oficial (CNIS)")
 arquivo_pdf = st.file_uploader("Selecione ou arraste o arquivo PDF completo baixado do Meu INSS:", type=["pdf"], label_visibility="collapsed")
