@@ -243,7 +243,7 @@ elif param_acesso in CODIGOS_DESCONTO_50:
 st.markdown("""
 <style>
     @media (min-width: 769px) {
-        [data-testid="stExpander"]:nth-of-type(2) {
+        div:has(> div > .mobile-only-anchor) + div {
             display: none !important;
         }
     }
@@ -739,6 +739,7 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 st.markdown('<div class="apenas-celular">', unsafe_allow_html=True)
+st.markdown('<span class="mobile-only-anchor"></span>', unsafe_allow_html=True)
 with st.expander("⚙️ CONFIGURAR PERFIL (SEXO, AMBIENTE, PCD) OU DIGITAR CUPOM"):
     sexo_mob = st.selectbox(
         "Sexo biológico (Regra INSS):",
