@@ -54,3 +54,89 @@ A plataforma processa o PDF completo do CNIS emitido pelo Meu INSS, cruza os dad
 │   └── config.toml           # Configurações de tema e servidor do Streamlit
 └── .devcontainer/
     └── devcontainer.json     # Configuração de ambiente para GitHub Codespaces
+```
+
+---
+
+## Instalação e Execução Local
+
+### Pré-requisitos
+- Python 3.11 ou superior
+- `pip` e ambiente virtual (`venv`)
+
+### Passo a passo
+
+1. **Clone o repositório:**
+   Baixe uma cópia completa dos arquivos do projeto do GitHub para o seu computador e entre na pasta raiz criada.
+```bash
+git clone [https://github.com/neivaldosa/auditoria-previdenciaria.git](https://github.com/neivaldosa/auditoria-previdenciaria.git)
+cd auditoria-previdenciaria
+```
+
+2. **Crie e ative o ambiente virtual:**
+   Isole as bibliotecas deste projeto para evitar conflitos com outros programas Python instalados na sua máquina. O terminal exibirá `(.venv)` antes do caminho quando estiver ativo.
+
+   *Linux / macOS:*
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+```
+   *Windows (PowerShell):*
+```powershell
+python -m venv .venv
+.venv\Scripts\Activate.ps1
+```
+
+3. **Instale as dependências:**
+   Leia o arquivo `requirements.txt` e baixe automaticamente todas as bibliotecas necessárias (Streamlit, Pandas, pdfplumber, openpyxl, FPDF2 e Pillow).
+```bash
+pip install -r requirements.txt
+```
+
+4. **Configure as variáveis de ambiente e segredos:**
+   Crie o arquivo `.streamlit/secrets.toml` localmente (ou configure na aba **Settings > Secrets** do Streamlit Cloud) com os códigos de acesso e chaves de API antes de iniciar a aplicação:
+```toml
+[codigos_acesso]
+dossie_avulso = ["SEU_CODIGO_DOSSIE"]
+passe_ilimitado = ["SEU_CODIGO_VIP"]
+desconto_50 = ["SEU_CUPOM_50"]
+brinde_gratis = ["SEU_CUPOM_CORTESIA"]
+```
+
+5. **Execute a aplicação:**
+   Inicie o servidor local do Streamlit; o sistema abrirá automaticamente uma aba no seu navegador padrão no endereço `http://localhost:8501`.
+```bash
+streamlit run app.py
+```
+
+---
+
+## Fluxo de Uso
+
+1. Acesse a plataforma e preencha os parâmetros do segurado (sexo, ambiente de trabalho predominante e eventual enquadramento PCD/TEA).
+2. Faça o upload do **Extrato CNIS completo** (formato PDF oficial do Meu INSS contendo vínculos e remunerações).
+3. Visualize a prévia diagnóstica ou insira sua chave de acesso para liberar a auditoria completa.
+4. Navegue pelas abas de vínculos, tempo de contribuição, especialidade, PCD e memória financeira.
+5. Baixe o parecer técnico em **PDF** e a planilha detalhada em **Excel**.
+
+---
+
+## Privacidade e Tratamento de Dados (LGPD)
+
+- **Processamento 100% em memória:** o PDF do CNIS enviado e a planilha gerada são processados diretamente em memória (`io.BytesIO`), sem gravação de documentos dos segurados em disco.
+- **Sem armazenamento permanente:** a aplicação não mantém banco de dados próprio de segurados ou históricos de CNIS.
+- **Deploy em produção:** recomenda-se hospedagem com HTTPS ativo, gestão de segredos via `secrets.toml` e adequação aos Termos de Uso e Política de Privacidade vigentes.
+
+---
+
+## Licença
+
+**Proprietário — Todos os direitos reservados.**  
+O código-fonte, a lógica de extração e os modelos de relatórios deste repositório são de uso exclusivo do autor. Não é permitida a cópia, redistribuição ou uso comercial sem autorização expressa.
+
+---
+
+## Contato e Suporte
+
+- **E-mail:** inteligenciaprevidenciariaaudi@gmail.com
+- **WhatsApp:** +55 21 96880-7965
