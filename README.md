@@ -49,6 +49,7 @@ A plataforma processa o PDF completo do CNIS emitido pelo Meu INSS, cruza os dad
 ├── obrigado                  # Página de confirmação pós-checkout
 ├── Logo.png                  # Identidade visual da aplicação e dos relatórios
 ├── requirements.txt          # Dependências do projeto
+├── .gitignore                # Exclusão de arquivos locais e sensíveis do controle de versão
 ├── .streamlit/
 │   └── config.toml           # Configurações de tema e servidor do Streamlit
 └── .devcontainer/
