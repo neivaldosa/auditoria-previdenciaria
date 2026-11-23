@@ -29,9 +29,15 @@ def renderizar_painel_acesso(chave_prefixo: str = "side") -> dict:
     st.markdown('<div class="sidebar-title">🔐 Área do Assinante</div>', unsafe_allow_html=True)
 
     if "user_session" not in st.session_state or st.session_state["user_session"] is None:
-        aba_login, aba_cadastro = st.tabs(["Entrar", "Criar Conta"])
+        modo_acesso = st.radio(
+            "Escolha uma opção:",
+            options=["Entrar na Conta", "Criar Conta Grátis"],
+            horizontal=True,
+            label_visibility="collapsed",
+            key=f"{chave_prefixo}_modo_acesso",
+        )
 
-        with aba_login:
+        if modo_acesso == "Entrar na Conta":
             email_login = st.text_input("E-mail", key=f"{chave_prefixo}_login_email").strip().lower()
             senha_login = st.text_input("Senha", type="password", key=f"{chave_prefixo}_login_senha")
             if st.button("Entrar", use_container_width=True, type="primary", key=f"{chave_prefixo}_btn_entrar"):
@@ -46,11 +52,10 @@ def renderizar_painel_acesso(chave_prefixo: str = "side") -> dict:
                         st.rerun()
                     except Exception:
                         st.error("E-mail ou senha inválidos.")
-
-        with aba_cadastro:
+        else:
             email_cad = st.text_input("Seu melhor e-mail", key=f"{chave_prefixo}_cad_email").strip().lower()
             senha_cad = st.text_input("Crie uma senha (mín. 6 dígitos)", type="password", key=f"{chave_prefixo}_cad_senha")
-            if st.button("Cadastrar Grátis", use_container_width=True, key=f"{chave_prefixo}_btn_cad"):
+            if st.button("Cadastrar Grátis", use_container_width=True, type="primary", key=f"{chave_prefixo}_btn_cad"):
                 if not email_cad or len(senha_cad) < 6:
                     st.warning("Informe um e-mail válido e senha com ao menos 6 caracteres.")
                 else:
@@ -63,7 +68,7 @@ def renderizar_painel_acesso(chave_prefixo: str = "side") -> dict:
                             st.success("Conta criada com sucesso!")
                             st.rerun()
                         else:
-                            st.info("Conta criada! Faça login na aba 'Entrar'.")
+                            st.info("Conta criada! Selecione 'Entrar na Conta' acima para acessar.")
                     except Exception as e:
                         st.error(f"Não foi possível cadastrar: {e}")
 
