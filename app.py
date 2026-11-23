@@ -155,6 +155,18 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="expanded"
 )
+
+import streamlit.components.v1 as components
+
+components.html("""
+<script async src="https://googletagmanager.com/gtm.js?id=GTM-5296H925"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+</script>
+""", height=0, width=0)
+
 if st.query_params.get("pagina", "").strip().lower() == "obrigado":
     cod_vip = st.query_params.get("acesso", "DOSSIE2026").strip().upper()
     plano_txt = "Passe Ilimitado VIP" if cod_vip in ("VIP7", "VIP30", "ILIMITADO30", "PRO2026") else "Dossiê Completo Avulso"
