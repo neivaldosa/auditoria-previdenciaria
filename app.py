@@ -12,6 +12,11 @@ from openpyxl.drawing.image import Image as XLImage
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from extrator_cnis import extrair_cnis_v5
 from gerador_pdf import criar_pdf_executivo
+from auth_supabase import (
+    renderizar_painel_acesso,
+    gerar_link_checkout_personalizado,
+    registrar_uso_credito_avulso,
+)
 
 
 def _achar_logo_oficial():
@@ -164,7 +169,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Carregamento seguro dos códigos via st.secrets (.streamlit/secrets.toml)
+# Carregamento seguro dos códigos de cortesia/admin via st.secrets
 _secrets_acesso = st.secrets.get("codigos_acesso", {})
 CODIGOS_DOSSIE_AVULSO = {c.strip().upper() for c in _secrets_acesso.get("dossie_avulso", [])}
 CODIGOS_PASSE_ILIMITADO = {c.strip().upper() for c in _secrets_acesso.get("passe_ilimitado", [])}
@@ -218,20 +223,18 @@ if pagina_url == "obrigado":
             Seu acesso ao <strong>{plano_txt}</strong> já está liberado.<br>
             Clique no botão dourado abaixo para acessar o sistema com todos os cálculos e downloads desbloqueados.
         </p>
-        <div style="background:rgba(255,255,255,0.08); border:1.5px dashed #C59B27; border-radius:8px; padding:0.8rem 1rem; margin-bottom:1.5rem; font-size:0.92rem; color:#F3D06B;">
-            🔑 Seu Código de Acesso VIP: <strong>{cod_vip}</strong>
-        </div>
-        <a href="/?acesso={cod_vip}" target="_self" style="display:inline-block; background:#C59B27; color:#0F293A !important; font-weight:800; font-size:1.05rem; padding:0.85rem 2rem; border-radius:8px; text-decoration:none !important;">
+        <a href="/" target="_self" style="display:inline-block; background:#C59B27; color:#0F293A !important; font-weight:800; font-size:1.05rem; padding:0.85rem 2rem; border-radius:8px; text-decoration:none !important;">
             🚀 Acessar Meu Dossiê Completo Agora
         </a>
     </div>
     """, unsafe_allow_html=True)
     st.stop()
 
-LINK_MP_AVULSO_19 = "https://mpago.la/1XEo7nL"
+_links_secrets = st.secrets.get("links_pagamento", {})
+LINK_MP_AVULSO_19 = _links_secrets.get("avulso", "https://mpago.la/1XEo7nL")
 LINK_MP_DESCONTO_50 = LINK_MP_AVULSO_19
-LINK_MP_PASSE_7D = "https://mpago.la/2aGyJn9"
-LINK_MP_PASSE_30D = "https://mpago.la/2iXqtct"
+LINK_MP_PASSE_7D = _links_secrets.get("passe_7d", "https://mpago.la/2aGyJn9")
+LINK_MP_PASSE_30D = _links_secrets.get("passe_30d", "https://mpago.la/2iXqtct")
 EMAIL_SUPORTE = "inteligenciaprevidenciariaaudi@gmail.com"
 
 if "plano_ativo" not in st.session_state:
@@ -667,6 +670,11 @@ with st.sidebar:
         </div>
     </div>
     """, unsafe_allow_html=True)
+
+    # Painel de Login, Conta e Assinatura Automática (Supabase)
+    acesso_supabase = renderizar_painel_acesso(chave_prefixo="side")
+
+    st.markdown("---")
     st.markdown("### ⚙️ Configure seu Perfil")
     sexo = st.selectbox("Sexo biológico (Regra INSS):", options=["M", "F"], format_func=lambda x: "Masculino" if x == "M" else "Feminino")
 
@@ -685,37 +693,23 @@ with st.sidebar:
     st.caption("Marque se possui laudo médico de deficiência física, sensorial, intelectual ou TEA.")
     st.markdown('</div>', unsafe_allow_html=True)
 
-    st.markdown('<div class="sidebar-card"><div class="sidebar-title">🔑 Cupom ou Código de Acesso</div>', unsafe_allow_html=True)
-    codigo_digitado = st.text_input("Digite seu cupom ou código:", placeholder="Insira seu cupom aqui...", label_visibility="collapsed").strip().upper()
-    if st.button("Ativar Código", use_container_width=True):
-        if codigo_digitado in CODIGOS_PASSE_ILIMITADO:
-            st.session_state["plano_ativo"] = "ILIMITADO"
-            st.success("Passe Ilimitado ativado!")
-        elif codigo_digitado in CODIGOS_DOSSIE_AVULSO:
-            st.session_state["plano_ativo"] = "DOSSIE"
-            st.success("Dossiê Completo ativado!")
-        elif codigo_digitado in CODIGOS_BRINDE_GRATIS:
-            st.session_state["plano_ativo"] = "BRINDE"
-            st.success("🎁 Cortesia de 1 Dossiê Completo ativada!")
-        elif codigo_digitado in CODIGOS_DESCONTO_50:
-            st.session_state["desconto_50"] = True
-            st.success("🎉 Cupom de 50% OFF aplicado!")
-        else:
-            st.error("Código ou cupom inválido.")
-
-    plano_atual = st.session_state["plano_ativo"]
-    if plano_atual == "BRINDE":
-        badge_plano = "🎁 Cortesia VIP Liberada"
-    elif plano_atual == "DOSSIE":
-        badge_plano = "🟡 Dossiê Completo Liberado"
-    elif plano_atual == "ILIMITADO":
-        badge_plano = "👑 Passe Ilimitado Ativo"
-    elif st.session_state["desconto_50"]:
-        badge_plano = "🏷️ Cupom 50% OFF Ativo (R$ 9,95)"
-    else:
-        badge_plano = "🟢 Plano Gratuito (Prévia)"
-    st.caption(f"Status atual: **{badge_plano}**")
-    st.markdown('</div>', unsafe_allow_html=True)
+    with st.expander("🔑 Possui Cupom ou Código VIP?"):
+        codigo_digitado = st.text_input("Digite seu cupom ou código:", placeholder="Insira seu cupom aqui...", label_visibility="collapsed").strip().upper()
+        if st.button("Ativar Código", use_container_width=True):
+            if codigo_digitado in CODIGOS_PASSE_ILIMITADO:
+                st.session_state["plano_ativo"] = "ILIMITADO"
+                st.success("Passe Ilimitado ativado!")
+            elif codigo_digitado in CODIGOS_DOSSIE_AVULSO:
+                st.session_state["plano_ativo"] = "DOSSIE"
+                st.success("Dossiê Completo ativado!")
+            elif codigo_digitado in CODIGOS_BRINDE_GRATIS:
+                st.session_state["plano_ativo"] = "BRINDE"
+                st.success("🎁 Cortesia de 1 Dossiê Completo ativada!")
+            elif codigo_digitado in CODIGOS_DESCONTO_50:
+                st.session_state["desconto_50"] = True
+                st.success("🎉 Cupom de 50% OFF aplicado!")
+            else:
+                st.error("Código ou cupom inválido.")
 
     st.markdown("""
     <div class="security-badge">
@@ -724,8 +718,18 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
+# Consolida acesso via Supabase (assinatura/créditos) OU cupom/código VIP manual
+modo_pago = acesso_supabase["tem_acesso_completo"] or (st.session_state["plano_ativo"] in ("DOSSIE", "ILIMITADO", "BRINDE"))
+email_logado = acesso_supabase.get("email")
+
 with st.container(key="menu_celular"):
-    with st.expander("⚙️ CONFIGURAR PERFIL (SEXO, AMBIENTE, PCD) OU DIGITAR CUPOM"):
+    with st.expander("🔐 ENTRAR NA CONTA OU CONFIGURAR PERFIL (SEXO, AMBIENTE, PCD)"):
+        acesso_mob = renderizar_painel_acesso(chave_prefixo="mob")
+        if acesso_mob["tem_acesso_completo"]:
+            modo_pago = True
+            email_logado = acesso_mob.get("email")
+
+        st.markdown("---")
         sexo_mob = st.selectbox(
             "Sexo biológico (Regra INSS):",
             options=["M", "F"],
@@ -750,7 +754,7 @@ with st.container(key="menu_celular"):
         possui_pcd = st.checkbox("Possui deficiência / TEA (LC 142/2013)?", value=possui_pcd, key="mob_pcd")
         st.caption("Marque se possui laudo médico de deficiência física, sensorial, intelectual ou TEA.")
 
-        st.markdown("**🔑 CUPOM OU CÓDIGO DE ACESSO**")
+        st.markdown("**🔑 CUPOM OU CÓDIGO VIP**")
         cod_mob = st.text_input("Cupom ou Código VIP:", placeholder="Insira seu cupom aqui...", label_visibility="collapsed", key="mob_cod").strip().upper()
         if st.button("Ativar Código VIP", use_container_width=True, key="mob_btn"):
             if cod_mob in CODIGOS_PASSE_ILIMITADO:
@@ -772,24 +776,19 @@ with st.container(key="menu_celular"):
             else:
                 st.error("Código ou cupom inválido.")
 
-        st.caption(f"Status atual: **{badge_plano}**")
-        st.markdown("""
-        <div class="security-badge">
-            <strong>🔒 Privacidade & Segurança LGPD</strong><br>
-            Processamento 100% isolado em memória. Nenhum dado pessoal ou PDF fica gravado em disco.
-        </div>
-        """, unsafe_allow_html=True)
-
 st.markdown("#### 📤 Envie seu Extrato Oficial (CNIS)")
 arquivo_pdf = st.file_uploader("Selecione ou arraste o arquivo PDF completo baixado do Meu INSS:", type=["pdf"], label_visibility="collapsed")
 preco_avulso_txt = "R$ 9,95 (50% OFF)" if st.session_state["desconto_50"] else "R$ 19,90"
-link_avulso_atual = LINK_MP_DESCONTO_50 if st.session_state["desconto_50"] else LINK_MP_AVULSO_19
+
+link_avulso_base = LINK_MP_DESCONTO_50 if st.session_state["desconto_50"] else LINK_MP_AVULSO_19
+link_avulso_atual = gerar_link_checkout_personalizado(link_avulso_base, email_logado)
+link_7d_atual = gerar_link_checkout_personalizado(LINK_MP_PASSE_7D, email_logado)
+link_30d_atual = gerar_link_checkout_personalizado(LINK_MP_PASSE_30D, email_logado)
 
 if arquivo_pdf is not None:
-    label_btn = "🔍 Gerar Diagnóstico Gratuito (Prévia)" if st.session_state["plano_ativo"] == "GRATUITO" else "🚀 Executar Auditoria e Gerar Dossiê Completo"
+    label_btn = "🔍 Gerar Diagnóstico Gratuito (Prévia)" if not modo_pago else "🚀 Executar Auditoria e Gerar Dossiê Completo"
     if st.button(label_btn, type="primary"):
         with st.spinner("Processando vínculos, cruzando tetos históricos e auditando indicadores..."):
-            # Leitura do PDF e geração do Excel 100% em memória (sem gravar CNIS no disco)
             pdf_em_memoria = io.BytesIO(arquivo_pdf.getvalue())
             excel_bruto_mem = io.BytesIO()
 
@@ -809,7 +808,6 @@ if arquivo_pdf is not None:
             df_res = abas["2. ⏱️ TEMPO LÍQUIDO"]
             df_fin = abas["5. 💰 VALOR ESTIMADO (RMI)"]
 
-            # Gera o PDF executivo via ficheiro temporário seguro com limpeza garantida
             tmp_pdf = tempfile.NamedTemporaryFile(suffix=".pdf", delete=False)
             caminho_pdf_relatorio = tmp_pdf.name
             tmp_pdf.close()
@@ -821,6 +819,10 @@ if arquivo_pdf is not None:
             finally:
                 if os.path.exists(caminho_pdf_relatorio):
                     os.remove(caminho_pdf_relatorio)
+
+            # Se estiver a usar crédito avulso, consome 1 crédito ao gerar o dossiê completo
+            if modo_pago and acesso_supabase.get("tipo_acesso") == "AVULSO":
+                registrar_uso_credito_avulso(acesso_supabase)
 
             st.session_state["resultado_auditoria"] = {
                 "parecer_texto": parecer_texto,
@@ -846,8 +848,6 @@ if "resultado_auditoria" in st.session_state:
     dif_mensal = str(df_fin.loc[df_fin["Metrica_Financeira"].str.contains("Diferença Mensal"), "Valor_Estimado"].tolist().pop())
     tempo_card = tempo_liq.split("(").pop().replace(")", "") if "(" in tempo_liq else tempo_liq
 
-    modo_pago = st.session_state["plano_ativo"] in ("DOSSIE", "ILIMITADO", "BRINDE")
-
     col1, col2, col3 = st.columns(3)
     with col1:
         st.markdown(f'<div class="metric-card"><div class="metric-label">Tempo Líquido Apurado</div><div class="metric-value">{tempo_card}</div><div class="metric-sub">Períodos concomitantes já descontados</div></div>', unsafe_allow_html=True)
@@ -868,10 +868,16 @@ if "resultado_auditoria" in st.session_state:
             f"2. AUDITORIA DE ALERTAS NO CNIS: Foram detectados {qtd_alertas} ponto(s) de atenção/pendência nos seus vínculos.\n"
             f"   -> Os alertas estão listados na aba 'Alertas de Vínculos', mas o passo a passo de como resolver cada pendência no Meu INSS está retido na versão gratuita.\n\n"
             f"3. CÁLCULOS FINANCEIROS, ESPECIAL E PCD: Bloqueados nesta prévia.\n"
-            f"   -> Desbloqueie o Dossiê Completo por {preco_avulso_txt} (Pix ou Cartão) para liberar automaticamente a solução de todas as pendências, a memória de cálculo desde 1994 e os downloads em PDF e Excel."
+            f"   -> Crie sua conta na barra lateral e desbloqueie o Dossiê Completo por {preco_avulso_txt} (Pix ou Cartão) para liberar automaticamente a solução de todas as pendências, a memória de cálculo desde 1994 e os downloads em PDF e Excel."
         )
 
-        st.markdown(f'<div class="upsell-banner"><h4 style="margin:0 0 0.3rem 0; color:#F3D06B;">⚠️ Encontramos {qtd_alertas} alerta(s) no seu CNIS — Desbloqueie agora e veja como corrigir + valor do benefício</h4><p style="margin:0 0 0.8rem 0; font-size:0.88rem; color:#E2E8F0;">O <strong>Plano de Ação no INSS (como resolver)</strong>, o cálculo desde 1994 e os arquivos <strong>PDF Executivo + Excel</strong> são liberados automaticamente após o pagamento via Pix ou Cartão no Mercado Pago.</p><a href="{link_avulso_atual}" target="_blank" class="plan-cta cta-gold" style="display:inline-block; padding:0.55rem 1.3rem;">🔓 Desbloquear Dossiê Completo Agora — {preco_avulso_txt}</a></div>', unsafe_allow_html=True)
+        aviso_login_checkout = (
+            f"Conectado como <strong>{email_logado}</strong> — seu acesso será liberado automaticamente assim que o pagamento for confirmado!"
+            if email_logado else
+            "⚠️ <strong>Dica:</strong> Crie sua conta gratuita na barra lateral antes de pagar (ou use o mesmo e-mail no Mercado Pago) para liberação automática imediata."
+        )
+
+        st.markdown(f'<div class="upsell-banner"><h4 style="margin:0 0 0.3rem 0; color:#F3D06B;">⚠️ Encontramos {qtd_alertas} alerta(s) no seu CNIS — Desbloqueie agora e veja como corrigir + valor do benefício</h4><p style="margin:0 0 0.6rem 0; font-size:0.88rem; color:#E2E8F0;">O <strong>Plano de Ação no INSS (como resolver)</strong>, o cálculo desde 1994 e os arquivos <strong>PDF Executivo + Excel</strong> são liberados automaticamente após o pagamento via Pix ou Cartão no Mercado Pago.</p><p style="margin:0 0 0.8rem 0; font-size:0.8rem; color:#F3D06B;">{aviso_login_checkout}</p><a href="{link_avulso_atual}" target="_blank" class="plan-cta cta-gold" style="display:inline-block; padding:0.55rem 1.3rem;">🔓 Desbloquear Dossiê Completo Agora — {preco_avulso_txt}</a></div>', unsafe_allow_html=True)
 
         tab0, tab1, tab2 = st.tabs(["📄 Parecer Executivo (Prévia)", "📋 Alertas de Vínculos", "⏱️ Resumo de Tempo"])
         with tab0:
@@ -1000,7 +1006,7 @@ st.markdown("""
     </div>
 </div>
 <div style="background-color:#EFF6FF; border:1px solid #BFDBFE; border-left:4px solid #0F293A; color:#0F293A; padding:0.65rem 0.9rem; border-radius:8px; font-size:0.83rem; margin-bottom:0.8rem;">
-    💡 <strong>Pagou via Pix?</strong> Após concluir o pagamento no app do seu banco, aguarde a tela verde de confirmação no Mercado Pago ou clique em <strong>"Voltar para o site"</strong> para liberar o Dossiê Completo automaticamente.
+    💡 <strong>Como funciona a liberação automática:</strong> Crie sua conta gratuita na barra lateral (ou utilize no Mercado Pago o mesmo e-mail do seu cadastro) e conclua o Pix ou Cartão. Assim que o pagamento for aprovado, clique em <strong>"🔄 Atualizar"</strong> no painel esquerdo para liberar o acesso na hora!
 </div>
 <div style="font-size: 1.05rem; font-weight: 700; color: #0F293A; margin-top: 0.4rem;">📋 O que está incluso no seu Dossiê Completo de Auditoria (6 Módulos):</div>
 <div class="feature-grid">
@@ -1029,7 +1035,7 @@ st.markdown("""
         <p class="feature-desc">Atualiza salários desde 07/1994 e compara Regra Geral vs. 80% maiores na Regra PCD.</p>
     </div>
 </div>
-""".replace("__PRECO_19__", preco_avulso_txt).replace("__LINK_19__", link_avulso_atual).replace("__LINK_7D__", LINK_MP_PASSE_7D).replace("__LINK_30D__", LINK_MP_PASSE_30D), unsafe_allow_html=True)
+""".replace("__PRECO_19__", preco_avulso_txt).replace("__LINK_19__", link_avulso_atual).replace("__LINK_7D__", link_7d_atual).replace("__LINK_30D__", link_30d_atual), unsafe_allow_html=True)
 
 _, col_ia, _ = st.columns([1, 2.2, 1])
 
