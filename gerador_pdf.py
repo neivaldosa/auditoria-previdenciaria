@@ -331,8 +331,8 @@ def criar_pdf_executivo(*args, **kwargs):
             cols = list(arg.columns)
             if len(cols) >= 2:
                 for _, row in arg.iterrows():
-                    chave = str(row[cols]).strip()
-                    valor = str(row[cols]).strip()
+                    chave = str(row[cols[0]]).strip()
+                    valor = str(row[cols[1]]).strip()
                     if "Data de Nascimento" in chave or "Idade" in chave:
                         dados["nascimento_idade"] = valor
                     elif "Ambiente" in chave:
