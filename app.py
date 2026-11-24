@@ -117,7 +117,7 @@ def aplicar_logo_todas_abas_excel(buffer_excel):
         ws["B2"].font = font_subtitulo
         ws["B2"].alignment = Alignment(vertical="center", horizontal="left")
 
-        ws["B3"] = "WhatsApp: +55 21 96880-7965  |  E-mail: inteligenciaprevidenciariaaudi@gmail.com"
+        ws["B3"] = "WhatsApp: +55 21 96880-7955  |  E-mail: inteligenciaprevidenciariaaudi@gmail.com"
         ws["B3"].font = font_contato
         ws["B3"].alignment = Alignment(vertical="center", horizontal="left")
 
@@ -966,7 +966,7 @@ if "resultado_auditoria" in st.session_state:
                 f"(Tempo Líquido: {tempo_card} | Potencial PCD: {rmi_pcd}) "
                 f"e gostaria de agendar uma análise com o escritório parceiro."
             )
-            params_whats = urllib.parse.urlencode({"phone": "5521968807965", "text": texto_bruto})
+            params_whats = urllib.parse.urlencode({"phone": "5521968807955", "text": texto_bruto})
             dominio_wa = "web." + "whatsapp" + ".com"
             link_whats = f"https://{dominio_wa}/send?{params_whats}"
 
@@ -1177,7 +1177,7 @@ st.markdown(f"""
             <a href="mailto:{EMAIL_SUPORTE}?subject={assunto_suporte}&body={corpo_suporte}" class="support-item sup-mail">✉️ Suporte via E-mail</a>
             <div class="sup-tip">
                 <strong>💡 Dica de Entrega:</strong><br>
-                Se o navegador corporativo bloquear o WhatsApp, use o e-mail ou salve o número: <strong>+55 21 96880-7965</strong>.
+                Se o navegador corporativo bloquear o WhatsApp, use o e-mail ou salve o número: <strong>+55 21 96880-7955</strong>.
             </div>
         </div>
         <div class="float-btn float-support" style="cursor:pointer;">
