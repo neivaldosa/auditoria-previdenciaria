@@ -1213,7 +1213,14 @@ with col_faq:
 
     with st.expander("Meus dados pessoais e meu extrato CNIS estão seguros (LGPD)?"):
         st.markdown("Sim. O processamento ocorre de forma isolada e 100% em memória apenas durante a leitura do ficheiro. Nenhum PDF enviado fica gravado no disco do servidor, em total conformidade com a Lei Geral de Proteção de Dados (LGPD).")
-
+st.markdown(
+    """
+<div style="text-align:center; color:#475569; font-size:0.82rem; margin:1.8rem auto 1rem auto; padding:0.75rem 1rem; max-width:860px; border-top:1px solid #CBD5E1;">
+    Ferramenta privada e independente de auditoria previdenciária. Não possuímos vínculo com o INSS ou órgãos governamentais.
+</div>
+""",
+    unsafe_allow_html=True,
+)
 assunto_suporte = urllib.parse.quote("Suporte Técnico - Inteligência Previdenciária & Auditoria")
 corpo_suporte = urllib.parse.quote("Olá! Preciso de suporte técnico no site Inteligência Previdenciária & Auditoria.")
 params_sup = urllib.parse.urlencode({"phone": "5521968807955", "text": "Olá! Preciso de suporte técnico no site Inteligência Previdenciária & Auditoria."})
