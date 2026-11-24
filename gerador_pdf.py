@@ -131,8 +131,8 @@ class ParecerPrevidenciarioPDF(FPDF):
         self.set_x(29)
         self.set_font("Helvetica", "", 7.3)
         self.set_text_color(90, 98, 110)
-        self.cell(0, 3.8, "WhatsApp: +55 21 96880-7965  |  E-mail: inteligenciaprevidenciariaaudi@gmail.com", ln=True)
-
+        self.cell(0, 3.8, "WhatsApp: +55 21 96880-7955  |  E-mail: inteligenciaprevidenciariaaudi@gmail.com", ln=True)
+        
         self.set_x(29)
         self.set_font("Helvetica", "I", 6.8)
         self.set_text_color(130, 138, 150)
