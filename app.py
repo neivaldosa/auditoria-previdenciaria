@@ -985,14 +985,11 @@ if not email_logado and st.session_state["aviso_cadastro_obrigatorio"]:
 
 if email_logado:
     cta_avulso_html = f'<a href="{link_avulso_atual}" target="_blank" class="plan-cta cta-outline">⚡ Liberar Dossiê (Pix ou Cartão)</a>'
-    cta_passes_html = f"""
-        <a href="{link_7d_atual}" target="_blank" class="plan-cta cta-gold">⚡ Passe 7 Dias — R$ 39,90 (Pix/Cartão)</a>
-        <a href="{link_30d_atual}" target="_blank" class="plan-cta cta-gold-outline">👑 Passe 30 Dias — R$ 69,90 (Pix/Cartão)</a>
-    """
+    cta_passes_html = f'<a href="{link_7d_atual}" target="_blank" class="plan-cta cta-gold">⚡ Passe 7 Dias — R$ 39,90 (Pix/Cartão)</a><a href="{link_30d_atual}" target="_blank" class="plan-cta cta-gold-outline">👑 Passe 30 Dias — R$ 69,90 (Pix/Cartão)</a>'
 else:
     cta_avulso_html = '<a href="#topo-pagina" class="plan-cta cta-outline">🔐 Cadastre-se na Área do Assinante Primeiro</a>'
     cta_passes_html = '<a href="#topo-pagina" class="plan-cta cta-gold">🔐 Cadastre-se na Área do Assinante Primeiro</a>'
-
+    
 st.markdown(f"""
 <div style="font-size: 1.05rem; font-weight: 700; color: #0F293A; margin-top: 0.8rem;">💎 Escolha o Plano Ideal (Liberação Automática via Pix ou Cartão)</div>
 <div class="pricing-grid">
