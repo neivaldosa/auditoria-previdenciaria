@@ -241,6 +241,8 @@ if "plano_ativo" not in st.session_state:
     st.session_state["plano_ativo"] = "GRATUITO"
 if "desconto_50" not in st.session_state:
     st.session_state["desconto_50"] = False
+if "aviso_cadastro_obrigatorio" not in st.session_state:
+    st.session_state["aviso_cadastro_obrigatorio"] = False
 
 if acesso_url in CODIGOS_PASSE_ILIMITADO:
     st.session_state["plano_ativo"] = "ILIMITADO"
@@ -728,6 +730,8 @@ with st.container(key="menu_celular"):
         if acesso_mob["tem_acesso_completo"]:
             modo_pago = True
             email_logado = acesso_mob.get("email")
+        elif acesso_mob.get("email") and not email_logado:
+            email_logado = acesso_mob.get("email")
 
         st.markdown("---")
         sexo_mob = st.selectbox(
@@ -868,16 +872,29 @@ if "resultado_auditoria" in st.session_state:
             f"2. AUDITORIA DE ALERTAS NO CNIS: Foram detectados {qtd_alertas} ponto(s) de atenção/pendência nos seus vínculos.\n"
             f"   -> Os alertas estão listados na aba 'Alertas de Vínculos', mas o passo a passo de como resolver cada pendência no Meu INSS está retido na versão gratuita.\n\n"
             f"3. CÁLCULOS FINANCEIROS, ESPECIAL E PCD: Bloqueados nesta prévia.\n"
-            f"   -> Crie sua conta na barra lateral e desbloqueie o Dossiê Completo por {preco_avulso_txt} (Pix ou Cartão) para liberar automaticamente a solução de todas as pendências, a memória de cálculo desde 1994 e os downloads em PDF e Excel."
+            f"   -> Cadastre-se primeiro em '🔐 Área do Assinante' (barra lateral esquerda no computador ou menu '⚙️ ENTRAR NA CONTA OU CONFIGURAR PERFIL' no celular) para liberar o pagamento e o Dossiê Completo por {preco_avulso_txt}."
         )
 
-        aviso_login_checkout = (
-            f"Conectado como <strong>{email_logado}</strong> — seu acesso será liberado automaticamente assim que o pagamento for confirmado!"
-            if email_logado else
-            "⚠️ <strong>Dica:</strong> Crie sua conta gratuita na barra lateral antes de pagar (ou use o mesmo e-mail no Mercado Pago) para liberação automática imediata."
-        )
-
-        st.markdown(f'<div class="upsell-banner"><h4 style="margin:0 0 0.3rem 0; color:#F3D06B;">⚠️ Encontramos {qtd_alertas} alerta(s) no seu CNIS — Desbloqueie agora e veja como corrigir + valor do benefício</h4><p style="margin:0 0 0.6rem 0; font-size:0.88rem; color:#E2E8F0;">O <strong>Plano de Ação no INSS (como resolver)</strong>, o cálculo desde 1994 e os arquivos <strong>PDF Executivo + Excel</strong> são liberados automaticamente após o pagamento via Pix ou Cartão no Mercado Pago.</p><p style="margin:0 0 0.8rem 0; font-size:0.8rem; color:#F3D06B;">{aviso_login_checkout}</p><a href="{link_avulso_atual}" target="_blank" class="plan-cta cta-gold" style="display:inline-block; padding:0.55rem 1.3rem;">🔓 Desbloquear Dossiê Completo Agora — {preco_avulso_txt}</a></div>', unsafe_allow_html=True)
+        if email_logado:
+            st.markdown(f"""
+            <div class="upsell-banner">
+                <h4 style="margin:0 0 0.3rem 0; color:#F3D06B;">⚠️ Encontramos {qtd_alertas} alerta(s) no seu CNIS — Desbloqueie agora e veja como corrigir + valor do benefício</h4>
+                <p style="margin:0 0 0.6rem 0; font-size:0.88rem; color:#E2E8F0;">Conta conectada: <strong>{email_logado}</strong>. Ao concluir o pagamento via Pix ou Cartão, o <strong>Plano de Ação no INSS</strong>, o cálculo desde 1994 e os arquivos <strong>PDF + Excel</strong> serão liberados automaticamente para este e-mail.</p>
+                <a href="{link_avulso_atual}" target="_blank" class="plan-cta cta-gold" style="display:inline-block; padding:0.55rem 1.3rem;">🔓 Desbloquear Dossiê Completo Agora — {preco_avulso_txt}</a>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            st.markdown(f"""
+            <div class="upsell-banner">
+                <h4 style="margin:0 0 0.3rem 0; color:#F3D06B;">⚠️ Encontramos {qtd_alertas} alerta(s) no seu CNIS — Cadastre-se primeiro para liberar o pagamento</h4>
+                <p style="margin:0 0 0.5rem 0; font-size:0.88rem; color:#E2E8F0;">Para garantir que o pagamento fique vinculado à sua conta e libere o <strong>Dossiê Completo ({preco_avulso_txt})</strong> automaticamente, <strong>você precisa criar sua conta gratuita antes de pagar</strong>:</p>
+                <p style="margin:0 0 0.85rem 0; font-size:0.84rem; color:#F3D06B;">
+                    ⬅️ <strong>No computador:</strong> vá na <strong>barra lateral esquerda</strong> em <strong>"🔐 Área do Assinante" → "Criar Conta Grátis"</strong>.<br>
+                    📱 <strong>No celular:</strong> abra o menu <strong>"⚙️ ENTRAR NA CONTA OU CONFIGURAR PERFIL"</strong> acima e clique em <strong>"Criar Conta Grátis"</strong>.
+                </p>
+                <a href="#topo-pagina" class="plan-cta cta-gold" style="display:inline-block; padding:0.55rem 1.3rem;">👆 Ir para o Cadastro (Área do Assinante)</a>
+            </div>
+            """, unsafe_allow_html=True)
 
         tab0, tab1, tab2 = st.tabs(["📄 Parecer Executivo (Prévia)", "📋 Alertas de Vínculos", "⏱️ Resumo de Tempo"])
         with tab0:
@@ -959,7 +976,24 @@ if "resultado_auditoria" in st.session_state:
                 use_container_width=True,
             )
 
-st.markdown("""
+if not email_logado and st.session_state["aviso_cadastro_obrigatorio"]:
+    st.warning(
+        "🔐 **Cadastre-se primeiro antes de ir para o pagamento:** "
+        "no computador, abra a **barra lateral esquerda** em **'🔐 Área do Assinante' → 'Criar Conta Grátis'**. "
+        "No celular, abra o menu **'⚙️ ENTRAR NA CONTA OU CONFIGURAR PERFIL'** e clique em **'Criar Conta Grátis'**."
+    )
+
+if email_logado:
+    cta_avulso_html = f'<a href="{link_avulso_atual}" target="_blank" class="plan-cta cta-outline">⚡ Liberar Dossiê (Pix ou Cartão)</a>'
+    cta_passes_html = f"""
+        <a href="{link_7d_atual}" target="_blank" class="plan-cta cta-gold">⚡ Passe 7 Dias — R$ 39,90 (Pix/Cartão)</a>
+        <a href="{link_30d_atual}" target="_blank" class="plan-cta cta-gold-outline">👑 Passe 30 Dias — R$ 69,90 (Pix/Cartão)</a>
+    """
+else:
+    cta_avulso_html = '<a href="#topo-pagina" class="plan-cta cta-outline">🔐 Cadastre-se na Área do Assinante Primeiro</a>'
+    cta_passes_html = '<a href="#topo-pagina" class="plan-cta cta-gold">🔐 Cadastre-se na Área do Assinante Primeiro</a>'
+
+st.markdown(f"""
 <div style="font-size: 1.05rem; font-weight: 700; color: #0F293A; margin-top: 0.8rem;">💎 Escolha o Plano Ideal (Liberação Automática via Pix ou Cartão)</div>
 <div class="pricing-grid">
     <div class="plan-card">
@@ -977,14 +1011,14 @@ st.markdown("""
     <div class="plan-card">
         <div>
             <div class="plan-top"><span class="plan-name" style="color:#0F293A;">Dossiê Completo Avulso</span></div>
-            <div class="plan-price" style="color:#0F293A;">__PRECO_19__ <span>/ único</span></div>
+            <div class="plan-price" style="color:#0F293A;">{preco_avulso_txt} <span>/ único</span></div>
             <ul class="plan-list" style="color:#334155;">
                 <li>✅ Plano de ação (como corrigir erros)</li>
                 <li>✅ Cálculo RMI (1994–2026), Especial e PCD</li>
                 <li>✅ Download PDF Executivo + Planilha Excel</li>
             </ul>
         </div>
-        <a href="__LINK_19__" target="_blank" class="plan-cta cta-outline">⚡ Liberar Dossiê (Pix ou Cartão)</a>
+        {cta_avulso_html}
     </div>
     <div class="plan-card featured">
         <div>
@@ -1000,13 +1034,12 @@ st.markdown("""
             </ul>
         </div>
         <div>
-            <a href="__LINK_7D__" target="_blank" class="plan-cta cta-gold">⚡ Passe 7 Dias — R$ 39,90 (Pix/Cartão)</a>
-            <a href="__LINK_30D__" target="_blank" class="plan-cta cta-gold-outline">👑 Passe 30 Dias — R$ 69,90 (Pix/Cartão)</a>
+            {cta_passes_html}
         </div>
     </div>
 </div>
 <div style="background-color:#EFF6FF; border:1px solid #BFDBFE; border-left:4px solid #0F293A; color:#0F293A; padding:0.65rem 0.9rem; border-radius:8px; font-size:0.83rem; margin-bottom:0.8rem;">
-    💡 <strong>Como funciona a liberação automática:</strong> Crie sua conta gratuita na barra lateral (ou utilize no Mercado Pago o mesmo e-mail do seu cadastro) e conclua o Pix ou Cartão. Assim que o pagamento for aprovado, clique em <strong>"🔄 Atualizar"</strong> no painel esquerdo para liberar o acesso na hora!
+    💡 <strong>Como funciona a liberação automática:</strong> Crie sua conta gratuita em <strong>"🔐 Área do Assinante"</strong> (na barra lateral esquerda no computador ou em <strong>"⚙️ ENTRAR NA CONTA OU CONFIGURAR PERFIL"</strong> no celular) antes de pagar e conclua o Pix ou Cartão no Mercado Pago. Assim que o pagamento for aprovado, clique em <strong>"🔄 Atualizar"</strong> para liberar o acesso na hora!
 </div>
 <div style="font-size: 1.05rem; font-weight: 700; color: #0F293A; margin-top: 0.4rem;">📋 O que está incluso no seu Dossiê Completo de Auditoria (6 Módulos):</div>
 <div class="feature-grid">
@@ -1035,7 +1068,12 @@ st.markdown("""
         <p class="feature-desc">Atualiza salários desde 07/1994 e compara Regra Geral vs. 80% maiores na Regra PCD.</p>
     </div>
 </div>
-""".replace("__PRECO_19__", preco_avulso_txt).replace("__LINK_19__", link_avulso_atual).replace("__LINK_7D__", link_7d_atual).replace("__LINK_30D__", link_30d_atual), unsafe_allow_html=True)
+""", unsafe_allow_html=True)
+
+if not email_logado:
+    if st.button("ℹ️ Onde faço meu cadastro antes de pagar?", key="btn_onde_cadastrar"):
+        st.session_state["aviso_cadastro_obrigatorio"] = True
+        st.rerun()
 
 _, col_ia, _ = st.columns([1, 2.2, 1])
 
