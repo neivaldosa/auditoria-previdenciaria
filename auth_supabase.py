@@ -1,13 +1,16 @@
 import streamlit as st
-from supabase import create_client, Client
+from supabase import create_client, Client, ClientOptions
 from datetime import datetime, timezone
 from urllib.parse import urlencode
 
 
-@st.cache_resource
-def init_supabase() -> Client:
-    url = st.secrets["supabase"]["url"]
-    key = st.secrets["supabase"]["key"]
+def get_supabase(access_token: str | None = None) -> Client:
+    """Cria o cliente Supabase com o token JWT do utilizador quando autenticado."""
+    url = st.secrets["supabase"]["url"].strip()
+    key = st.secrets["supabase"]["key"].strip()
+    if access_token:
+        options = ClientOptions(headers={"Authorization": f"Bearer {access_token}"})
+        return create_client(url, key, options=options)
     return create_client(url, key)
 
 
@@ -16,7 +19,6 @@ def renderizar_painel_acesso(chave_prefixo: str = "side") -> dict:
     Renderiza o login/cadastro e status da assinatura.
     Retorna um dicionário com o estado atual de acesso do utilizador.
     """
-    supabase = init_supabase()
     estado = {
         "autenticado": False,
         "tem_acesso_completo": False,
@@ -29,6 +31,7 @@ def renderizar_painel_acesso(chave_prefixo: str = "side") -> dict:
     st.markdown('<div class="sidebar-title">🔐 Área do Assinante</div>', unsafe_allow_html=True)
 
     if "user_session" not in st.session_state or st.session_state["user_session"] is None:
+        supabase = get_supabase()
         modo_acesso = st.radio(
             "Escolha uma opção:",
             options=["Entrar na Conta", "Criar Conta Grátis"],
@@ -50,8 +53,8 @@ def renderizar_painel_acesso(chave_prefixo: str = "side") -> dict:
                         st.session_state["user_email"] = res.user.email
                         st.session_state["user_id"] = res.user.id
                         st.rerun()
-                    except Exception:
-                        st.error("E-mail ou senha inválidos.")
+                    except Exception as e:
+                        st.error(f"E-mail ou senha inválidos ({e}).")
         else:
             email_cad = st.text_input("Seu melhor e-mail", key=f"{chave_prefixo}_cad_email").strip().lower()
             senha_cad = st.text_input("Crie uma senha (mín. 6 dígitos)", type="password", key=f"{chave_prefixo}_cad_senha")
@@ -77,20 +80,21 @@ def renderizar_painel_acesso(chave_prefixo: str = "side") -> dict:
 
     # Utilizador autenticado
     session = st.session_state["user_session"]
-    supabase.postgrest.auth(session.access_token)
+    supabase = get_supabase(session.access_token)
     email_usuario = st.session_state.get("user_email", "")
 
+    dados = None
     try:
-        dados = (
+        resp = (
             supabase.table("assinaturas")
             .select("*")
             .eq("id", st.session_state["user_id"])
-            .single()
             .execute()
-            .data
         )
-    except Exception:
-        dados = None
+        if resp.data:
+            dados = resp.data[0]
+    except Exception as e:
+        st.error(f"Erro ao ler assinatura: {e}")
 
     st.success(f"Conectado: **{email_usuario}**")
 
@@ -138,6 +142,8 @@ def renderizar_painel_acesso(chave_prefixo: str = "side") -> dict:
                 "tipo_acesso": "GRATUITO",
                 "email": email_usuario,
             })
+    else:
+        st.warning("⚠️ Registro de assinatura não localizado para esta conta.")
 
     col_atualizar, col_sair = st.columns(2)
     with col_atualizar:
@@ -145,7 +151,10 @@ def renderizar_painel_acesso(chave_prefixo: str = "side") -> dict:
             st.rerun()
     with col_sair:
         if st.button("Sair", use_container_width=True, key=f"{chave_prefixo}_btn_sair"):
-            supabase.auth.sign_out()
+            try:
+                supabase.auth.sign_out()
+            except Exception:
+                pass
             st.session_state["user_session"] = None
             st.session_state.pop("credito_consumido_nesta_sessao", None)
             st.rerun()
@@ -187,11 +196,10 @@ def _exibir_botoes_checkout(email_usuario: str):
 def registrar_uso_credito_avulso(acesso: dict):
     """Desconta 1 crédito avulso quando o utilizador gera um Dossiê Avulso."""
     if acesso.get("tipo_acesso") == "AVULSO" and not st.session_state.get("credito_consumido_nesta_sessao"):
-        supabase = init_supabase()
         session = st.session_state.get("user_session")
         if session:
             try:
-                supabase.postgrest.auth(session.access_token)
+                supabase = get_supabase(session.access_token)
                 supabase.rpc("consumir_credito_avulso").execute()
                 st.session_state["credito_consumido_nesta_sessao"] = True
             except Exception:
