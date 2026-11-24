@@ -139,4 +139,4 @@ O código-fonte, a lógica de extração e os modelos de relatórios deste repos
 ## Contato e Suporte
 
 - **E-mail:** inteligenciaprevidenciariaaudi@gmail.com
-- **WhatsApp:** +55 21 96880-7965
+- **WhatsApp:** +55 21 96880-7955
