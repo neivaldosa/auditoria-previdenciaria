@@ -169,6 +169,68 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+PLANOS = {
+    "AVULSO": {
+        "titulo": "Dossiê Avulso - Auditoria CNIS",
+        "valor": 19.90,
+    },
+    "PASSE_7D": {
+        "titulo": "Passe 7 Dias - Auditoria CNIS",
+        "valor": 39.90,
+    },
+    "PASSE_30D": {
+        "titulo": "Passe 30 Dias - Auditoria CNIS",
+        "valor": 69.90,
+    },
+}
+
+
+def criar_preferencia_checkout(plano_id: str, email_usuario: str) -> str:
+    """Cria a preferência no Mercado Pago Checkout Pro com back_urls configuradas
+    e retorna a URL de pagamento (init_point)."""
+    import mercadopago
+
+    if plano_id not in PLANOS:
+        raise ValueError(f"Plano inválido: {plano_id}")
+
+    plano_info = PLANOS[plano_id]
+    valor = plano_info["valor"]
+    titulo = plano_info["titulo"]
+
+    access_token = st.secrets["MERCADOPAGO_ACCESS_TOKEN"]
+    base_url = st.secrets.get("APP_BASE_URL", "https://inteligenciapreviden.streamlit.app").rstrip("/")
+
+    sdk = mercadopago.SDK(access_token)
+
+    url_sucesso = f"{base_url}/?pagamento=aprovado&plano={plano_id}&valor={valor:.2f}"
+    url_falha = f"{base_url}/?pagamento=falha&plano={plano_id}"
+    url_pendente = f"{base_url}/?pagamento=pendente&plano={plano_id}"
+
+    preference_data = {
+        "items": [
+            {
+                "id": plano_id,
+                "title": titulo,
+                "quantity": 1,
+                "currency_id": "BRL",
+                "unit_price": valor,
+            }
+        ],
+        "payer": {
+            "email": email_usuario,
+        },
+        "back_urls": {
+            "success": url_sucesso,
+            "failure": url_falha,
+            "pending": url_pendente,
+        },
+        "auto_return": "approved",
+        "external_reference": f"{email_usuario}|{plano_id}",
+    }
+
+    resposta = sdk.preference().create(preference_data)
+    return resposta["response"]["init_point"]
+
 # Carregamento seguro dos códigos de cortesia/admin via st.secrets
 _secrets_acesso = st.secrets.get("codigos_acesso", {})
 CODIGOS_DOSSIE_AVULSO = {c.strip().upper() for c in _secrets_acesso.get("dossie_avulso", [])}
@@ -179,15 +241,33 @@ TODOS_CODIGOS_PAGOS = CODIGOS_DOSSIE_AVULSO | CODIGOS_PASSE_ILIMITADO
 
 acesso_url = st.query_params.get("acesso", "").strip().upper()
 pagina_url = st.query_params.get("pagina", "").strip().lower()
-is_conversao_paga = (pagina_url == "obrigado") or (acesso_url in TODOS_CODIGOS_PAGOS)
+status_pgto = st.query_params.get("pagamento", "").strip().lower()
+status_mp = st.query_params.get("status", "").strip().lower()
+plano_url = st.query_params.get("plano", "").strip().upper()
+payment_id_url = (st.query_params.get("payment_id") or st.query_params.get("collection_id") or "").strip()
 
-script_evento_compra = ""
+retorno_mp_aprovado = (status_pgto == "aprovado") or (status_mp == "approved")
+is_conversao_paga = (pagina_url == "obrigado") or (acesso_url in TODOS_CODIGOS_PAGOS) or retorno_mp_aprovado
+
+valor_conversao = 0.0
 if is_conversao_paga:
-    script_evento_compra = """
-      window.parent.gtag('event', 'conversion', {
+    valor_padrao_plano = PLANOS.get(plano_url, {}).get("valor", 19.90)
+    try:
+        valor_conversao = float(st.query_params.get("valor", valor_padrao_plano))
+    except (ValueError, TypeError):
+        valor_conversao = valor_padrao_plano
+
+chave_conv_sessao = f"conv_gads_disparada_{payment_id_url or plano_url or pagina_url or acesso_url}"
+script_evento_compra = ""
+if is_conversao_paga and not st.session_state.get(chave_conv_sessao):
+    st.session_state[chave_conv_sessao] = True
+    script_evento_compra = f"""
+      window.parent.gtag('event', 'conversion', {{
           'send_to': 'AW-18585331316/Fwq0CLj10L0dEPTMlp5F',
-          'transaction_id': ''
-      });
+          'value': {valor_conversao:.2f},
+          'currency': 'BRL',
+          'transaction_id': '{payment_id_url}'
+      }});
     """
 
 components.html(f"""
@@ -204,6 +284,8 @@ components.html(f"""
       window.parent.gtag = function(){{window.parent.dataLayer.push(arguments);}};
       window.parent.gtag('js', new Date());
       window.parent.gtag('config', 'AW-18585331316');
+    }}
+    if (window.parent.gtag) {{
       {script_evento_compra}
     }}
   }} catch (e) {{
@@ -211,6 +293,17 @@ components.html(f"""
   }}
 </script>
 """, height=0, width=0)
+
+if retorno_mp_aprovado:
+    nome_plano_retornado = PLANOS.get(plano_url, {}).get("titulo", plano_url or "Dossiê Completo")
+    st.query_params.clear()
+    st.success(f"✅ Pagamento aprovado! Seu acesso ({nome_plano_retornado} — R$ {valor_conversao:.2f}) já foi confirmado. Clique em '🔄 Atualizar' na Área do Assinante se necessário.")
+elif status_pgto == "pendente" or status_mp == "pending":
+    st.query_params.clear()
+    st.info("⏳ Seu pagamento está em processamento. Assim que for confirmado, seu acesso será liberado automaticamente.")
+elif status_pgto == "falha" or status_mp == "rejected":
+    st.query_params.clear()
+    st.warning("⚠️ O pagamento não foi concluído. Você pode tentar novamente quando quiser.")
 
 if pagina_url == "obrigado":
     cod_vip = acesso_url
@@ -648,6 +741,13 @@ st.markdown(f"""
         <h1 class="hero-title">Diagnóstico Estratégico de Aposentadoria e CNIS</h1>
         <p class="hero-subtitle">Análise automatizada de vínculos, auditoria de pendências no INSS, enquadramento PCD (LC 142/2013) e projeção de renda.</p>
     </div>
+</div>
+""", unsafe_allow_html=True)
+
+st.markdown("""
+<div style="background:linear-gradient(90deg, #FFFDF5 0%, #FFFFFF 100%); border:1.5px solid #C59B27; border-left:5px solid #0F293A; border-radius:10px; padding:0.75rem 1.1rem; margin-bottom:0.75rem; font-size:0.86rem; color:#0F293A; line-height:1.45;">
+    <strong>🛡️ Por que não usar o ChatGPT ou IAs genéricas para ler seu CNIS?</strong><br>
+    Ferramentas genéricas de texto costumam errar datas, ignorar indicadores ocultos do INSS (como <em>PREC-MENOR-MIN</em>, <em>IEAN</em> e <em>PEXT</em>) e somar períodos concomitantes de forma incorreta. Aqui, cada vínculo e remuneração passa por <strong>regras determinísticas da legislação previdenciária</strong> com sigilo total (LGPD).
 </div>
 """, unsafe_allow_html=True)
 
