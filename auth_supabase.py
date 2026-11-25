@@ -204,3 +204,25 @@ def registrar_uso_credito_avulso(acesso: dict):
                 st.session_state["credito_consumido_nesta_sessao"] = True
             except Exception:
                 pass
+                
+def enviar_email_recuperacao(email: str, redirect_url: str):
+    """Envia o link de redefinição de senha para o e-mail do usuário."""
+    try:
+        client = get_supabase()
+        client.auth.reset_password_for_email(
+            email,
+            options={"redirect_to": redirect_url}
+        )
+        return True, "Enviamos um link de recuperação para o seu e-mail. Verifique sua caixa de entrada e spam."
+    except Exception as e:
+        return False, f"Erro ao enviar e-mail de recuperação: {str(e)}"
+
+def atualizar_nova_senha(nova_senha: str):
+    """Atualiza a senha do usuário após ele clicar no link do e-mail."""
+    try:
+        client = get_supabase()
+        client.auth.update_user({"password": nova_senha})
+        return True, "Senha alterada com sucesso! Você já pode acessar seu dossiê."
+    except Exception as e:
+        return False, f"Erro ao atualizar a senha: {str(e)}"
+        
