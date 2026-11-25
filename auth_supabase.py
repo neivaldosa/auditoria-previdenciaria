@@ -232,26 +232,24 @@ def registrar_uso_credito_avulso(acesso: dict):
                 pass
 
 
-def enviar_email_recuperacao(email: str, redirect_url: str):
-    """Envia o link/código de redefinição de senha usando fluxo implicit."""
+def enviar_email_recuperacao(email: str, redirect_url: str | None = None):
+    """Envia um código OTP por e-mail para autenticar a recuperação sem depender de link."""
+    email_limpo = (email or "").strip().lower()
+    if not email_limpo:
+        return False, "Por favor, digite seu e-mail."
     try:
-        url, key = _obter_credenciais_supabase()
-        client_implicit = create_client(
-            url,
-            key,
-            options=ClientOptions(flow_type="implicit"),
-        )
-        client_implicit.auth.reset_password_for_email(
-            email,
-            options={"redirect_to": redirect_url},
-        )
-        return True, "Enviamos um e-mail de recuperação. Você pode clicar no link ou digitar o código recebido abaixo."
+        client = get_supabase()
+        client.auth.sign_in_with_otp({
+            "email": email_limpo,
+            "options": {"should_create_user": False},
+        })
+        return True, "Enviamos um código para o seu e-mail. Digite o código abaixo para criar sua nova senha."
     except Exception as e:
-        return False, f"Erro ao enviar e-mail de recuperação: {str(e)}"
+        return False, f"Erro ao enviar código de recuperação: {str(e)}"
 
 
 def verificar_codigo_otp_recuperacao(email: str, codigo_otp: str):
-    """Valida um código OTP recebido por e-mail e abre o formulário de nova senha."""
+    """Valida o código OTP recebido por e-mail e abre o formulário de nova senha."""
     email_limpo = (email or "").strip().lower()
     token_limpo = (codigo_otp or "").strip()
     if not email_limpo or not token_limpo:
@@ -261,7 +259,7 @@ def verificar_codigo_otp_recuperacao(email: str, codigo_otp: str):
         client = get_supabase()
         res = None
         ultimo_erro = None
-        for tipo_otp in ("recovery", "email"):
+        for tipo_otp in ("email", "recovery"):
             try:
                 res = client.auth.verify_otp({"email": email_limpo, "token": token_limpo, "type": tipo_otp})
                 break
