@@ -173,6 +173,23 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Converte automaticamente o fragmento (#access_token=... / #error=...) em query string (?...)
+components.html(
+    """
+    <script>
+      try {
+        var h = window.parent.location.hash || "";
+        if (h.length > 1 && (h.indexOf("access_token=") !== -1 || h.indexOf("error=") !== -1)) {
+          var novaUrl = window.parent.location.origin + window.parent.location.pathname + "?" + h.substring(1);
+          window.parent.location.replace(novaUrl);
+        }
+      } catch (e) {}
+    </script>
+    """,
+    height=0,
+    width=0,
+)
+
 URL_APP = "https://auditoria-previdenciaria-4ibrpwssuthl96ga3kh974.streamlit.app"
 
 query_params = st.query_params
@@ -196,6 +213,7 @@ def _guardar_sessao_recuperacao(res):
 
 
 if erro_url:
+    st.error(f"Link de recuperação expirado ou inválido ({erro_url}). Solicite um novo e-mail.")
     st.query_params.clear()
 elif access_token_url and (tipo_param == "recovery" or not tipo_param):
     try:
@@ -203,8 +221,9 @@ elif access_token_url and (tipo_param == "recovery" or not tipo_param):
         res = client.auth.set_session(access_token_url, refresh_token_url or "")
         _guardar_sessao_recuperacao(res)
         st.query_params.clear()
+        st.rerun()
     except Exception as e:
-        st.error(f"Link de recuperação expirado ou inválido ({e}). Solicite um novo código.")
+        st.error(f"Link de recuperação expirado ou inválido ({e}). Solicite um novo.")
         st.query_params.clear()
 elif token_hash and (tipo_param == "recovery" or not tipo_param):
     try:
@@ -212,8 +231,9 @@ elif token_hash and (tipo_param == "recovery" or not tipo_param):
         res = client.auth.verify_otp({"token_hash": token_hash, "type": "recovery"})
         _guardar_sessao_recuperacao(res)
         st.query_params.clear()
+        st.rerun()
     except Exception as e:
-        st.error(f"Link de recuperação expirado ou inválido ({e}). Solicite um novo código.")
+        st.error(f"Link de recuperação expirado ou inválido ({e}). Solicite um novo.")
         st.query_params.clear()
 elif codigo_auth:
     try:
@@ -221,6 +241,7 @@ elif codigo_auth:
         res = client.auth.exchange_code_for_session({"auth_code": codigo_auth})
         _guardar_sessao_recuperacao(res)
         st.query_params.clear()
+        st.rerun()
     except Exception:
         st.query_params.clear()
 
@@ -260,14 +281,18 @@ def _renderizar_bloco_esqueci_senha(sufixo_key: str):
             placeholder="seu@email.com",
             key=f"email_recuperacao_{sufixo_key}",
         )
-        if st.button("Enviar código por e-mail", use_container_width=True, key=f"btn_enviar_recuperacao_{sufixo_key}"):
-            ok, mensagem = enviar_email_recuperacao(email_rec.strip(), url_base)
-            if ok:
-                st.success(mensagem)
+        if st.button("Enviar e-mail de recuperação", use_container_width=True, key=f"btn_enviar_recuperacao_{sufixo_key}"):
+            if email_rec.strip():
+                ok, mensagem = enviar_email_recuperacao(email_rec.strip(), url_base)
+                if ok:
+                    st.success(mensagem)
+                else:
+                    st.error(mensagem)
             else:
-                st.error(mensagem)
+                st.warning("Por favor, digite seu e-mail.")
 
         st.markdown("---")
+        st.caption("Se o e-mail trouxe um código numérico, digite abaixo para trocar a senha sem depender do link:")
         codigo_otp = st.text_input(
             "Código recebido por e-mail",
             placeholder="Ex.: 123456",
