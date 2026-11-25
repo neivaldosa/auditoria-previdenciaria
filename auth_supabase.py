@@ -156,6 +156,21 @@ def renderizar_painel_acesso(chave_prefixo: str = "side") -> dict:
     else:
         st.warning("⚠️ Registro de assinatura não localizado para esta conta.")
 
+    with st.expander("🔑 Alterar Senha da Conta", expanded=False):
+        nova_s_logada = st.text_input("Nova senha (mín. 6 dígitos)", type="password", key=f"{chave_prefixo}_nova_senha_logado")
+        conf_s_logada = st.text_input("Confirmar nova senha", type="password", key=f"{chave_prefixo}_conf_senha_logado")
+        if st.button("Atualizar Senha", use_container_width=True, key=f"{chave_prefixo}_btn_alt_senha"):
+            if len(nova_s_logada) < 6:
+                st.warning("A senha deve ter pelo menos 6 caracteres.")
+            elif nova_s_logada != conf_s_logada:
+                st.warning("As senhas não coincidem.")
+            else:
+                ok_s, msg_s = atualizar_nova_senha(nova_s_logada)
+                if ok_s:
+                    st.success(msg_s)
+                else:
+                    st.error(msg_s)
+
     col_atualizar, col_sair = st.columns(2)
     with col_atualizar:
         if st.button("🔄 Atualizar", use_container_width=True, key=f"{chave_prefixo}_btn_att", help="Clique após concluir um pagamento"):
@@ -218,7 +233,7 @@ def registrar_uso_credito_avulso(acesso: dict):
 
 
 def enviar_email_recuperacao(email: str, redirect_url: str):
-    """Envia o link de redefinição de senha usando fluxo implicit (sem exigir code_verifier)."""
+    """Envia o link/código de redefinição de senha usando fluxo implicit."""
     try:
         url, key = _obter_credenciais_supabase()
         client_implicit = create_client(
@@ -230,13 +245,50 @@ def enviar_email_recuperacao(email: str, redirect_url: str):
             email,
             options={"redirect_to": redirect_url},
         )
-        return True, "Enviamos um link de recuperação para o seu e-mail. Verifique sua caixa de entrada e spam."
+        return True, "Enviamos um e-mail de recuperação. Você pode clicar no link ou digitar o código recebido abaixo."
     except Exception as e:
         return False, f"Erro ao enviar e-mail de recuperação: {str(e)}"
 
 
+def verificar_codigo_otp_recuperacao(email: str, codigo_otp: str):
+    """Valida um código OTP recebido por e-mail e abre o formulário de nova senha."""
+    email_limpo = (email or "").strip().lower()
+    token_limpo = (codigo_otp or "").strip()
+    if not email_limpo or not token_limpo:
+        return False, "Informe o e-mail e o código recebido."
+
+    try:
+        client = get_supabase()
+        res = None
+        ultimo_erro = None
+        for tipo_otp in ("recovery", "email"):
+            try:
+                res = client.auth.verify_otp({"email": email_limpo, "token": token_limpo, "type": tipo_otp})
+                break
+            except Exception as err:
+                ultimo_erro = err
+
+        if res is None:
+            return False, f"Código inválido ou expirado ({ultimo_erro})."
+
+        sess_obj = getattr(res, "session", None)
+        user_obj = getattr(res, "user", None)
+        if sess_obj:
+            st.session_state["user_session"] = sess_obj
+        if user_obj:
+            st.session_state["user_email"] = getattr(user_obj, "email", email_limpo)
+            st.session_state["user_id"] = getattr(user_obj, "id", st.session_state.get("user_id", ""))
+        else:
+            st.session_state["user_email"] = email_limpo
+
+        st.session_state["modo_redefinir_senha"] = True
+        return True, "Código validado! Defina sua nova senha abaixo."
+    except Exception as e:
+        return False, f"Não foi possível validar o código ({e})."
+
+
 def atualizar_nova_senha(nova_senha: str):
-    """Atualiza a senha do usuário após ele clicar no link do e-mail."""
+    """Atualiza a senha do usuário com sessão ativa."""
     try:
         sess = st.session_state.get("user_session")
         access_token = getattr(sess, "access_token", None) if sess else None
@@ -245,4 +297,3 @@ def atualizar_nova_senha(nova_senha: str):
         return True, "Senha alterada com sucesso! Você já pode acessar seu dossiê."
     except Exception as e:
         return False, f"Erro ao atualizar a senha: {str(e)}"
-        
