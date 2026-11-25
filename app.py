@@ -174,7 +174,7 @@ st.set_page_config(
 
 URL_APP = "https://auditoria-previdenciaria-4ibrpwssuthl96ga3kh974.streamlit.app"
 
-# Converte fragmentos #access_token=... ou #error=... enviados pelo Supabase em query params para o Streamlit ler
+# Converte fragmentos #access_token=... / #token_hash=... / #type=recovery em query params para o Streamlit ler
 components.html("""
 <script>
   try {
@@ -196,6 +196,18 @@ tipo_param = (query_params.get("type") or "").lower()
 codigo_auth = query_params.get("code")
 erro_url = query_params.get("error_description") or query_params.get("error")
 
+
+def _guardar_sessao_recuperacao(res):
+    sess_obj = getattr(res, "session", None)
+    user_obj = getattr(res, "user", None)
+    if sess_obj:
+        st.session_state["user_session"] = sess_obj
+    if user_obj:
+        st.session_state["user_email"] = getattr(user_obj, "email", st.session_state.get("user_email", ""))
+        st.session_state["user_id"] = getattr(user_obj, "id", st.session_state.get("user_id", ""))
+    st.session_state["modo_redefinir_senha"] = True
+
+
 if erro_url:
     st.error(f"Erro na recuperação: {erro_url}")
     st.query_params.clear()
@@ -203,14 +215,7 @@ elif access_token_url and (tipo_param == "recovery" or not tipo_param):
     try:
         client = get_supabase()
         res = client.auth.set_session(access_token_url, refresh_token_url or "")
-        sess_obj = getattr(res, "session", None)
-        user_obj = getattr(res, "user", None)
-        if sess_obj:
-            st.session_state["user_session"] = sess_obj
-            if user_obj:
-                st.session_state["user_email"] = getattr(user_obj, "email", st.session_state.get("user_email", ""))
-                st.session_state["user_id"] = getattr(user_obj, "id", st.session_state.get("user_id", ""))
-        st.session_state["modo_redefinir_senha"] = True
+        _guardar_sessao_recuperacao(res)
         st.query_params.clear()
     except Exception as e:
         st.error(f"Link de recuperação expirado ou inválido ({e}). Solicite um novo.")
@@ -219,14 +224,7 @@ elif token_hash and (tipo_param == "recovery" or not tipo_param):
     try:
         client = get_supabase()
         res = client.auth.verify_otp({"token_hash": token_hash, "type": "recovery"})
-        sess_obj = getattr(res, "session", None)
-        user_obj = getattr(res, "user", None)
-        if sess_obj:
-            st.session_state["user_session"] = sess_obj
-            if user_obj:
-                st.session_state["user_email"] = getattr(user_obj, "email", st.session_state.get("user_email", ""))
-                st.session_state["user_id"] = getattr(user_obj, "id", st.session_state.get("user_id", ""))
-        st.session_state["modo_redefinir_senha"] = True
+        _guardar_sessao_recuperacao(res)
         st.query_params.clear()
     except Exception as e:
         st.error(f"Link de recuperação expirado ou inválido ({e}). Solicite um novo.")
@@ -235,17 +233,11 @@ elif codigo_auth:
     try:
         client = get_supabase()
         res = client.auth.exchange_code_for_session({"auth_code": codigo_auth})
-        sess_obj = getattr(res, "session", None)
-        user_obj = getattr(res, "user", None)
-        if sess_obj:
-            st.session_state["user_session"] = sess_obj
-            if user_obj:
-                st.session_state["user_email"] = getattr(user_obj, "email", st.session_state.get("user_email", ""))
-                st.session_state["user_id"] = getattr(user_obj, "id", st.session_state.get("user_id", ""))
-        st.session_state["modo_redefinir_senha"] = True
+        _guardar_sessao_recuperacao(res)
         st.query_params.clear()
-    except Exception as e:
-        st.error(f"Não foi possível validar o link automaticamente ({e}). Solicite um novo ou abra o link no mesmo navegador.")
+    except Exception:
+        # Se vier ?code= sem code_verifier no navegador, abre o formulário para tentativa direta
+        st.session_state["modo_redefinir_senha"] = True
         st.query_params.clear()
 
 if st.session_state.get("modo_redefinir_senha"):
@@ -254,20 +246,46 @@ if st.session_state.get("modo_redefinir_senha"):
     nova_senha = st.text_input("Digite sua nova senha (mínimo 6 caracteres)", type="password", key="nova_senha_input")
     confirmar_senha = st.text_input("Confirme sua nova senha", type="password", key="conf_senha_input")
 
-    if st.button("Salvar Nova Senha", key="btn_salvar_nova_senha"):
-        if len(nova_senha) < 6:
-            st.warning("A senha deve ter pelo menos 6 caracteres.")
-        elif nova_senha != confirmar_senha:
-            st.warning("As senhas não coincidem.")
-        else:
-            sucesso, msg = atualizar_nova_senha(nova_senha)
-            if sucesso:
-                st.success(msg)
-                st.session_state["modo_redefinir_senha"] = False
-                st.rerun()
+    col_s1, col_s2 = st.columns([1, 1])
+    with col_s1:
+        if st.button("Salvar Nova Senha", type="primary", key="btn_salvar_nova_senha"):
+            if len(nova_senha) < 6:
+                st.warning("A senha deve ter pelo menos 6 caracteres.")
+            elif nova_senha != confirmar_senha:
+                st.warning("As senhas não coincidem.")
             else:
-                st.error(msg)
+                sucesso, msg = atualizar_nova_senha(nova_senha)
+                if sucesso:
+                    st.success(msg)
+                    st.session_state["modo_redefinir_senha"] = False
+                    st.rerun()
+                else:
+                    st.error(msg)
+    with col_s2:
+        if st.button("Voltar ao início", key="btn_voltar_redefinir"):
+            st.session_state["modo_redefinir_senha"] = False
+            st.rerun()
     st.stop()
+
+
+def _renderizar_bloco_esqueci_senha(sufixo_key: str):
+    url_base = globals().get("URL_APP", "https://auditoria-previdenciaria-4ibrpwssuthl96ga3kh974.streamlit.app")
+    with st.expander("Esqueci minha senha", expanded=False):
+        email_rec = st.text_input(
+            "Digite o e-mail cadastrado",
+            placeholder="seu@email.com",
+            key=f"email_recuperacao_{sufixo_key}",
+        )
+        if st.button("Enviar link de recuperação", key=f"btn_enviar_recuperacao_{sufixo_key}"):
+            if email_rec.strip():
+                ok, mensagem = enviar_email_recuperacao(email_rec.strip(), url_base)
+                if ok:
+                    st.success(mensagem)
+                else:
+                    st.error(mensagem)
+            else:
+                st.warning("Por favor, digite seu e-mail.")
+
 
 PLANOS = {
     "AVULSO": {
