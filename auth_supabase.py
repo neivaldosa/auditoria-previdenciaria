@@ -89,7 +89,6 @@ def renderizar_painel_acesso(chave_prefixo: str = "side") -> dict:
         st.caption("Crie sua conta gratuita para vincular seu pagamento automaticamente.")
         return estado
 
-    # Utilizador autenticado
     session = st.session_state["user_session"]
     supabase = get_supabase(session.access_token)
     email_usuario = st.session_state.get("user_email", "")
@@ -233,7 +232,7 @@ def registrar_uso_credito_avulso(acesso: dict):
 
 
 def enviar_email_recuperacao(email: str, redirect_url: str):
-    """Envia o link de redefinição de senha usando fluxo implicit."""
+    """Envia o e-mail de redefinição de senha com o código {{ .Token }}."""
     email_limpo = (email or "").strip().lower()
     if not email_limpo:
         return False, "Por favor, digite seu e-mail."
@@ -248,9 +247,46 @@ def enviar_email_recuperacao(email: str, redirect_url: str):
             email_limpo,
             options={"redirect_to": redirect_url},
         )
-        return True, "Enviamos um link para o seu e-mail. Abra o e-mail e clique em 'Reset password' imediatamente."
+        return True, "Enviamos o código para o seu e-mail. Digite-o abaixo para trocar a senha."
     except Exception as e:
-        return False, f"Erro ao enviar e-mail de recuperação: {str(e)}"
+        return False, f"Erro ao enviar código de recuperação: {str(e)}"
+
+
+def verificar_codigo_otp_recuperacao(email: str, codigo_otp: str):
+    """Valida o código OTP recebido por e-mail e abre o formulário de nova senha."""
+    email_limpo = (email or "").strip().lower()
+    token_limpo = (codigo_otp or "").strip()
+    if not email_limpo or not token_limpo:
+        return False, "Informe o e-mail e o código recebido."
+
+    try:
+        client = get_supabase()
+        res = None
+        ultimo_erro = None
+        for tipo_otp in ("recovery", "email"):
+            try:
+                res = client.auth.verify_otp({"email": email_limpo, "token": token_limpo, "type": tipo_otp})
+                break
+            except Exception as err:
+                ultimo_erro = err
+
+        if res is None:
+            return False, f"Código inválido ou expirado ({ultimo_erro})."
+
+        sess_obj = getattr(res, "session", None)
+        user_obj = getattr(res, "user", None)
+        if sess_obj:
+            st.session_state["user_session"] = sess_obj
+        if user_obj:
+            st.session_state["user_email"] = getattr(user_obj, "email", email_limpo)
+            st.session_state["user_id"] = getattr(user_obj, "id", st.session_state.get("user_id", ""))
+        else:
+            st.session_state["user_email"] = email_limpo
+
+        st.session_state["modo_redefinir_senha"] = True
+        return True, "Código validado! Defina sua nova senha abaixo."
+    except Exception as e:
+        return False, f"Não foi possível validar o código ({e})."
 
 
 def atualizar_nova_senha(nova_senha: str):
@@ -263,4 +299,3 @@ def atualizar_nova_senha(nova_senha: str):
         return True, "Senha alterada com sucesso! Você já pode acessar seu dossiê."
     except Exception as e:
         return False, f"Erro ao atualizar a senha: {str(e)}"
-        
