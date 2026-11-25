@@ -16,6 +16,9 @@ from auth_supabase import (
     renderizar_painel_acesso,
     gerar_link_checkout_personalizado,
     registrar_uso_credito_avulso,
+    enviar_email_recuperacao,
+    atualizar_nova_senha,
+    get_supabase,
 )
 
 
@@ -169,6 +172,59 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+URL_APP = "https://auditoria-previdenciaria-4ibrpwssuthl96ga3kh974.streamlit.app"
+
+query_params = st.query_params
+if "code" in query_params:
+    try:
+        sess = st.session_state.get("user_session")
+        client = get_supabase(sess.access_token) if sess and getattr(sess, "access_token", None) else get_supabase()
+        client.auth.exchange_code_for_session({"auth_code": query_params["code"]})
+        st.session_state["modo_redefinir_senha"] = True
+        st.query_params.clear()
+    except Exception:
+        st.error("Link de recuperação expirado ou inválido. Solicite um novo.")
+
+if st.session_state.get("modo_redefinir_senha"):
+    st.subheader("🔑 Criar Nova Senha")
+    st.caption("Sua conta e seu histórico de pagamentos/créditos permanecem preservados.")
+    nova_senha = st.text_input("Digite sua nova senha (mínimo 6 caracteres)", type="password", key="nova_senha_input")
+    confirmar_senha = st.text_input("Confirme sua nova senha", type="password", key="conf_senha_input")
+
+    if st.button("Salvar Nova Senha", key="btn_salvar_nova_senha"):
+        if len(nova_senha) < 6:
+            st.warning("A senha deve ter pelo menos 6 caracteres.")
+        elif nova_senha != confirmar_senha:
+            st.warning("As senhas não coincidem.")
+        else:
+            sucesso, msg = atualizar_nova_senha(nova_senha)
+            if sucesso:
+                st.success(msg)
+                st.session_state["modo_redefinir_senha"] = False
+                st.rerun()
+            else:
+                st.error(msg)
+    st.stop()
+
+
+def _renderizar_bloco_esqueci_senha(sufixo_key: str):
+    with st.expander("Esqueci minha senha", expanded=False):
+        email_rec = st.text_input(
+            "Digite o e-mail cadastrado",
+            placeholder="seu@email.com",
+            key=f"email_recuperacao_{sufixo_key}",
+        )
+        if st.button("Enviar link de recuperação", key=f"btn_enviar_recuperacao_{sufixo_key}"):
+            if email_rec.strip():
+                ok, mensagem = enviar_email_recuperacao(email_rec.strip(), URL_APP)
+                if ok:
+                    st.success(mensagem)
+                else:
+                    st.error(mensagem)
+            else:
+                st.warning("Por favor, digite seu e-mail.")
+
+
 PLANOS = {
     "AVULSO": {
         "titulo": "Dossiê Avulso - Auditoria CNIS",
@@ -230,6 +286,7 @@ def criar_preferencia_checkout(plano_id: str, email_usuario: str) -> str:
 
     resposta = sdk.preference().create(preference_data)
     return resposta["response"]["init_point"]
+
 
 # Carregamento seguro dos códigos de cortesia/admin via st.secrets
 _secrets_acesso = st.secrets.get("codigos_acesso", {})
@@ -775,6 +832,7 @@ with st.sidebar:
 
     # Painel de Login, Conta e Assinatura Automática (Supabase)
     acesso_supabase = renderizar_painel_acesso(chave_prefixo="side")
+    _renderizar_bloco_esqueci_senha("side")
 
     st.markdown("---")
     st.markdown("### ⚙️ Configure seu Perfil")
@@ -827,6 +885,7 @@ email_logado = acesso_supabase.get("email")
 with st.container(key="menu_celular"):
     with st.expander("🔐 ENTRAR NA CONTA OU CONFIGURAR PERFIL (SEXO, AMBIENTE, PCD)"):
         acesso_mob = renderizar_painel_acesso(chave_prefixo="mob")
+        _renderizar_bloco_esqueci_senha("mob")
         if acesso_mob["tem_acesso_completo"]:
             modo_pago = True
             email_logado = acesso_mob.get("email")
