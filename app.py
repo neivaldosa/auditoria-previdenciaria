@@ -195,7 +195,9 @@ elif token_hash and tipo_param == "recovery":
 elif codigo_auth:
     try:
         client = get_supabase()
-        client.auth.exchange_code_for_session({"auth_code": codigo_auth})
+        res = client.auth.exchange_code_for_session({"auth_code": codigo_auth})
+        if getattr(res, "session", None):
+            st.session_state["user_session"] = res.session
         st.session_state["modo_redefinir_senha"] = True
         st.query_params.clear()
     except Exception as e:
