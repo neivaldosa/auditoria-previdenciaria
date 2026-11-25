@@ -17,6 +17,7 @@ from auth_supabase import (
     gerar_link_checkout_personalizado,
     registrar_uso_credito_avulso,
     enviar_email_recuperacao,
+    verificar_codigo_otp_recuperacao,
     atualizar_nova_senha,
     get_supabase,
 )
@@ -172,25 +173,6 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Converte imediatamente o fragmento (#access_token=... / #error=...) em query string (?...)
-components.html(
-    """
-    <script>
-      (function() {
-        try {
-          var h = window.parent.location.hash || "";
-          if (h.length > 1 && (h.indexOf("access_token=") !== -1 || h.indexOf("error=") !== -1)) {
-            var novaUrl = window.parent.location.origin + window.parent.location.pathname + "?" + h.substring(1);
-            window.parent.location.replace(novaUrl);
-          }
-        } catch (e) {}
-      })();
-    </script>
-    """,
-    height=0,
-    width=0,
-)
-
 URL_APP = "https://auditoria-previdenciaria-4ibrpwssuthl96ga3kh974.streamlit.app"
 
 query_params = st.query_params
@@ -199,7 +181,6 @@ refresh_token_url = query_params.get("refresh_token")
 token_hash = query_params.get("token_hash")
 tipo_param = (query_params.get("type") or "").lower()
 codigo_auth = query_params.get("code")
-erro_url = query_params.get("error_description") or query_params.get("error")
 
 
 def _guardar_sessao_recuperacao(res):
@@ -213,18 +194,14 @@ def _guardar_sessao_recuperacao(res):
     st.session_state["modo_redefinir_senha"] = True
 
 
-if erro_url:
-    st.warning("⚠️ O link de redefinição de senha expirou ou já foi utilizado. Solicite um novo link na barra lateral.")
-    st.query_params.clear()
-elif access_token_url and (tipo_param == "recovery" or not tipo_param):
+if access_token_url and (tipo_param == "recovery" or not tipo_param):
     try:
         client = get_supabase()
         res = client.auth.set_session(access_token_url, refresh_token_url or "")
         _guardar_sessao_recuperacao(res)
         st.query_params.clear()
         st.rerun()
-    except Exception as e:
-        st.error(f"Link de recuperação expirado ou inválido ({e}). Solicite um novo.")
+    except Exception:
         st.query_params.clear()
 elif token_hash and (tipo_param == "recovery" or not tipo_param):
     try:
@@ -233,8 +210,7 @@ elif token_hash and (tipo_param == "recovery" or not tipo_param):
         _guardar_sessao_recuperacao(res)
         st.query_params.clear()
         st.rerun()
-    except Exception as e:
-        st.error(f"Link de recuperação expirado ou inválido ({e}). Solicite um novo.")
+    except Exception:
         st.query_params.clear()
 elif codigo_auth:
     try:
@@ -282,7 +258,7 @@ def _renderizar_bloco_esqueci_senha(sufixo_key: str):
             placeholder="seu@email.com",
             key=f"email_recuperacao_{sufixo_key}",
         )
-        if st.button("Enviar link de recuperação", use_container_width=True, key=f"btn_enviar_recuperacao_{sufixo_key}"):
+        if st.button("Enviar código de recuperação", use_container_width=True, key=f"btn_enviar_recuperacao_{sufixo_key}"):
             if email_rec.strip():
                 ok, mensagem = enviar_email_recuperacao(email_rec.strip(), url_base)
                 if ok:
@@ -291,6 +267,19 @@ def _renderizar_bloco_esqueci_senha(sufixo_key: str):
                     st.error(mensagem)
             else:
                 st.warning("Por favor, digite seu e-mail.")
+
+        st.markdown("---")
+        codigo_otp = st.text_input(
+            "Código recebido por e-mail",
+            placeholder="Digite o código recebido",
+            key=f"codigo_otp_{sufixo_key}",
+        )
+        if st.button("Validar código e trocar senha", use_container_width=True, key=f"btn_validar_otp_{sufixo_key}"):
+            ok_otp, msg_otp = verificar_codigo_otp_recuperacao(email_rec, codigo_otp)
+            if ok_otp:
+                st.rerun()
+            else:
+                st.error(msg_otp)
 
 
 PLANOS = {
@@ -356,7 +345,6 @@ def criar_preferencia_checkout(plano_id: str, email_usuario: str) -> str:
     return resposta["response"]["init_point"]
 
 
-# Carregamento seguro dos códigos de cortesia/admin via st.secrets
 _secrets_acesso = st.secrets.get("codigos_acesso", {})
 CODIGOS_DOSSIE_AVULSO = {c.strip().upper() for c in _secrets_acesso.get("dossie_avulso", [])}
 CODIGOS_PASSE_ILIMITADO = {c.strip().upper() for c in _secrets_acesso.get("passe_ilimitado", [])}
@@ -543,7 +531,6 @@ st.markdown("""
         }
     }
 
-    /* Textos no fundo azul escuro da sidebar */
     [data-testid="stSidebar"] h1,
     [data-testid="stSidebar"] h2,
     [data-testid="stSidebar"] h3,
@@ -564,14 +551,12 @@ st.markdown("""
         opacity: 1 !important;
     }
 
-    /* Botão Entrar / Cadastrar na sidebar */
     [data-testid="stSidebar"] button[kind="primary"] {
         background-color: #0F293A !important;
         border: 1.5px solid #C59B27 !important;
         color: #FFFFFF !important;
     }
 
-    /* Textos dentro dos expanders claros na sidebar (Esqueci minha senha, Cupom, Alterar Senha) */
     [data-testid="stSidebar"] [data-testid="stExpander"] summary,
     [data-testid="stSidebar"] [data-testid="stExpander"] summary p,
     [data-testid="stSidebar"] [data-testid="stExpander"] summary span,
@@ -923,7 +908,6 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-    # Painel de Login, Conta e Assinatura Automática (Supabase)
     acesso_supabase = renderizar_painel_acesso(chave_prefixo="side")
     _renderizar_bloco_esqueci_senha("side")
 
@@ -969,7 +953,6 @@ with st.sidebar:
     </div>
     """, unsafe_allow_html=True)
 
-# Consolida acesso via Supabase (assinatura/créditos) OU cupom/código VIP manual
 modo_pago = acesso_supabase["tem_acesso_completo"] or (st.session_state["plano_ativo"] in ("DOSSIE", "ILIMITADO", "BRINDE"))
 email_logado = acesso_supabase.get("email")
 
@@ -1074,7 +1057,6 @@ if arquivo_pdf is not None:
                 if os.path.exists(caminho_pdf_relatorio):
                     os.remove(caminho_pdf_relatorio)
 
-            # Se estiver a usar crédito avulso, consome 1 crédito ao gerar o dossiê completo
             if modo_pago and acesso_supabase.get("tipo_acesso") == "AVULSO":
                 registrar_uso_credito_avulso(acesso_supabase)
 
