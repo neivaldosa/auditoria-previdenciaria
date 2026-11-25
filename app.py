@@ -17,6 +17,7 @@ from auth_supabase import (
     gerar_link_checkout_personalizado,
     registrar_uso_credito_avulso,
     enviar_email_recuperacao,
+    verificar_codigo_otp_recuperacao,
     atualizar_nova_senha,
     get_supabase,
 )
@@ -174,20 +175,6 @@ st.set_page_config(
 
 URL_APP = "https://auditoria-previdenciaria-4ibrpwssuthl96ga3kh974.streamlit.app"
 
-# Converte fragmentos #access_token=... / #token_hash=... / #type=recovery em query params para o Streamlit ler
-components.html("""
-<script>
-  try {
-    var h = window.parent.location.hash;
-    if (h && h.length > 1 && (h.indexOf('access_token=') !== -1 || h.indexOf('token_hash=') !== -1 || h.indexOf('error=') !== -1 || h.indexOf('type=') !== -1)) {
-      var sep = window.parent.location.search ? '&' : '?';
-      var cleanUrl = window.parent.location.pathname + window.parent.location.search + sep + h.substring(1);
-      window.parent.location.replace(cleanUrl);
-    }
-  } catch (e) {}
-</script>
-""", height=0, width=0)
-
 query_params = st.query_params
 access_token_url = query_params.get("access_token")
 refresh_token_url = query_params.get("refresh_token")
@@ -236,8 +223,6 @@ elif codigo_auth:
         _guardar_sessao_recuperacao(res)
         st.query_params.clear()
     except Exception:
-        # Se vier ?code= sem code_verifier no navegador, abre o formulário para tentativa direta
-        st.session_state["modo_redefinir_senha"] = True
         st.query_params.clear()
 
 if st.session_state.get("modo_redefinir_senha"):
@@ -276,7 +261,7 @@ def _renderizar_bloco_esqueci_senha(sufixo_key: str):
             placeholder="seu@email.com",
             key=f"email_recuperacao_{sufixo_key}",
         )
-        if st.button("Enviar link de recuperação", key=f"btn_enviar_recuperacao_{sufixo_key}"):
+        if st.button("Enviar e-mail de recuperação", use_container_width=True, key=f"btn_enviar_recuperacao_{sufixo_key}"):
             if email_rec.strip():
                 ok, mensagem = enviar_email_recuperacao(email_rec.strip(), url_base)
                 if ok:
@@ -285,6 +270,20 @@ def _renderizar_bloco_esqueci_senha(sufixo_key: str):
                     st.error(mensagem)
             else:
                 st.warning("Por favor, digite seu e-mail.")
+
+        st.markdown("---")
+        st.caption("Se o e-mail trouxe um código numérico, digite abaixo para trocar a senha sem depender do link:")
+        codigo_otp = st.text_input(
+            "Código recebido por e-mail",
+            placeholder="Ex.: 123456",
+            key=f"codigo_otp_{sufixo_key}",
+        )
+        if st.button("Validar código e trocar senha", use_container_width=True, key=f"btn_validar_otp_{sufixo_key}"):
+            ok_otp, msg_otp = verificar_codigo_otp_recuperacao(email_rec, codigo_otp)
+            if ok_otp:
+                st.rerun()
+            else:
+                st.error(msg_otp)
 
 
 PLANOS = {
