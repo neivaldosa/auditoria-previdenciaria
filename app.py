@@ -574,8 +574,10 @@ st.markdown("""
         font-weight: 500 !important;
     }
 
-    [data-testid="stSidebar"] [data-testid="stCaptionContainer"] p {
-        color: #CBD5E1 !important;
+    [data-testid="stSidebar"] [data-testid="stExpander"] [data-testid="stCaptionContainer"] p,
+    [data-testid="stSidebar"] [data-testid="stExpander"] label,
+    [data-testid="stSidebar"] [data-testid="stExpander"] p {
+        color: #0F293A !important;
     }
 
     .sidebar-card {
