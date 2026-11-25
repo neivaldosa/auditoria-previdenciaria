@@ -299,3 +299,4 @@ def atualizar_nova_senha(nova_senha: str):
         return True, "Senha alterada com sucesso! Você já pode acessar seu dossiê."
     except Exception as e:
         return False, f"Erro ao atualizar a senha: {str(e)}"
+```[cite: 26]
