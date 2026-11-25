@@ -4,10 +4,21 @@ from datetime import datetime, timezone
 from urllib.parse import urlencode
 
 
+def _obter_credenciais_supabase() -> tuple[str, str]:
+    """Lê URL e chave do Supabase em st.secrets com compatibilidade de formato."""
+    if "supabase" in st.secrets:
+        sec_sb = st.secrets["supabase"]
+        url = sec_sb["url"].strip()
+        key = sec_sb["key"].strip()
+        return url, key
+    url = st.secrets["SUPABASE_URL"].strip()
+    key = st.secrets["SUPABASE_KEY"].strip()
+    return url, key
+
+
 def get_supabase(access_token: str | None = None) -> Client:
     """Cria o cliente Supabase com o token JWT do utilizador quando autenticado."""
-    url = st.secrets["supabase"]["url"].strip()
-    key = st.secrets["supabase"]["key"].strip()
+    url, key = _obter_credenciais_supabase()
     if access_token:
         options = ClientOptions(headers={"Authorization": f"Bearer {access_token}"})
         return create_client(url, key, options=options)
@@ -204,23 +215,32 @@ def registrar_uso_credito_avulso(acesso: dict):
                 st.session_state["credito_consumido_nesta_sessao"] = True
             except Exception:
                 pass
-                
+
+
 def enviar_email_recuperacao(email: str, redirect_url: str):
-    """Envia o link de redefinição de senha para o e-mail do usuário."""
+    """Envia o link de redefinição de senha usando fluxo implicit (sem exigir code_verifier)."""
     try:
-        client = get_supabase()
-        client.auth.reset_password_for_email(
+        url, key = _obter_credenciais_supabase()
+        client_implicit = create_client(
+            url,
+            key,
+            options=ClientOptions(flow_type="implicit"),
+        )
+        client_implicit.auth.reset_password_for_email(
             email,
-            options={"redirect_to": redirect_url}
+            options={"redirect_to": redirect_url},
         )
         return True, "Enviamos um link de recuperação para o seu e-mail. Verifique sua caixa de entrada e spam."
     except Exception as e:
         return False, f"Erro ao enviar e-mail de recuperação: {str(e)}"
 
+
 def atualizar_nova_senha(nova_senha: str):
     """Atualiza a senha do usuário após ele clicar no link do e-mail."""
     try:
-        client = get_supabase()
+        sess = st.session_state.get("user_session")
+        access_token = getattr(sess, "access_token", None) if sess else None
+        client = get_supabase(access_token)
         client.auth.update_user({"password": nova_senha})
         return True, "Senha alterada com sucesso! Você já pode acessar seu dossiê."
     except Exception as e:
