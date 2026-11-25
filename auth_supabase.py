@@ -39,7 +39,7 @@ def renderizar_painel_acesso(chave_prefixo: str = "side") -> dict:
         "creditos": 0,
     }
 
-    st.markdown('<div class="sidebar-title">🔐 Área do Assinante</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sidebar-title-gold">🔐 Área do Assinante</div>', unsafe_allow_html=True)
 
     if "user_session" not in st.session_state or st.session_state["user_session"] is None:
         supabase = get_supabase()
@@ -248,45 +248,9 @@ def enviar_email_recuperacao(email: str, redirect_url: str):
             email_limpo,
             options={"redirect_to": redirect_url},
         )
-        return True, "Enviamos um e-mail de recuperação. Clique no link recebido para criar sua nova senha."
+        return True, "Enviamos um link para o seu e-mail. Abra o e-mail e clique em 'Reset password' imediatamente."
     except Exception as e:
         return False, f"Erro ao enviar e-mail de recuperação: {str(e)}"
-
-def verificar_codigo_otp_recuperacao(email: str, codigo_otp: str):
-    """Valida um código OTP recebido por e-mail e abre o formulário de nova senha."""
-    email_limpo = (email or "").strip().lower()
-    token_limpo = (codigo_otp or "").strip()
-    if not email_limpo or not token_limpo:
-        return False, "Informe o e-mail e o código recebido."
-
-    try:
-        client = get_supabase()
-        res = None
-        ultimo_erro = None
-        for tipo_otp in ("recovery", "email"):
-            try:
-                res = client.auth.verify_otp({"email": email_limpo, "token": token_limpo, "type": tipo_otp})
-                break
-            except Exception as err:
-                ultimo_erro = err
-
-        if res is None:
-            return False, f"Código inválido ou expirado ({ultimo_erro})."
-
-        sess_obj = getattr(res, "session", None)
-        user_obj = getattr(res, "user", None)
-        if sess_obj:
-            st.session_state["user_session"] = sess_obj
-        if user_obj:
-            st.session_state["user_email"] = getattr(user_obj, "email", email_limpo)
-            st.session_state["user_id"] = getattr(user_obj, "id", st.session_state.get("user_id", ""))
-        else:
-            st.session_state["user_email"] = email_limpo
-
-        st.session_state["modo_redefinir_senha"] = True
-        return True, "Código validado! Defina sua nova senha abaixo."
-    except Exception as e:
-        return False, f"Não foi possível validar o código ({e})."
 
 
 def atualizar_nova_senha(nova_senha: str):
@@ -299,3 +263,4 @@ def atualizar_nova_senha(nova_senha: str):
         return True, "Senha alterada com sucesso! Você já pode acessar seu dossiê."
     except Exception as e:
         return False, f"Erro ao atualizar a senha: {str(e)}"
+        
