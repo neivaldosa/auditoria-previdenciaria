@@ -252,7 +252,6 @@ def enviar_email_recuperacao(email: str, redirect_url: str):
     except Exception as e:
         return False, f"Erro ao enviar e-mail de recuperação: {str(e)}"
 
-
 def verificar_codigo_otp_recuperacao(email: str, codigo_otp: str):
     """Valida um código OTP recebido por e-mail e abre o formulário de nova senha."""
     email_limpo = (email or "").strip().lower()
