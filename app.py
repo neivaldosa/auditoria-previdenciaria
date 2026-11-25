@@ -196,7 +196,6 @@ def _guardar_sessao_recuperacao(res):
 
 
 if erro_url:
-    st.error(f"Erro na recuperação: {erro_url}")
     st.query_params.clear()
 elif access_token_url and (tipo_param == "recovery" or not tipo_param):
     try:
@@ -205,7 +204,7 @@ elif access_token_url and (tipo_param == "recovery" or not tipo_param):
         _guardar_sessao_recuperacao(res)
         st.query_params.clear()
     except Exception as e:
-        st.error(f"Link de recuperação expirado ou inválido ({e}). Solicite um novo.")
+        st.error(f"Link de recuperação expirado ou inválido ({e}). Solicite um novo código.")
         st.query_params.clear()
 elif token_hash and (tipo_param == "recovery" or not tipo_param):
     try:
@@ -214,7 +213,7 @@ elif token_hash and (tipo_param == "recovery" or not tipo_param):
         _guardar_sessao_recuperacao(res)
         st.query_params.clear()
     except Exception as e:
-        st.error(f"Link de recuperação expirado ou inválido ({e}). Solicite um novo.")
+        st.error(f"Link de recuperação expirado ou inválido ({e}). Solicite um novo código.")
         st.query_params.clear()
 elif codigo_auth:
     try:
@@ -261,18 +260,14 @@ def _renderizar_bloco_esqueci_senha(sufixo_key: str):
             placeholder="seu@email.com",
             key=f"email_recuperacao_{sufixo_key}",
         )
-        if st.button("Enviar e-mail de recuperação", use_container_width=True, key=f"btn_enviar_recuperacao_{sufixo_key}"):
-            if email_rec.strip():
-                ok, mensagem = enviar_email_recuperacao(email_rec.strip(), url_base)
-                if ok:
-                    st.success(mensagem)
-                else:
-                    st.error(mensagem)
+        if st.button("Enviar código por e-mail", use_container_width=True, key=f"btn_enviar_recuperacao_{sufixo_key}"):
+            ok, mensagem = enviar_email_recuperacao(email_rec.strip(), url_base)
+            if ok:
+                st.success(mensagem)
             else:
-                st.warning("Por favor, digite seu e-mail.")
+                st.error(mensagem)
 
         st.markdown("---")
-        st.caption("Se o e-mail trouxe um código numérico, digite abaixo para trocar a senha sem depender do link:")
         codigo_otp = st.text_input(
             "Código recebido por e-mail",
             placeholder="Ex.: 123456",
