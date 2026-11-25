@@ -175,37 +175,32 @@ st.set_page_config(
 URL_APP = "https://auditoria-previdenciaria-4ibrpwssuthl96ga3kh974.streamlit.app"
 
 query_params = st.query_params
-if "code" in query_params:
+token_hash = query_params.get("token_hash")
+tipo_param = query_params.get("type")
+codigo_auth = query_params.get("code")
+erro_url = query_params.get("error_description") or query_params.get("error")
+
+if erro_url:
+    st.error(f"Erro retornado na recuperação: {erro_url}")
+    st.query_params.clear()
+elif token_hash and tipo_param == "recovery":
     try:
-        sess = st.session_state.get("user_session")
-        client = get_supabase(sess.access_token) if sess and getattr(sess, "access_token", None) else get_supabase()
-        client.auth.exchange_code_for_session({"auth_code": query_params["code"]})
+        client = get_supabase()
+        client.auth.verify_otp({"token_hash": token_hash, "type": "recovery"})
         st.session_state["modo_redefinir_senha"] = True
         st.query_params.clear()
-    except Exception:
-        st.error("Link de recuperação expirado ou inválido. Solicite um novo.")
-
-if st.session_state.get("modo_redefinir_senha"):
-    st.subheader("🔑 Criar Nova Senha")
-    st.caption("Sua conta e seu histórico de pagamentos/créditos permanecem preservados.")
-    nova_senha = st.text_input("Digite sua nova senha (mínimo 6 caracteres)", type="password", key="nova_senha_input")
-    confirmar_senha = st.text_input("Confirme sua nova senha", type="password", key="conf_senha_input")
-
-    if st.button("Salvar Nova Senha", key="btn_salvar_nova_senha"):
-        if len(nova_senha) < 6:
-            st.warning("A senha deve ter pelo menos 6 caracteres.")
-        elif nova_senha != confirmar_senha:
-            st.warning("As senhas não coincidem.")
-        else:
-            sucesso, msg = atualizar_nova_senha(nova_senha)
-            if sucesso:
-                st.success(msg)
-                st.session_state["modo_redefinir_senha"] = False
-                st.rerun()
-            else:
-                st.error(msg)
-    st.stop()
-
+    except Exception as e:
+        st.error(f"Link de recuperação expirado ou inválido ({e}). Solicite um novo.")
+        st.query_params.clear()
+elif codigo_auth:
+    try:
+        client = get_supabase()
+        client.auth.exchange_code_for_session({"auth_code": codigo_auth})
+        st.session_state["modo_redefinir_senha"] = True
+        st.query_params.clear()
+    except Exception as e:
+        st.error(f"Não foi possível validar o link automaticamente ({e}). Solicite um novo ou abra o link no mesmo navegador.")
+        st.query_params.clear()
 
 def _renderizar_bloco_esqueci_senha(sufixo_key: str):
     with st.expander("Esqueci minha senha", expanded=False):
