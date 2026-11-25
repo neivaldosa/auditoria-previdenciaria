@@ -17,7 +17,6 @@ from auth_supabase import (
     gerar_link_checkout_personalizado,
     registrar_uso_credito_avulso,
     enviar_email_recuperacao,
-    verificar_codigo_otp_recuperacao,
     atualizar_nova_senha,
     get_supabase,
 )
@@ -173,17 +172,19 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Converte automaticamente o fragmento (#access_token=... / #error=...) em query string (?...)
+# Converte imediatamente o fragmento (#access_token=... / #error=...) em query string (?...)
 components.html(
     """
     <script>
-      try {
-        var h = window.parent.location.hash || "";
-        if (h.length > 1 && (h.indexOf("access_token=") !== -1 || h.indexOf("error=") !== -1)) {
-          var novaUrl = window.parent.location.origin + window.parent.location.pathname + "?" + h.substring(1);
-          window.parent.location.replace(novaUrl);
-        }
-      } catch (e) {}
+      (function() {
+        try {
+          var h = window.parent.location.hash || "";
+          if (h.length > 1 && (h.indexOf("access_token=") !== -1 || h.indexOf("error=") !== -1)) {
+            var novaUrl = window.parent.location.origin + window.parent.location.pathname + "?" + h.substring(1);
+            window.parent.location.replace(novaUrl);
+          }
+        } catch (e) {}
+      })();
     </script>
     """,
     height=0,
@@ -213,7 +214,7 @@ def _guardar_sessao_recuperacao(res):
 
 
 if erro_url:
-    st.error(f"Link de recuperação expirado ou inválido ({erro_url}). Solicite um novo e-mail.")
+    st.warning("⚠️ O link de redefinição de senha expirou ou já foi utilizado. Solicite um novo link na barra lateral.")
     st.query_params.clear()
 elif access_token_url and (tipo_param == "recovery" or not tipo_param):
     try:
@@ -281,7 +282,7 @@ def _renderizar_bloco_esqueci_senha(sufixo_key: str):
             placeholder="seu@email.com",
             key=f"email_recuperacao_{sufixo_key}",
         )
-        if st.button("Enviar e-mail de recuperação", use_container_width=True, key=f"btn_enviar_recuperacao_{sufixo_key}"):
+        if st.button("Enviar link de recuperação", use_container_width=True, key=f"btn_enviar_recuperacao_{sufixo_key}"):
             if email_rec.strip():
                 ok, mensagem = enviar_email_recuperacao(email_rec.strip(), url_base)
                 if ok:
@@ -290,20 +291,6 @@ def _renderizar_bloco_esqueci_senha(sufixo_key: str):
                     st.error(mensagem)
             else:
                 st.warning("Por favor, digite seu e-mail.")
-
-        st.markdown("---")
-        st.caption("Se o e-mail trouxe um código numérico, digite abaixo para trocar a senha sem depender do link:")
-        codigo_otp = st.text_input(
-            "Código recebido por e-mail",
-            placeholder="Ex.: 123456",
-            key=f"codigo_otp_{sufixo_key}",
-        )
-        if st.button("Validar código e trocar senha", use_container_width=True, key=f"btn_validar_otp_{sufixo_key}"):
-            ok_otp, msg_otp = verificar_codigo_otp_recuperacao(email_rec, codigo_otp)
-            if ok_otp:
-                st.rerun()
-            else:
-                st.error(msg_otp)
 
 
 PLANOS = {
@@ -556,14 +543,11 @@ st.markdown("""
         }
     }
 
+    /* Textos no fundo azul escuro da sidebar */
     [data-testid="stSidebar"] h1,
     [data-testid="stSidebar"] h2,
     [data-testid="stSidebar"] h3,
-    [data-testid="stSidebar"] > div > div > div > div > div > label,
-    [data-testid="stSidebar"] [data-testid="stWidgetLabel"] p {
-        color: #FFFFFF !important;
-    }
-
+    [data-testid="stSidebar"] [data-testid="stWidgetLabel"] p,
     [data-testid="stSidebar"] [data-testid="stRadio"] label,
     [data-testid="stSidebar"] [data-testid="stRadio"] p,
     [data-testid="stSidebar"] [data-testid="stRadio"] span,
@@ -574,6 +558,24 @@ st.markdown("""
         font-weight: 500 !important;
     }
 
+    [data-testid="stSidebar"] [data-testid="stCaptionContainer"] p,
+    [data-testid="stSidebar"] small {
+        color: #E2E8F0 !important;
+        opacity: 1 !important;
+    }
+
+    /* Botão Entrar / Cadastrar na sidebar */
+    [data-testid="stSidebar"] button[kind="primary"] {
+        background-color: #0F293A !important;
+        border: 1.5px solid #C59B27 !important;
+        color: #FFFFFF !important;
+    }
+
+    /* Textos dentro dos expanders claros na sidebar (Esqueci minha senha, Cupom, Alterar Senha) */
+    [data-testid="stSidebar"] [data-testid="stExpander"] summary,
+    [data-testid="stSidebar"] [data-testid="stExpander"] summary p,
+    [data-testid="stSidebar"] [data-testid="stExpander"] summary span,
+    [data-testid="stSidebar"] [data-testid="stExpander"] [data-testid="stWidgetLabel"] p,
     [data-testid="stSidebar"] [data-testid="stExpander"] [data-testid="stCaptionContainer"] p,
     [data-testid="stSidebar"] [data-testid="stExpander"] label,
     [data-testid="stSidebar"] [data-testid="stExpander"] p {
@@ -589,7 +591,7 @@ st.markdown("""
         margin-bottom: 0.75rem;
         box-shadow: 0 3px 10px rgba(197, 155, 39, 0.12);
     }
-    .sidebar-title {
+    .sidebar-title-gold {
         font-size: 0.85rem;
         font-weight: 700;
         color: #F3D06B !important;
@@ -597,11 +599,19 @@ st.markdown("""
         text-transform: uppercase;
         letter-spacing: 0.4px;
     }
+    .sidebar-title {
+        font-size: 0.85rem;
+        font-weight: 800;
+        color: #0F293A !important;
+        margin-bottom: 0.2rem;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+    }
     .security-badge {
         background: linear-gradient(180deg, #FFFDF5 0%, #FFFFFF 100%);
         border: 1.5px solid rgba(197, 155, 39, 0.55);
         border-left: 5px solid #C59B27;
-        color: #0F293A;
+        color: #0F293A !important;
         padding: 0.75rem 0.85rem;
         border-radius: 10px;
         font-size: 0.8rem;
@@ -921,20 +931,18 @@ with st.sidebar:
     st.markdown("### ⚙️ Configure seu Perfil")
     sexo = st.selectbox("Sexo biológico (Regra INSS):", options=["M", "F"], format_func=lambda x: "Masculino" if x == "M" else "Feminino")
 
-    st.markdown('<div class="sidebar-card"><div class="sidebar-title">1. Ambiente de Trabalho</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sidebar-card"><div class="sidebar-title">1. Ambiente de Trabalho</div></div>', unsafe_allow_html=True)
     ambiente = st.radio(
         "Selecione sua atuação predominante:",
         options=["Administrativo / Escritório", "Operacional / Área de Risco (Insalubridade/Periculosidade)"],
         index=0,
         label_visibility="collapsed"
     )
-    st.markdown('</div>', unsafe_allow_html=True)
     ambiente_operacional = (ambiente == "Operacional / Área de Risco (Insalubridade/Periculosidade)")
 
-    st.markdown('<div class="sidebar-card"><div class="sidebar-title">2. Enquadramento PCD / TEA</div>', unsafe_allow_html=True)
+    st.markdown('<div class="sidebar-card"><div class="sidebar-title">2. Enquadramento PCD / TEA</div></div>', unsafe_allow_html=True)
     possui_pcd = st.checkbox("Possui deficiência / TEA (LC 142/2013)?", value=True)
     st.caption("Marque se possui laudo médico de deficiência física, sensorial, intelectual ou TEA.")
-    st.markdown('</div>', unsafe_allow_html=True)
 
     with st.expander("🔑 Possui Cupom ou Código VIP?"):
         codigo_digitado = st.text_input("Digite seu cupom ou código:", placeholder="Insira seu cupom aqui...", label_visibility="collapsed").strip().upper()
