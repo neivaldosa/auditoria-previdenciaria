@@ -208,7 +208,7 @@ def _responder_duvida_inss(pergunta: str) -> str:
 
         client = genai.Client(api_key=api_key)
         response = client.models.generate_content(
-            model="gemini-2.5-flash",
+            model="gemini-3.8-flash",
             contents=prompt,
         )
         texto = getattr(response, "text", None)
@@ -220,7 +220,7 @@ def _responder_duvida_inss(pergunta: str) -> str:
     # 2) Plano B: chamada REST direta com x-goog-api-key
     url = (
         "https://generativelanguage.googleapis.com/v1beta/"
-        "models/gemini-2.5-flash:generateContent"
+        "models/gemini-3.8-flash:generateContent"
     )
     payload = {
         "contents": [
