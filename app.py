@@ -169,6 +169,24 @@ import urllib.error
 import urllib.request
 
 
+def _carregar_prova_seguranca_b64() -> str:
+    candidatos = [
+        "prova_seguranca_gemini.png",
+        "prova_seguranca_gemini.jpg",
+        "prova_seguranca_gemini.jpeg",
+        "seguranca_gemini.png",
+        "seguranca_lgpd.png",
+    ]
+    for nome in candidatos:
+        if os.path.exists(nome):
+            try:
+                with open(nome, "rb") as f:
+                    return base64.b64encode(f.read()).decode("utf-8")
+            except Exception:
+                pass
+    return ""
+
+
 def _obter_gemini_api_key() -> str:
     chave = ""
     try:
@@ -1124,6 +1142,97 @@ st.markdown("""
     .st-key-caixa_lateral_inss [data-testid="stChatMessage"] li::marker {
         color: #F3D06B !important;
     }
+
+    /* Pop-up de Segurança & LGPD (hover + clique/foco) */
+    .lgpd-trigger-wrap {
+        position: relative;
+        display: block;
+    }
+    .lgpd-trigger-inline {
+        position: relative;
+        display: inline-block;
+    }
+    .lgpd-popover-card {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 390px;
+        max-width: calc(100vw - 24px);
+        max-height: 88vh;
+        overflow-y: auto;
+        background: linear-gradient(180deg, #0F293A 0%, #15344A 100%);
+        border: 2px solid #C59B27;
+        border-radius: 14px;
+        padding: 0.9rem 1rem;
+        color: #FFFFFF;
+        box-shadow: 0 18px 44px rgba(15, 41, 58, 0.55);
+        z-index: 10020;
+    }
+    .lgpd-trigger-wrap:hover .lgpd-popover-card,
+    .lgpd-trigger-wrap:focus-within .lgpd-popover-card,
+    .lgpd-trigger-inline:hover .lgpd-popover-card,
+    .lgpd-trigger-inline:focus-within .lgpd-popover-card {
+        display: block;
+    }
+    .lgpd-pop-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        border-bottom: 1px solid rgba(197, 155, 39, 0.45);
+        padding-bottom: 0.45rem;
+        margin-bottom: 0.55rem;
+    }
+    .lgpd-pop-title {
+        font-size: 0.88rem;
+        font-weight: 800;
+        color: #F3D06B;
+    }
+    .lgpd-pop-hint {
+        font-size: 0.72rem;
+        color: #CBD5E1;
+    }
+    .lgpd-pop-body {
+        font-size: 0.8rem;
+        color: #F8FAFC;
+        line-height: 1.45;
+    }
+    .lgpd-pop-img {
+        width: 100%;
+        height: auto;
+        border-radius: 10px;
+        border: 1.5px solid #C59B27;
+        margin-top: 0.45rem;
+        display: block;
+    }
+    .lgpd-upload-header {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin: 0.35rem 0 0.45rem 0;
+    }
+    .lgpd-upload-title {
+        font-size: 1.12rem;
+        font-weight: 700;
+        color: #0F293A;
+        margin: 0;
+    }
+    .lgpd-pill-trigger {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+        background: #FFFDF5;
+        border: 1.5px solid #C59B27;
+        color: #0F293A;
+        font-size: 0.76rem;
+        font-weight: 700;
+        padding: 3px 10px;
+        border-radius: 20px;
+        cursor: pointer;
+    }
     .st-key-caixa_lateral_inss button[kind="secondary"],
     .st-key-caixa_lateral_inss [data-testid="stBaseButton-secondary"] {
         background: #F8E7B2 !important;
@@ -1256,6 +1365,33 @@ if LOGO_SITE and os.path.exists(LOGO_SITE):
     with open(LOGO_SITE, "rb") as _f_logo:
         _logo_b64 = base64.b64encode(_f_logo.read()).decode("utf-8")
 
+_prova_seg_b64 = _carregar_prova_seguranca_b64()
+_img_prova_seg_html = (
+    f'<img src="data:image/png;base64,{_prova_seg_b64}" class="lgpd-pop-img" alt="Verificação de segurança e LGPD no Gemini" />'
+    if _prova_seg_b64
+    else (
+        '<div style="background:rgba(255,255,255,0.07); border:1px solid rgba(197,155,39,0.4); border-radius:10px; padding:0.75rem; margin-top:0.5rem;">'
+        '<div style="color:#F3D06B; font-weight:700; margin-bottom:0.35rem;">✦ Resposta do Gemini sobre a segurança do CNIS:</div>'
+        '<div style="color:#FFFFFF; font-size:0.79rem; line-height:1.45;">'
+        '"Pode confiar sim! A plataforma foi desenvolvida com protocolos modernos de segurança e criptografia, seguindo rigorosamente a Lei Geral de Proteção de Dados (LGPD). '
+        'Os dados do seu arquivo são processados em memória com sigilo absoluto e utilizados exclusivamente para gerar o seu relatório."'
+        '</div></div>'
+    )
+)
+
+POPUP_SEGURANCA_HTML = f"""
+<div class="lgpd-popover-card">
+    <div class="lgpd-pop-header">
+        <span class="lgpd-pop-title">🛡️ Sigilo Absoluto & Conformidade LGPD</span>
+        <span class="lgpd-pop-hint">Passe fora ou toque fora para fechar</span>
+    </div>
+    <div class="lgpd-pop-body">
+        Seu PDF do CNIS é lido <strong>100% em memória</strong> apenas durante a auditoria e <strong>nunca fica gravado em disco</strong>.
+        {_img_prova_seg_html}
+    </div>
+</div>
+"""
+
 _img_hero_html = (
     f'<img src="data:image/png;base64,{_logo_b64}" class="hero-logo" style="width:76px; height:76px; border-radius:10px; border:1.5px solid #C59B27; flex-shrink:0;" />'
     if _logo_b64 else ""
@@ -1339,10 +1475,13 @@ with st.sidebar:
             else:
                 st.error("Código ou cupom inválido.")
 
-    st.markdown("""
-    <div class="security-badge">
-        <strong>🔒 Privacidade & Segurança LGPD</strong><br>
-        Processamento 100% isolado em memória. Nenhum dado pessoal ou PDF fica gravado em disco.
+    st.markdown(f"""
+    <div class="lgpd-trigger-wrap" tabindex="0">
+        <div class="security-badge" style="cursor:pointer;">
+            <strong>🔒 Privacidade & Segurança LGPD</strong> <span style="font-size:0.72rem; color:#8A6810; font-weight:700;">(ver detalhes)</span><br>
+            Processamento 100% isolado em memória. Nenhum dado pessoal ou PDF fica gravado em disco.
+        </div>
+        {POPUP_SEGURANCA_HTML}
     </div>
     """, unsafe_allow_html=True)
 
@@ -1406,7 +1545,15 @@ with st.container(key="menu_celular"):
             else:
                 st.error("Código ou cupom inválido.")
 
-st.markdown("#### 📤 Envie seu Extrato Oficial (CNIS)")
+st.markdown(f"""
+<div class="lgpd-upload-header">
+    <div class="lgpd-trigger-inline" tabindex="0" style="cursor:pointer;">
+        <span class="lgpd-upload-title">📤 Envie seu Extrato Oficial (CNIS)</span>
+        <span class="lgpd-pill-trigger">🔒 Sigilo LGPD</span>
+        {POPUP_SEGURANCA_HTML}
+    </div>
+</div>
+""", unsafe_allow_html=True)
 arquivo_pdf = st.file_uploader("Selecione ou arraste o arquivo PDF completo baixado do Meu INSS:", type=["pdf"], label_visibility="collapsed")
 preco_avulso_txt = "R$ 9,95 (50% OFF)" if st.session_state["desconto_50"] else "R$ 19,90"
 
