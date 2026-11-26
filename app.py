@@ -853,15 +853,41 @@ st.markdown("""
         margin: 1rem 0;
     }
     .save-warning-box {
-        background: linear-gradient(90deg, #FFFDF5 0%, #FEF9C3 100%);
-        border: 1.5px solid #C59B27;
-        border-left: 5px solid #0F293A;
-        border-radius: 10px;
-        padding: 0.85rem 1.1rem;
+        background: linear-gradient(135deg, #0F293A 0%, #16364D 100%);
+        border: 2px solid #C59B27;
+        border-left: 6px solid #F3D06B;
+        border-radius: 12px;
+        padding: 1.05rem 1.25rem;
+        color: #FFFFFF;
+        font-size: 0.88rem;
+        line-height: 1.5;
+        margin: 1rem 0 0.85rem 0;
+        box-shadow: 0 6px 18px rgba(15, 41, 58, 0.16);
+    }
+    .save-warning-badge {
+        display: inline-block;
+        background: #C59B27;
         color: #0F293A;
-        font-size: 0.86rem;
-        line-height: 1.45;
-        margin: 0.9rem 0 0.75rem 0;
+        font-size: 0.7rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        padding: 2px 9px;
+        border-radius: 20px;
+        margin-bottom: 0.45rem;
+    }
+    .save-warning-title {
+        font-size: 1rem;
+        font-weight: 800;
+        color: #F3D06B;
+        margin-bottom: 0.35rem;
+    }
+    .save-warning-support {
+        margin-top: 0.65rem;
+        padding-top: 0.6rem;
+        border-top: 1px solid rgba(197, 155, 39, 0.35);
+        font-size: 0.83rem;
+        color: #F8FAFC;
     }
     .stButton > button[kind="primary"] {
         background-color: #0F293A;
@@ -1314,7 +1340,14 @@ if "resultado_auditoria" in st.session_state:
 
         st.markdown("""
         <div class="save-warning-box">
-            <strong>📥 Baixe e salve seu dossiê agora:</strong> Por segurança e privacidade (LGPD), a leitura do CNIS é feita em memória e o dossiê gerado aqui não fica armazenado para reabertura posterior. Baixe agora o <strong>Relatório Executivo (.pdf)</strong> e a <strong>Planilha Detalhada (.xlsx)</strong> no seu celular ou computador. Se precisar de ajuda ou tiver qualquer dúvida, fale com o suporte pelo WhatsApp <strong>+55 21 96880-7955</strong> ou pelo e-mail <strong>inteligenciaprevidenciariaaudi@gmail.com</strong>.
+            <div class="save-warning-badge">⚠️ Salve seus arquivos agora</div>
+            <div class="save-warning-title">📥 Baixe e guarde seu dossiê antes de sair ou atualizar a página</div>
+            <div style="color:#E2E8F0;">
+                Por segurança e privacidade (<strong>LGPD</strong>), a leitura do CNIS é feita em memória e o dossiê gerado aqui <strong>não fica salvo no sistema para reabertura posterior</strong>. Baixe agora o <strong>Relatório Executivo (.pdf)</strong> e a <strong>Planilha Detalhada (.xlsx)</strong> no seu celular ou computador.
+            </div>
+            <div class="save-warning-support">
+                💬 <strong>Suporte:</strong> WhatsApp <strong style="color:#F3D06B; white-space:nowrap;">+55 21 96880-7955</strong> &nbsp;|&nbsp; E-mail: <strong style="color:#F3D06B;">inteligenciaprevidenciariaaudi@gmail.com</strong>
+            </div>
         </div>
         """, unsafe_allow_html=True)
 
