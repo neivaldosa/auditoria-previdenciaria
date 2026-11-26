@@ -283,6 +283,7 @@ if st.session_state.get("modo_redefinir_senha"):
         st.rerun()
     st.stop()
 
+
 def _renderizar_bloco_esqueci_senha(sufixo_key: str):
     url_base = globals().get("URL_APP", "https://auditoria-previdenciaria-4ibrpwssuthl96ga3kh974.streamlit.app")
     with st.expander("Esqueci minha senha", expanded=False):
@@ -550,18 +551,16 @@ st.markdown("""
     }
 
     @media (max-width: 768px) {
-        header[data-testid="stHeader"] {
-            visibility: visible !important;
-            background: transparent !important;
-        }
         [data-testid="stSidebarCollapseButton"],
         [data-testid="collapsedControl"] {
-            display: flex !important;
-            visibility: visible !important;
-            background-color: #C59B27 !important;
-            color: #0F293A !important;
-            border-radius: 8px !important;
-            margin: 6px !important;
+            display: none !important;
+        }
+        .block-container {
+            padding-top: 0.55rem !important;
+            padding-left: 0.75rem !important;
+            padding-right: 0.75rem !important;
+            padding-bottom: 7.5rem !important;
+            max-width: 100% !important;
         }
     }
 
@@ -645,6 +644,10 @@ st.markdown("""
         color: #FFFFFF;
         margin-bottom: 0.8rem;
         box-shadow: 0 6px 18px -5px rgba(15, 41, 58, 0.15);
+        display: flex;
+        align-items: flex-start;
+        justify-content: flex-start;
+        gap: 1rem;
     }
     .hero-badge {
         display: inline-block;
@@ -664,11 +667,17 @@ st.markdown("""
         font-weight: 700;
         margin: 0 0 0.2rem 0;
         letter-spacing: -0.4px;
+        line-height: 1.25;
+        overflow-wrap: break-word;
+        word-break: normal;
     }
     .hero-subtitle {
         font-size: 0.88rem;
         color: #CBD5E1;
         margin: 0;
+        line-height: 1.4;
+        overflow-wrap: break-word;
+        word-break: normal;
     }
     [data-testid="stExpander"] {
         background: linear-gradient(90deg, #FFFDF5 0%, #FFFFFF 100%);
@@ -811,6 +820,7 @@ st.markdown("""
         border-radius: 10px;
         border: 1px solid #E2E8F0;
         border-left: 4px solid #0F293A;
+        margin-bottom: 0.5rem;
     }
     .metric-card.highlight {
         border-left: 5px solid #C59B27;
@@ -857,6 +867,7 @@ st.markdown("""
         right: 22px;
         display: flex;
         flex-direction: column;
+        align-items: flex-end;
         gap: 10px;
         z-index: 9999;
     }
@@ -884,6 +895,88 @@ st.markdown("""
         background-color: #C59B27;
         color: #0F293A !important;
     }
+    @media (max-width: 768px) {
+        .hero-box {
+            flex-direction: column;
+            align-items: center;
+            text-align: center !important;
+            padding: 0.95rem 0.9rem !important;
+            gap: 0.55rem !important;
+        }
+        .hero-box > div {
+            text-align: center !important;
+            width: 100%;
+        }
+        .hero-logo {
+            width: 58px !important;
+            height: 58px !important;
+        }
+        .hero-badge {
+            font-size: 0.66rem !important;
+        }
+        .hero-title {
+            font-size: 1.18rem !important;
+            line-height: 1.24 !important;
+            letter-spacing: -0.2px !important;
+        }
+        .hero-subtitle {
+            font-size: 0.81rem !important;
+            line-height: 1.38 !important;
+        }
+        [data-testid="stExpander"] summary {
+            font-size: 0.84rem !important;
+            padding: 0.5rem 0.75rem !important;
+            line-height: 1.3 !important;
+        }
+        .pricing-grid,
+        .feature-grid {
+            grid-template-columns: 1fr !important;
+            gap: 0.7rem !important;
+        }
+        .metric-card {
+            padding: 0.9rem 1rem !important;
+        }
+        .metric-value {
+            font-size: 1.25rem !important;
+        }
+        .upsell-banner {
+            padding: 0.95rem 1rem !important;
+        }
+        .upsell-banner .plan-cta {
+            display: block !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+        .stButton > button,
+        .stDownloadButton > button,
+        a[data-testid="stBaseLinkButton-secondary"] {
+            width: 100% !important;
+        }
+        [data-testid="stTabs"] [role="tablist"] {
+            overflow-x: auto !important;
+            flex-wrap: nowrap !important;
+            -webkit-overflow-scrolling: touch;
+        }
+        [data-testid="stTabs"] button[role="tab"] {
+            white-space: nowrap !important;
+            font-size: 0.8rem !important;
+            padding: 0.45rem 0.65rem !important;
+        }
+        .floating-container {
+            bottom: 10px !important;
+            right: 10px !important;
+            gap: 6px !important;
+        }
+        .float-btn {
+            padding: 6px 11px !important;
+            font-size: 0.73rem !important;
+            gap: 5px !important;
+        }
+        .support-menu {
+            width: 220px !important;
+            bottom: 40px !important;
+        }
+    }
     @media (min-width: 769px) {
         .apenas-celular {
             display: none !important;
@@ -898,14 +991,14 @@ if LOGO_SITE and os.path.exists(LOGO_SITE):
         _logo_b64 = base64.b64encode(_f_logo.read()).decode("utf-8")
 
 _img_hero_html = (
-    f'<img src="data:image/png;base64,{_logo_b64}" style="width:76px; height:76px; border-radius:10px; border:1.5px solid #C59B27; flex-shrink:0;" />'
+    f'<img src="data:image/png;base64,{_logo_b64}" class="hero-logo" style="width:76px; height:76px; border-radius:10px; border:1.5px solid #C59B27; flex-shrink:0;" />'
     if _logo_b64 else ""
 )
 
 st.markdown(f"""
-<div id="topo-pagina" class="hero-box" style="display:flex; align-items:flex-start; justify-content:flex-start; gap:1rem; padding:1rem 1.4rem;">
+<div id="topo-pagina" class="hero-box">
     {_img_hero_html}
-    <div style="text-align:left;">
+    <div>
         <div class="hero-badge">Inteligência Previdenciária & Auditoria</div>
         <h1 class="hero-title">Diagnóstico Estratégico de Aposentadoria e CNIS</h1>
         <p class="hero-subtitle">Análise automatizada de vínculos, auditoria de pendências no INSS, enquadramento PCD (LC 142/2013) e projeção de renda.</p>
@@ -1156,7 +1249,7 @@ if "resultado_auditoria" in st.session_state:
                 <p style="margin:0 0 0.5rem 0; font-size:0.88rem; color:#E2E8F0;">Para garantir que o pagamento fique vinculado à sua conta e libere o <strong>Dossiê Completo ({preco_avulso_txt})</strong> automaticamente, <strong>você precisa criar sua conta gratuita antes de pagar</strong>:</p>
                 <p style="margin:0 0 0.85rem 0; font-size:0.84rem; color:#F3D06B;">
                     ⬅️ <strong>No computador:</strong> vá na <strong>barra lateral esquerda</strong> em <strong>"🔐 Área do Assinante" → "Criar Conta Grátis"</strong>.<br>
-                    📱 <strong>No celular:</strong> abra o menu <strong>"⚙️ ENTRAR NA CONTA OU CONFIGURAR PERFIL"</strong> acima e clique em <strong>"Criar Conta Grátis"</strong>.
+                    📱 <strong>No celular:</strong> abra o menu <strong>"🔐 ENTRAR NA CONTA OU CONFIGURAR PERFIL"</strong> acima e clique em <strong>"Criar Conta Grátis"</strong>.
                 </p>
                 <a href="#topo-pagina" class="plan-cta cta-gold" style="display:inline-block; padding:0.55rem 1.3rem;">👆 Ir para o Cadastro (Área do Assinante)</a>
             </div>
@@ -1246,7 +1339,7 @@ if not email_logado and st.session_state["aviso_cadastro_obrigatorio"]:
     st.warning(
         "🔐 **Cadastre-se primeiro antes de ir para o pagamento:** "
         "no computador, abra a **barra lateral esquerda** em **'🔐 Área do Assinante' → 'Criar Conta Grátis'**. "
-        "No celular, abra o menu **'⚙️ ENTRAR NA CONTA OU CONFIGURAR PERFIL'** e clique em **'Criar Conta Grátis'**."
+        "No celular, abra o menu **'🔐 ENTRAR NA CONTA OU CONFIGURAR PERFIL'** e clique em **'Criar Conta Grátis'**."
     )
 
 if email_logado:
@@ -1302,7 +1395,7 @@ st.markdown(f"""
     </div>
 </div>
 <div style="background-color:#EFF6FF; border:1px solid #BFDBFE; border-left:4px solid #0F293A; color:#0F293A; padding:0.65rem 0.9rem; border-radius:8px; font-size:0.83rem; margin-bottom:0.8rem;">
-    💡 <strong>Como funciona a liberação automática:</strong> Crie sua conta gratuita em <strong>"🔐 Área do Assinante"</strong> (na barra lateral esquerda no computador ou em <strong>"⚙️ ENTRAR NA CONTA OU CONFIGURAR PERFIL"</strong> no celular) antes de pagar e conclua o Pix ou Cartão no Mercado Pago. Assim que o pagamento for aprovado, clique em <strong>"🔄 Atualizar"</strong> para liberar o acesso na hora!
+    💡 <strong>Como funciona a liberação automática:</strong> Crie sua conta gratuita em <strong>"🔐 Área do Assinante"</strong> (na barra lateral esquerda no computador ou em <strong>"🔐 ENTRAR NA CONTA OU CONFIGURAR PERFIL"</strong> no celular) antes de pagar e conclua o Pix ou Cartão no Mercado Pago. Assim que o pagamento for aprovado, clique em <strong>"🔄 Atualizar"</strong> para liberar o acesso na hora!
 </div>
 <div style="font-size: 1.05rem; font-weight: 700; color: #0F293A; margin-top: 0.4rem;">📋 O que está incluso no seu Dossiê Completo de Auditoria (6 Módulos):</div>
 <div class="feature-grid">
