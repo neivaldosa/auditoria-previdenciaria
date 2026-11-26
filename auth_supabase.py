@@ -25,6 +25,28 @@ def get_supabase(access_token: str | None = None) -> Client:
     return create_client(url, key)
 
 
+def _extrair_tokens_sessao(sess_obj) -> tuple[str | None, str | None]:
+    """Extrai access_token e refresh_token de um objeto Session ou dict."""
+    if not sess_obj:
+        return None, None
+    if isinstance(sess_obj, dict):
+        return sess_obj.get("access_token"), sess_obj.get("refresh_token")
+    acc = getattr(sess_obj, "access_token", None)
+    ref = getattr(sess_obj, "refresh_token", None)
+    return acc, ref
+
+
+def _guardar_tokens_recuperacao(sess_obj):
+    """Guarda tokens da sessão de recuperação no session_state."""
+    if sess_obj:
+        st.session_state["user_session"] = sess_obj
+    acc, ref = _extrair_tokens_sessao(sess_obj)
+    if acc:
+        st.session_state["recovery_access_token"] = acc
+    if ref:
+        st.session_state["recovery_refresh_token"] = ref
+
+
 def renderizar_painel_acesso(chave_prefixo: str = "side") -> dict:
     """
     Renderiza o login/cadastro e status da assinatura.
@@ -90,7 +112,8 @@ def renderizar_painel_acesso(chave_prefixo: str = "side") -> dict:
         return estado
 
     session = st.session_state["user_session"]
-    supabase = get_supabase(session.access_token)
+    acc_sess, _ = _extrair_tokens_sessao(session)
+    supabase = get_supabase(acc_sess)
     email_usuario = st.session_state.get("user_email", "")
 
     dados = None
@@ -181,6 +204,8 @@ def renderizar_painel_acesso(chave_prefixo: str = "side") -> dict:
             except Exception:
                 pass
             st.session_state["user_session"] = None
+            st.session_state.pop("recovery_access_token", None)
+            st.session_state.pop("recovery_refresh_token", None)
             st.session_state.pop("credito_consumido_nesta_sessao", None)
             st.rerun()
 
@@ -222,9 +247,10 @@ def registrar_uso_credito_avulso(acesso: dict):
     """Desconta 1 crédito avulso quando o utilizador gera um Dossiê Avulso."""
     if acesso.get("tipo_acesso") == "AVULSO" and not st.session_state.get("credito_consumido_nesta_sessao"):
         session = st.session_state.get("user_session")
-        if session:
+        acc_sess, _ = _extrair_tokens_sessao(session)
+        if acc_sess:
             try:
-                supabase = get_supabase(session.access_token)
+                supabase = get_supabase(acc_sess)
                 supabase.rpc("consumir_credito_avulso").execute()
                 st.session_state["credito_consumido_nesta_sessao"] = True
             except Exception:
@@ -274,12 +300,22 @@ def verificar_codigo_otp_recuperacao(email: str, codigo_otp: str):
             return False, f"Código inválido ou expirado ({ultimo_erro})."
 
         sess_obj = getattr(res, "session", None)
+        if sess_obj is None and isinstance(res, dict):
+            sess_obj = res.get("session")
+
         user_obj = getattr(res, "user", None)
-        if sess_obj:
-            st.session_state["user_session"] = sess_obj
+        if user_obj is None and isinstance(res, dict):
+            user_obj = res.get("user")
+
+        _guardar_tokens_recuperacao(sess_obj)
+
         if user_obj:
-            st.session_state["user_email"] = getattr(user_obj, "email", email_limpo)
-            st.session_state["user_id"] = getattr(user_obj, "id", st.session_state.get("user_id", ""))
+            user_email = user_obj.get("email") if isinstance(user_obj, dict) else getattr(user_obj, "email", None)
+            user_id = user_obj.get("id") if isinstance(user_obj, dict) else getattr(user_obj, "id", None)
+            if user_email:
+                st.session_state["user_email"] = user_email
+            if user_id:
+                st.session_state["user_id"] = user_id
         else:
             st.session_state["user_email"] = email_limpo
 
@@ -290,12 +326,22 @@ def verificar_codigo_otp_recuperacao(email: str, codigo_otp: str):
 
 
 def atualizar_nova_senha(nova_senha: str):
-    """Atualiza a senha do usuário com sessão ativa."""
+    """Atualiza a senha do usuário garantindo sessão ativa no cliente Supabase."""
     try:
         sess = st.session_state.get("user_session")
-        access_token = getattr(sess, "access_token", None) if sess else None
-        client = get_supabase(access_token)
+        acc_sess, ref_sess = _extrair_tokens_sessao(sess)
+        access_token = st.session_state.get("recovery_access_token") or acc_sess
+        refresh_token = st.session_state.get("recovery_refresh_token") or ref_sess or ""
+
+        if not access_token:
+            return False, "Erro ao atualizar a senha: Auth session missing! Solicite um novo código de recuperação."
+
+        client = get_supabase()
+        client.auth.set_session(access_token, refresh_token)
         client.auth.update_user({"password": nova_senha})
+
+        st.session_state.pop("recovery_access_token", None)
+        st.session_state.pop("recovery_refresh_token", None)
         return True, "Senha alterada com sucesso! Você já pode acessar seu dossiê."
     except Exception as e:
         return False, f"Erro ao atualizar a senha: {str(e)}"
