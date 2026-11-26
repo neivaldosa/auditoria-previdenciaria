@@ -1379,18 +1379,18 @@ _img_prova_seg_html = (
     )
 )
 
-POPUP_SEGURANCA_HTML = f"""
-<div class="lgpd-popover-card">
-    <div class="lgpd-pop-header">
-        <span class="lgpd-pop-title">🛡️ Sigilo Absoluto & Conformidade LGPD</span>
-        <span class="lgpd-pop-hint">Passe fora ou toque fora para fechar</span>
-    </div>
-    <div class="lgpd-pop-body">
-        Seu PDF do CNIS é lido <strong>100% em memória</strong> apenas durante a auditoria e <strong>nunca fica gravado em disco</strong>.
-        {_img_prova_seg_html}
-    </div>
-</div>
-"""
+POPUP_SEGURANCA_HTML = (
+    '<div class="lgpd-popover-card">'
+    '<div class="lgpd-pop-header">'
+    '<span class="lgpd-pop-title">🛡️ Sigilo Absoluto &amp; Conformidade LGPD</span>'
+    '<span class="lgpd-pop-hint">Passe fora ou toque fora para fechar</span>'
+    '</div>'
+    '<div class="lgpd-pop-body">'
+    'Seu PDF do CNIS é lido <strong>100% em memória</strong> apenas durante a auditoria e <strong>nunca fica gravado em disco</strong>.'
+    + _img_prova_seg_html
+    + '</div>'
+    '</div>'
+)
 
 _img_hero_html = (
     f'<img src="data:image/png;base64,{_logo_b64}" class="hero-logo" style="width:76px; height:76px; border-radius:10px; border:1.5px solid #C59B27; flex-shrink:0;" />'
@@ -1475,15 +1475,17 @@ with st.sidebar:
             else:
                 st.error("Código ou cupom inválido.")
 
-    st.markdown(f"""
-    <div class="lgpd-trigger-wrap" tabindex="0">
-        <div class="security-badge" style="cursor:pointer;">
-            <strong>🔒 Privacidade & Segurança LGPD</strong> <span style="font-size:0.72rem; color:#8A6810; font-weight:700;">(ver detalhes)</span><br>
-            Processamento 100% isolado em memória. Nenhum dado pessoal ou PDF fica gravado em disco.
-        </div>
-        {POPUP_SEGURANCA_HTML}
-    </div>
-    """, unsafe_allow_html=True)
+    _html_lgpd_side = (
+        '<div class="lgpd-trigger-wrap" tabindex="0">'
+        '<div class="security-badge" style="cursor:pointer;">'
+        '<strong>🔒 Privacidade &amp; Segurança LGPD</strong> '
+        '<span style="font-size:0.72rem; color:#8A6810; font-weight:700;">(ver detalhes)</span><br>'
+        'Processamento 100% isolado em memória. Nenhum dado pessoal ou PDF fica gravado em disco.'
+        '</div>'
+        + POPUP_SEGURANCA_HTML
+        + '</div>'
+    )
+    st.markdown(_html_lgpd_side, unsafe_allow_html=True)
 
 modo_pago = acesso_supabase["tem_acesso_completo"] or (st.session_state["plano_ativo"] in ("DOSSIE", "ILIMITADO", "BRINDE"))
 email_logado = acesso_supabase.get("email")
@@ -1545,15 +1547,16 @@ with st.container(key="menu_celular"):
             else:
                 st.error("Código ou cupom inválido.")
 
-st.markdown(f"""
-<div class="lgpd-upload-header">
-    <div class="lgpd-trigger-inline" tabindex="0" style="cursor:pointer;">
-        <span class="lgpd-upload-title">📤 Envie seu Extrato Oficial (CNIS)</span>
-        <span class="lgpd-pill-trigger">🔒 Sigilo LGPD</span>
-        {POPUP_SEGURANCA_HTML}
-    </div>
-</div>
-""", unsafe_allow_html=True)
+_html_lgpd_upload = (
+    '<div class="lgpd-upload-header">'
+    '<div class="lgpd-trigger-inline" tabindex="0" style="cursor:pointer;">'
+    '<span class="lgpd-upload-title">📤 Envie seu Extrato Oficial (CNIS)</span>'
+    '<span class="lgpd-pill-trigger">🔒 Sigilo LGPD</span>'
+    + POPUP_SEGURANCA_HTML
+    + '</div>'
+    '</div>'
+)
+st.markdown(_html_lgpd_upload, unsafe_allow_html=True)
 arquivo_pdf = st.file_uploader("Selecione ou arraste o arquivo PDF completo baixado do Meu INSS:", type=["pdf"], label_visibility="collapsed")
 preco_avulso_txt = "R$ 9,95 (50% OFF)" if st.session_state["desconto_50"] else "R$ 19,90"
 
