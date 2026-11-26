@@ -164,55 +164,64 @@ def aplicar_logo_todas_abas_excel(buffer_excel):
     return saida_final.getvalue()
 
 
+def _obter_gemini_key() -> str:
+    if "GEMINI_API_KEY" in st.secrets:
+        return str(st.secrets["GEMINI_API_KEY"]).strip()
+    if "gemini" in st.secrets and isinstance(st.secrets["gemini"], dict):
+        return str(st.secrets["gemini"].get("api_key", "")).strip()
+    return os.environ.get("GEMINI_API_KEY", "").strip()
+
+
 def _responder_duvida_inss(pergunta: str) -> str:
-    """Responde dúvidas gerais sobre INSS, CNIS e regras usando Gemini quando disponível."""
+    """Conversa real com o Gemini mantendo o histórico da caixa lateral."""
     pergunta_limpa = (pergunta or "").strip()
     if not pergunta_limpa:
-        return "Digite sua dúvida sobre CNIS, vínculos, indicadores do INSS ou aposentadoria."
+        return "Pode mandar sua pergunta!"
 
-    api_key = st.secrets.get("GEMINI_API_KEY") or os.environ.get("GEMINI_API_KEY")
-    if api_key:
-        try:
-            from google import genai
-            client = genai.Client(api_key=api_key)
-            prompt = (
-                "Você é o assistente de orientação geral do site 'Inteligência Previdenciária & Auditoria'. "
-                "Responda em português claro, objetivo e cordial sobre dúvidas gerais de CNIS, INSS, indicadores "
-                "(como PREC-MENOR-MIN, IEAN, PEXT), tempo concomitante, aposentadoria especial ou regra PCD (LC 142/2013). "
-                "Lembre brevemente que o cálculo exato do extrato e a auditoria determinística são feitos enviando o PDF do CNIS no sistema, "
-                "sem substituir consultoria jurídica individualizada.\n\n"
-                f"Pergunta do usuário: {pergunta_limpa}"
-            )
-            resp = client.models.generate_content(
-                model="gemini-2.5-flash",
-                contents=prompt,
-            )
-            texto = getattr(resp, "text", None)
-            if texto and texto.strip():
-                return texto.strip()
-        except Exception:
-            pass
+    api_key = _obter_gemini_key()
+    if not api_key:
+        return "⚠️ Chave `GEMINI_API_KEY` não encontrada nos Secrets do Streamlit Cloud."
 
-    p_low = pergunta_limpa.lower()
-    if "cnis" in p_low or "baixar" in p_low or "meu inss" in p_low:
-        return (
-            "Para baixar o CNIS completo, acesse **meu.inss.gov.br** ou o app **Meu INSS**, vá em "
-            "**Extratos e Comprovantes > Extrato de Contribuições (CNIS)** e baixe o PDF com vínculos, contribuições e remunerações."
+    try:
+        from google import genai
+        from google.genai import types
+
+        client = genai.Client(api_key=api_key)
+
+        instrucao_sistema = (
+            "Você é o Gemini, assistente inteligente e conversacional do site 'Inteligência Previdenciária & Auditoria'. "
+            "Converse de forma natural, humana, clara e prestativa em português do Brasil, mantendo o contexto da conversa. "
+            "Ajude com dúvidas sobre INSS, CNIS, indicadores (como PREC-MENOR-MIN, IEAN, PEXT), tempo concomitante, "
+            "aposentadoria especial, regra PCD / TEA (LC 142/2013) e planejamento previdenciário, lembrando quando fizer "
+            "sentido que o cálculo exato do extrato é feito enviando o PDF do CNIS no motor da página principal."
         )
-    if "pcd" in p_low or "tea" in p_low or "142" in p_low:
-        return (
-            "A **LC 142/2013** trata da aposentadoria da pessoa com deficiência (incluindo condições avaliadas como deficiência/TEA "
-            "mediante avaliação biopsicossocial), sem exigência de idade mínima, variando o tempo conforme o grau (leve, moderado ou grave)."
+
+        historico_contents = []
+        for m in st.session_state.get("mensagens_ia", [])[-10:]:
+            papel = "user" if m.get("role") == "user" else "model"
+            conteudo = str(m.get("content", "")).strip()
+            if conteudo:
+                historico_contents.append(
+                    types.Content(role=papel, parts=[types.Part.from_text(text=conteudo)])
+                )
+
+        if not historico_contents:
+            historico_contents.append(
+                types.Content(role="user", parts=[types.Part.from_text(text=pergunta_limpa)])
+            )
+
+        resp = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=historico_contents,
+            config=types.GenerateContentConfig(
+                system_instruction=instrucao_sistema,
+                temperature=0.7,
+            ),
         )
-    if "indicador" in p_low or "pendência" in p_low or "pendencia" in p_low or "prec-menor" in p_low:
-        return (
-            "Indicadores no CNIS (como *PREC-MENOR-MIN*, *IEAN* ou *PEXT*) sinalizam pontos que podem exigir acerto, comprovação "
-            "ou ajuste de remuneração/vínculo. Envie o PDF do seu CNIS para auditar os vínculos e ver o plano de ação no Dossiê Completo."
-        )
-    return (
-        "Posso te ajudar com dúvidas gerais sobre **CNIS**, **pendências no Meu INSS**, **tempo concomitante**, "
-        "**aposentadoria especial** e **regra PCD (LC 142/2013)**. Para o cálculo exato do seu extrato, envie o PDF do CNIS na tela principal."
-    )
+        texto = (getattr(resp, "text", None) or "").strip()
+        return texto if texto else "Não consegui gerar uma resposta agora. Tente novamente."
+    except Exception as exc:
+        return f"⚠️ Erro ao chamar o Gemini ({type(exc).__name__}): {exc}"
 
 
 LOGO_SITE = _achar_logo_oficial()
@@ -541,7 +550,7 @@ if "mensagens_ia" not in st.session_state:
     st.session_state["mensagens_ia"] = [
         {
             "role": "assistant",
-            "content": "✦ **Gemini** aqui! Posso ajudar com dúvidas gerais sobre **CNIS**, pendências no INSS, tempo concomitante, aposentadoria especial ou regra PCD (LC 142/2013). *(O cálculo oficial do seu extrato continua no motor da página.)*"
+            "content": "✦ **Gemini** aqui! Posso conversar sobre dúvidas de **CNIS**, pendências no INSS, tempo concomitante, aposentadoria especial ou regra PCD (LC 142/2013). *(O cálculo oficial do seu extrato continua no motor da página.)*"
         }
     ]
 
@@ -1661,7 +1670,7 @@ if st.session_state.get("gaveta_ia_aberta"):
                 '</div>',
                 unsafe_allow_html=True,
             )
-            st.caption("Tira-dúvidas geral com Gemini — cálculo exato no motor do CNIS.")
+            st.caption("Conversa com Gemini — cálculo exato no motor do CNIS.")
         with col_ia_fechar:
             if st.button("✕", key="btn_fechar_gaveta_ia", use_container_width=True):
                 st.session_state["gaveta_ia_aberta"] = False
