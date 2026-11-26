@@ -188,6 +188,15 @@ def _guardar_sessao_recuperacao(res):
     user_obj = getattr(res, "user", None)
     if sess_obj:
         st.session_state["user_session"] = sess_obj
+        acc_tok = getattr(sess_obj, "access_token", None)
+        ref_tok = getattr(sess_obj, "refresh_token", None)
+        if isinstance(sess_obj, dict):
+            acc_tok = acc_tok or sess_obj.get("access_token")
+            ref_tok = ref_tok or sess_obj.get("refresh_token")
+        if acc_tok:
+            st.session_state["recovery_access_token"] = acc_tok
+        if ref_tok:
+            st.session_state["recovery_refresh_token"] = ref_tok
     if user_obj:
         st.session_state["user_email"] = getattr(user_obj, "email", st.session_state.get("user_email", ""))
         st.session_state["user_id"] = getattr(user_obj, "id", st.session_state.get("user_id", ""))
@@ -198,6 +207,9 @@ if access_token_url and (tipo_param == "recovery" or not tipo_param):
     try:
         client = get_supabase()
         res = client.auth.set_session(access_token_url, refresh_token_url or "")
+        st.session_state["recovery_access_token"] = access_token_url
+        if refresh_token_url:
+            st.session_state["recovery_refresh_token"] = refresh_token_url
         _guardar_sessao_recuperacao(res)
         st.query_params.clear()
         st.rerun()
@@ -247,19 +259,29 @@ if st.session_state.get("modo_redefinir_senha"):
         elif senha_limpa != conf_limpa:
             st.warning("As senhas não coincidem.")
         else:
+            acc_tok = st.session_state.get("recovery_access_token")
+            ref_tok = st.session_state.get("recovery_refresh_token", "")
+            if acc_tok:
+                try:
+                    get_supabase().auth.set_session(acc_tok, ref_tok)
+                except Exception:
+                    pass
             sucesso, msg = atualizar_nova_senha(senha_limpa)
             if sucesso:
                 st.success(msg)
                 st.session_state["modo_redefinir_senha"] = False
+                st.session_state.pop("recovery_access_token", None)
+                st.session_state.pop("recovery_refresh_token", None)
                 st.rerun()
             else:
                 st.error(msg)
 
     if st.button("Voltar ao início", key="btn_voltar_redefinir"):
         st.session_state["modo_redefinir_senha"] = False
+        st.session_state.pop("recovery_access_token", None)
+        st.session_state.pop("recovery_refresh_token", None)
         st.rerun()
     st.stop()
-
 
 def _renderizar_bloco_esqueci_senha(sufixo_key: str):
     url_base = globals().get("URL_APP", "https://auditoria-previdenciaria-4ibrpwssuthl96ga3kh974.streamlit.app")
