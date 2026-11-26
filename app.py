@@ -170,10 +170,11 @@ def _responder_duvida_inss(pergunta: str) -> str:
     if not pergunta_limpa:
         return "Digite sua dúvida sobre CNIS, vínculos, indicadores do INSS ou aposentadoria."
 
-    if "GEMINI_API_KEY" in st.secrets:
+    api_key = st.secrets.get("GEMINI_API_KEY") or os.environ.get("GEMINI_API_KEY")
+    if api_key:
         try:
             from google import genai
-            client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
+            client = genai.Client(api_key=api_key)
             prompt = (
                 "Você é o assistente de orientação geral do site 'Inteligência Previdenciária & Auditoria'. "
                 "Responda em português claro, objetivo e cordial sobre dúvidas gerais de CNIS, INSS, indicadores "
@@ -1684,12 +1685,15 @@ if st.session_state.get("gaveta_ia_aberta"):
             with st.chat_message(msg["role"]):
                 st.markdown(msg["content"])
 
-        pergunta_ia = st.text_input(
-            "Sua dúvida sobre CNIS ou INSS:",
-            placeholder="Ex.: O que significa PREC-MENOR-MIN?",
-            key="input_gaveta_ia",
-        )
-        if st.button("Perguntar", type="primary", use_container_width=True, key="btn_enviar_gaveta_ia"):
+        with st.form("form_gaveta_ia", clear_on_submit=True):
+            pergunta_ia = st.text_input(
+                "Sua dúvida sobre CNIS ou INSS:",
+                placeholder="Ex.: O que significa PREC-MENOR-MIN?",
+                key="input_gaveta_ia",
+            )
+            enviou_ia = st.form_submit_button("Perguntar", type="primary", use_container_width=True)
+
+        if enviou_ia:
             if pergunta_ia.strip():
                 st.session_state["mensagens_ia"].append({"role": "user", "content": pergunta_ia.strip()})
                 st.session_state["mensagens_ia"].append({"role": "assistant", "content": _responder_duvida_inss(pergunta_ia.strip())})
