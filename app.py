@@ -540,7 +540,7 @@ if "mensagens_ia" not in st.session_state:
     st.session_state["mensagens_ia"] = [
         {
             "role": "assistant",
-            "content": "Olá! Sou o assistente virtual da **Inteligência Previdenciária & Auditoria**. Tire dúvidas gerais sobre CNIS, pendências no INSS, tempo concomitante, aposentadoria especial ou regra PCD (LC 142/2013)."
+            "content": "✦ **Gemini** aqui! Posso ajudar com dúvidas gerais sobre **CNIS**, pendências no INSS, tempo concomitante, aposentadoria especial ou regra PCD (LC 142/2013). *(O cálculo oficial do seu extrato continua no motor da página.)*"
         }
     ]
 
@@ -1026,7 +1026,7 @@ st.markdown("""
         font-size: 0.82rem !important;
         line-height: 1.42 !important;
         color: #FFFFFF !important;
-        
+    }
     .st-key-caixa_lateral_inss button[kind="secondary"] {
         background: linear-gradient(135deg, #FFFDF5 0%, #F8E7B2 100%) !important;
         color: #0F293A !important;
@@ -1636,8 +1636,14 @@ if st.session_state.get("gaveta_ia_aberta"):
     with st.container(key="caixa_lateral_inss"):
         col_ia_tit, col_ia_fechar = st.columns([5, 1])
         with col_ia_tit:
-            st.markdown('<div style="color:#F3D06B; font-weight:800; font-size:0.95rem;">✨ Dúvidas INSS & CNIS</div>', unsafe_allow_html=True)
-            st.caption("Orientação geral integrada — cálculo exato no motor do CNIS.")
+            st.markdown(
+                '<div style="display:flex; align-items:center; gap:6px; color:#F3D06B; font-weight:800; font-size:0.95rem;">'
+                '<span style="background:#C59B27; color:#0F293A; border-radius:6px; padding:1px 6px; font-size:0.8rem;">✦</span>'
+                '<span>Dúvidas INSS • Gemini</span>'
+                '</div>',
+                unsafe_allow_html=True,
+            )
+            st.caption("Tira-dúvidas geral com Gemini — cálculo exato no motor do CNIS.")
         with col_ia_fechar:
             if st.button("✕", key="btn_fechar_gaveta_ia", use_container_width=True):
                 st.session_state["gaveta_ia_aberta"] = False
@@ -1733,7 +1739,7 @@ st.markdown(f"""
 
 <div class="floating-container">
     <a href="?abrir_ia=1" target="_self" class="float-btn float-gemini">
-        <span>✨ Dúvidas INSS</span>
+        <span>✦ Dúvidas INSS (Gemini)</span>
     </a>
     <div class="support-wrapper" tabindex="0">
         <div class="support-menu">
