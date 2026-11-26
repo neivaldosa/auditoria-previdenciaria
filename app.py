@@ -164,6 +164,56 @@ def aplicar_logo_todas_abas_excel(buffer_excel):
     return saida_final.getvalue()
 
 
+def _responder_duvida_inss(pergunta: str) -> str:
+    """Responde dúvidas gerais sobre INSS, CNIS e regras usando Gemini quando disponível."""
+    pergunta_limpa = (pergunta or "").strip()
+    if not pergunta_limpa:
+        return "Digite sua dúvida sobre CNIS, vínculos, indicadores do INSS ou aposentadoria."
+
+    if "GEMINI_API_KEY" in st.secrets:
+        try:
+            from google import genai
+            client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
+            prompt = (
+                "Você é o assistente de orientação geral do site 'Inteligência Previdenciária & Auditoria'. "
+                "Responda em português claro, objetivo e cordial sobre dúvidas gerais de CNIS, INSS, indicadores "
+                "(como PREC-MENOR-MIN, IEAN, PEXT), tempo concomitante, aposentadoria especial ou regra PCD (LC 142/2013). "
+                "Lembre brevemente que o cálculo exato do extrato e a auditoria determinística são feitos enviando o PDF do CNIS no sistema, "
+                "sem substituir consultoria jurídica individualizada.\n\n"
+                f"Pergunta do usuário: {pergunta_limpa}"
+            )
+            resp = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=prompt,
+            )
+            texto = getattr(resp, "text", None)
+            if texto and texto.strip():
+                return texto.strip()
+        except Exception:
+            pass
+
+    p_low = pergunta_limpa.lower()
+    if "cnis" in p_low or "baixar" in p_low or "meu inss" in p_low:
+        return (
+            "Para baixar o CNIS completo, acesse **meu.inss.gov.br** ou o app **Meu INSS**, vá em "
+            "**Extratos e Comprovantes > Extrato de Contribuições (CNIS)** e baixe o PDF com vínculos, contribuições e remunerações."
+        )
+    if "pcd" in p_low or "tea" in p_low or "142" in p_low:
+        return (
+            "A **LC 142/2013** trata da aposentadoria da pessoa com deficiência (incluindo condições avaliadas como deficiência/TEA "
+            "mediante avaliação biopsicossocial), sem exigência de idade mínima, variando o tempo conforme o grau (leve, moderado ou grave)."
+        )
+    if "indicador" in p_low or "pendência" in p_low or "pendencia" in p_low or "prec-menor" in p_low:
+        return (
+            "Indicadores no CNIS (como *PREC-MENOR-MIN*, *IEAN* ou *PEXT*) sinalizam pontos que podem exigir acerto, comprovação "
+            "ou ajuste de remuneração/vínculo. Envie o PDF do seu CNIS para auditar os vínculos e ver o plano de ação no Dossiê Completo."
+        )
+    return (
+        "Posso te ajudar com dúvidas gerais sobre **CNIS**, **pendências no Meu INSS**, **tempo concomitante**, "
+        "**aposentadoria especial** e **regra PCD (LC 142/2013)**. Para o cálculo exato do seu extrato, envie o PDF do CNIS na tela principal."
+    )
+
+
 LOGO_SITE = _achar_logo_oficial()
 
 st.set_page_config(
@@ -484,6 +534,15 @@ if "desconto_50" not in st.session_state:
     st.session_state["desconto_50"] = False
 if "aviso_cadastro_obrigatorio" not in st.session_state:
     st.session_state["aviso_cadastro_obrigatorio"] = False
+if "gaveta_ia_aberta" not in st.session_state:
+    st.session_state["gaveta_ia_aberta"] = False
+if "mensagens_ia" not in st.session_state:
+    st.session_state["mensagens_ia"] = [
+        {
+            "role": "assistant",
+            "content": "Olá! Sou o assistente virtual da **Inteligência Previdenciária & Auditoria**. Tire dúvidas gerais sobre CNIS, pendências no INSS, tempo concomitante, aposentadoria especial ou regra PCD (LC 142/2013)."
+        }
+    ]
 
 if acesso_url in CODIGOS_PASSE_ILIMITADO:
     st.session_state["plano_ativo"] = "ILIMITADO"
@@ -900,7 +959,7 @@ st.markdown("""
     }
     .floating-container {
         position: fixed;
-        bottom: 22px;
+        bottom: 72px;
         right: 22px;
         display: flex;
         flex-direction: column;
@@ -932,6 +991,43 @@ st.markdown("""
         background-color: #C59B27;
         color: #0F293A !important;
     }
+
+    /* Caixa lateral interativa de Dúvidas INSS */
+    .st-key-caixa_lateral_inss {
+        position: fixed !important;
+        top: 24px !important;
+        right: 22px !important;
+        width: 370px !important;
+        max-width: calc(100vw - 24px) !important;
+        max-height: calc(100vh - 48px) !important;
+        overflow-y: auto !important;
+        background: linear-gradient(180deg, #0F293A 0%, #15344A 100%) !important;
+        border: 2px solid #C59B27 !important;
+        border-radius: 14px !important;
+        padding: 0.95rem 1rem !important;
+        z-index: 10002 !important;
+        box-shadow: 0 14px 34px rgba(15, 41, 58, 0.35) !important;
+        color: #FFFFFF !important;
+    }
+    .st-key-caixa_lateral_inss [data-testid="stWidgetLabel"] p,
+    .st-key-caixa_lateral_inss [data-testid="stCaptionContainer"] p,
+    .st-key-caixa_lateral_inss p,
+    .st-key-caixa_lateral_inss label {
+        color: #F8FAFC !important;
+    }
+    .st-key-caixa_lateral_inss [data-testid="stChatMessage"] {
+        background: rgba(255, 255, 255, 0.06) !important;
+        border: 1px solid rgba(197, 155, 39, 0.28) !important;
+        border-radius: 10px !important;
+        padding: 0.5rem 0.65rem !important;
+        margin-bottom: 0.45rem !important;
+    }
+    .st-key-caixa_lateral_inss [data-testid="stChatMessage"] p {
+        font-size: 0.82rem !important;
+        line-height: 1.42 !important;
+        color: #FFFFFF !important;
+    }
+
     @media (max-width: 768px) {
         .hero-box {
             flex-direction: column;
@@ -1000,7 +1096,7 @@ st.markdown("""
             padding: 0.45rem 0.65rem !important;
         }
         .floating-container {
-            bottom: 10px !important;
+            bottom: 64px !important;
             right: 10px !important;
             gap: 6px !important;
         }
@@ -1012,6 +1108,14 @@ st.markdown("""
         .support-menu {
             width: 220px !important;
             bottom: 40px !important;
+        }
+        .st-key-caixa_lateral_inss {
+            top: 12px !important;
+            right: 10px !important;
+            left: 10px !important;
+            width: auto !important;
+            max-width: none !important;
+            max-height: calc(100vh - 24px) !important;
         }
     }
     @media (min-width: 769px) {
@@ -1481,22 +1585,6 @@ if not email_logado:
         st.session_state["aviso_cadastro_obrigatorio"] = True
         st.rerun()
 
-_, col_ia, _ = st.columns([1, 2.2, 1])
-
-with col_ia:
-    if "GEMINI_API_KEY" in st.secrets:
-        from google import genai
-        client = genai.Client(api_key=st.secrets["GEMINI_API_KEY"])
-
-        if "mensagens_ia" not in st.session_state:
-            st.session_state["mensagens_ia"] = [
-                {"role": "assistant", "content": "Olá! Sou o assistente virtual da **Inteligência Previdenciária & Auditoria**. Qual é a sua dúvida sobre aposentadoria, CNIS ou regras do INSS?"}
-            ]
-
-        for msg in st.session_state["mensagens_ia"]:
-            with st.chat_message(msg["role"]):
-                st.markdown(msg["content"])
-
 st.markdown('<h3 style="text-align: center; color: #0F293A; margin-top: 2rem; margin-bottom: 1rem;">❓ Perguntas Frequentes</h3>', unsafe_allow_html=True)
 
 _, col_faq, _ = st.columns([1, 2.2, 1])
@@ -1522,6 +1610,7 @@ with col_faq:
 
     with st.expander("Meus dados pessoais e meu extrato CNIS estão seguros (LGPD)?"):
         st.markdown("Sim. O processamento ocorre de forma isolada e 100% em memória apenas durante a leitura do ficheiro. Nenhum PDF enviado fica gravado no disco do servidor, em total conformidade com a Lei Geral de Proteção de Dados (LGPD).")
+
 st.markdown(
     """
 <div style="text-align:center; color:#475569; font-size:0.82rem; margin:1.8rem auto 1rem auto; padding:0.75rem 1rem; max-width:860px; border-top:1px solid #CBD5E1;">
@@ -1530,12 +1619,60 @@ st.markdown(
 """,
     unsafe_allow_html=True,
 )
+
+# Caixa lateral interativa quando o usuário clica em "Dúvidas INSS"
+if st.session_state.get("gaveta_ia_aberta"):
+    with st.container(key="caixa_lateral_inss"):
+        col_ia_tit, col_ia_fechar = st.columns([5, 1])
+        with col_ia_tit:
+            st.markdown('<div style="color:#F3D06B; font-weight:800; font-size:0.95rem;">✨ Dúvidas INSS & CNIS</div>', unsafe_allow_html=True)
+            st.caption("Orientação geral integrada — cálculo exato no motor do CNIS.")
+        with col_ia_fechar:
+            if st.button("✕", key="btn_fechar_gaveta_ia", use_container_width=True):
+                st.session_state["gaveta_ia_aberta"] = False
+                st.rerun()
+
+        c_rap1, c_rap2 = st.columns(2)
+        with c_rap1:
+            if st.button("Como baixar CNIS?", key="ia_rap_cnis", use_container_width=True):
+                perg = "Como baixar o CNIS completo no Meu INSS?"
+                st.session_state["mensagens_ia"].append({"role": "user", "content": perg})
+                st.session_state["mensagens_ia"].append({"role": "assistant", "content": _responder_duvida_inss(perg)})
+                st.rerun()
+        with c_rap2:
+            if st.button("Regra PCD / TEA", key="ia_rap_pcd", use_container_width=True):
+                perg = "Como funciona a aposentadoria PCD e TEA pela LC 142/2013?"
+                st.session_state["mensagens_ia"].append({"role": "user", "content": perg})
+                st.session_state["mensagens_ia"].append({"role": "assistant", "content": _responder_duvida_inss(perg)})
+                st.rerun()
+
+        for msg in st.session_state["mensagens_ia"][-6:]:
+            with st.chat_message(msg["role"]):
+                st.markdown(msg["content"])
+
+        pergunta_ia = st.text_input(
+            "Sua dúvida sobre CNIS ou INSS:",
+            placeholder="Ex.: O que significa PREC-MENOR-MIN?",
+            key="input_gaveta_ia",
+        )
+        if st.button("Perguntar", type="primary", use_container_width=True, key="btn_enviar_gaveta_ia"):
+            if pergunta_ia.strip():
+                st.session_state["mensagens_ia"].append({"role": "user", "content": pergunta_ia.strip()})
+                st.session_state["mensagens_ia"].append({"role": "assistant", "content": _responder_duvida_inss(pergunta_ia.strip())})
+                st.rerun()
+            else:
+                st.warning("Digite uma dúvida antes de enviar.")
+
+if st.query_params.get("abrir_ia") == "1":
+    st.query_params.pop("abrir_ia", None)
+    st.session_state["gaveta_ia_aberta"] = True
+    st.rerun()
+
 assunto_suporte = urllib.parse.quote("Suporte Técnico - Inteligência Previdenciária & Auditoria")
 corpo_suporte = urllib.parse.quote("Olá! Preciso de suporte técnico no site Inteligência Previdenciária & Auditoria.")
 params_sup = urllib.parse.urlencode({"phone": "5521968807955", "text": "Olá! Preciso de suporte técnico no site Inteligência Previdenciária & Auditoria."})
 dominio_sup = "web." + "whatsapp" + ".com"
 whats_suporte = f"https://{dominio_sup}/send?{params_sup}"
-url_gemini = "https://gemini." + "google" + ".com/app"
 
 st.markdown(f"""
 <style>
@@ -1584,8 +1721,8 @@ st.markdown(f"""
 </style>
 
 <div class="floating-container">
-    <a href="{url_gemini}" target="_blank" rel="noopener noreferrer" class="float-btn float-gemini">
-        <span>✨ Dúvidas INSS (Gemini IA)</span>
+    <a href="?abrir_ia=1" target="_self" class="float-btn float-gemini">
+        <span>✨ Dúvidas INSS</span>
     </a>
     <div class="support-wrapper" tabindex="0">
         <div class="support-menu">
