@@ -4,3 +4,4 @@ pdfplumber
 openpyxl
 fpdf2
 supabase
+google-genai
