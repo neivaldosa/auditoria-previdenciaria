@@ -169,6 +169,24 @@ import urllib.error
 import urllib.request
 
 
+def _carregar_prova_dossie_b64() -> str:
+    candidatos = [
+        "prova_resultados_dossie.png",
+        "prova_resultados_dossie.jpg",
+        "prova_resultados_dossie.jpeg",
+        "resultados_dossie.png",
+        "resultados_dossie.jpg",
+    ]
+    for nome in candidatos:
+        if os.path.exists(nome):
+            try:
+                with open(nome, "rb") as f:
+                    return base64.b64encode(f.read()).decode("utf-8")
+            except Exception:
+                pass
+    return ""
+
+
 def _carregar_prova_seguranca_b64() -> str:
     candidatos = [
         "prova_seguranca_gemini.png",
@@ -1143,6 +1161,51 @@ st.markdown("""
         color: #F3D06B !important;
     }
 
+    /* Pop-up de Resultados do Dossiê / Planos (hover + clique/foco) */
+    .dossie-trigger-card {
+        position: relative;
+        cursor: pointer;
+    }
+    .dossie-popover-card {
+        display: none;
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 390px;
+        max-width: calc(100vw - 24px);
+        max-height: 88vh;
+        overflow-y: auto;
+        background: linear-gradient(180deg, #0F293A 0%, #15344A 100%);
+        border: 2px solid #C59B27;
+        border-radius: 14px;
+        padding: 0.9rem 1rem;
+        color: #FFFFFF;
+        box-shadow: 0 18px 44px rgba(15, 41, 58, 0.55);
+        z-index: 10025;
+        text-align: left;
+    }
+    .dossie-trigger-card:hover .dossie-popover-card,
+    .dossie-trigger-card:focus-within .dossie-popover-card {
+        display: block;
+    }
+    .dossie-pill-hint {
+        display: inline-block;
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: #8A6810;
+        background: #FFFDF5;
+        border: 1px solid #C59B27;
+        border-radius: 20px;
+        padding: 2px 9px;
+        margin-bottom: 0.45rem;
+    }
+    .plan-card.featured .dossie-pill-hint {
+        color: #F3D06B;
+        background: rgba(197, 155, 39, 0.16);
+        border-color: rgba(197, 155, 39, 0.55);
+    }
+
     /* Pop-up de Segurança & LGPD (hover + clique/foco) */
     .lgpd-trigger-wrap {
         position: relative;
@@ -1391,6 +1454,34 @@ POPUP_SEGURANCA_HTML = (
     + '</div>'
     '</div>'
 )
+
+_prova_dossie_b64 = _carregar_prova_dossie_b64()
+_img_prova_dossie_html = (
+    f'<img src="data:image/jpeg;base64,{_prova_dossie_b64}" class="lgpd-pop-img" alt="Como o Dossiê Completo ajuda na sua aposentadoria" />'
+    if _prova_dossie_b64
+    else (
+        '<div style="background:rgba(255,255,255,0.07); border:1px solid rgba(197,155,39,0.4); border-radius:10px; padding:0.75rem; margin-top:0.5rem;">'
+        '<div style="color:#F3D06B; font-weight:700; margin-bottom:0.35rem;">✦ Como o Dossiê ajuda na sua aposentadoria:</div>'
+        '<div style="color:#FFFFFF; font-size:0.79rem; line-height:1.45;">'
+        'O Dossiê funciona como um <strong>raio-X completo</strong> da sua vida profissional: revela pendências escondidas no CNIS, '
+        'mostra o que está regular, onde estão as travas e quais comprovantes reunir antes de pedir o benefício no INSS.'
+        '</div></div>'
+    )
+)
+
+POPUP_DOSSIE_HTML = (
+    '<div class="dossie-popover-card">'
+    '<div class="lgpd-pop-header">'
+    '<span class="lgpd-pop-title">📋 Por que o Dossiê faz diferença no INSS</span>'
+    '<span class="lgpd-pop-hint">Passe fora ou toque fora para fechar</span>'
+    '</div>'
+    '<div class="lgpd-pop-body">'
+    'Veja como a auditoria completa evita exigências demoradas e benefício concedido com valor menor:'
+    + _img_prova_dossie_html
+    + '</div>'
+    '</div>'
+)
+
 
 _img_hero_html = (
     f'<img src="data:image/png;base64,{_logo_b64}" class="hero-logo" style="width:76px; height:76px; border-radius:10px; border:1.5px solid #C59B27; flex-shrink:0;" />'
@@ -1781,10 +1872,11 @@ else:
 st.markdown(f"""
 <div style="font-size: 1.05rem; font-weight: 700; color: #0F293A; margin-top: 0.8rem;">💎 Escolha o Plano Ideal (Liberação Automática via Pix ou Cartão)</div>
 <div class="pricing-grid">
-    <div class="plan-card">
+    <div class="plan-card dossie-trigger-card" tabindex="0">
         <div>
             <div class="plan-top"><span class="plan-name" style="color:#0F293A;">Diagnóstico Inicial</span></div>
             <div class="plan-price" style="color:#0F293A;">Grátis <span>/ prévia</span></div>
+            <div class="dossie-pill-hint">✦ Veja o que o Dossiê destrava</div>
             <ul class="plan-list" style="color:#334155;">
                 <li>✅ Tempo líquido e leitura do CNIS</li>
                 <li>✅ Alerta de pendências nos vínculos</li>
@@ -1792,11 +1884,13 @@ st.markdown(f"""
             </ul>
         </div>
         <div style="text-align:center; font-size:0.78rem; color:#64748B; font-weight:600; padding:0.45rem; background:#F1F5F9; border-radius:6px;">Ativo — Envie seu PDF acima</div>
+        {POPUP_DOSSIE_HTML}
     </div>
-    <div class="plan-card">
+    <div class="plan-card dossie-trigger-card" tabindex="0">
         <div>
             <div class="plan-top"><span class="plan-name" style="color:#0F293A;">Dossiê Completo Avulso</span></div>
             <div class="plan-price" style="color:#0F293A;">{preco_avulso_txt} <span>/ único</span></div>
+            <div class="dossie-pill-hint">✦ Raio-X completo antes do pedido</div>
             <ul class="plan-list" style="color:#334155;">
                 <li>✅ Plano de ação (como corrigir erros)</li>
                 <li>✅ Cálculo RMI (1994–2026), Especial e PCD</li>
@@ -1804,14 +1898,16 @@ st.markdown(f"""
             </ul>
         </div>
         {cta_avulso_html}
+        {POPUP_DOSSIE_HTML}
     </div>
-    <div class="plan-card featured">
+    <div class="plan-card featured dossie-trigger-card" tabindex="0">
         <div>
             <div class="plan-top">
                 <span class="plan-name">Passe Ilimitado</span>
                 <span class="plan-badge">Mais Escolhido</span>
             </div>
             <div class="plan-price" style="color:#F3D06B;">R$ 39,90 <span>/ 7d ou R$ 69,90 / 30d</span></div>
+            <div class="dossie-pill-hint">✦ Raio-X completo antes do pedido</div>
             <ul class="plan-list" style="color:#E2E8F0;">
                 <li>✅ <strong>Simulações e PDFs/Excel ilimitados</strong></li>
                 <li>✅ Teste cenários (PCD, Especial, futuro)</li>
@@ -1821,6 +1917,7 @@ st.markdown(f"""
         <div>
             {cta_passes_html}
         </div>
+        {POPUP_DOSSIE_HTML}
     </div>
 </div>
 <div style="background-color:#EFF6FF; border:1px solid #BFDBFE; border-left:4px solid #0F293A; color:#0F293A; padding:0.65rem 0.9rem; border-radius:8px; font-size:0.83rem; margin-bottom:0.8rem;">
