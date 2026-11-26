@@ -225,28 +225,39 @@ elif codigo_auth:
 if st.session_state.get("modo_redefinir_senha"):
     st.subheader("🔑 Criar Nova Senha")
     st.caption("Sua conta e seu histórico de pagamentos/créditos permanecem preservados.")
-    nova_senha = st.text_input("Digite sua nova senha (mínimo 6 caracteres)", type="password", key="nova_senha_input")
-    confirmar_senha = st.text_input("Confirme sua nova senha", type="password", key="conf_senha_input")
 
-    col_s1, col_s2 = st.columns([1, 1])
-    with col_s1:
-        if st.button("Salvar Nova Senha", type="primary", key="btn_salvar_nova_senha"):
-            if len(nova_senha) < 6:
-                st.warning("A senha deve ter pelo menos 6 caracteres.")
-            elif nova_senha != confirmar_senha:
-                st.warning("As senhas não coincidem.")
+    with st.form("form_criar_nova_senha", clear_on_submit=False):
+        nova_senha = st.text_input(
+            "Digite sua nova senha (mínimo 6 caracteres)",
+            type="password",
+            key="nova_senha_input",
+        )
+        confirmar_senha = st.text_input(
+            "Confirme sua nova senha",
+            type="password",
+            key="conf_senha_input",
+        )
+        enviou_nova_senha = st.form_submit_button("Salvar Nova Senha", type="primary")
+
+    if enviou_nova_senha:
+        senha_limpa = (nova_senha or "").strip()
+        conf_limpa = (confirmar_senha or "").strip()
+        if len(senha_limpa) < 6:
+            st.warning("A senha deve ter pelo menos 6 caracteres.")
+        elif senha_limpa != conf_limpa:
+            st.warning("As senhas não coincidem.")
+        else:
+            sucesso, msg = atualizar_nova_senha(senha_limpa)
+            if sucesso:
+                st.success(msg)
+                st.session_state["modo_redefinir_senha"] = False
+                st.rerun()
             else:
-                sucesso, msg = atualizar_nova_senha(nova_senha)
-                if sucesso:
-                    st.success(msg)
-                    st.session_state["modo_redefinir_senha"] = False
-                    st.rerun()
-                else:
-                    st.error(msg)
-    with col_s2:
-        if st.button("Voltar ao início", key="btn_voltar_redefinir"):
-            st.session_state["modo_redefinir_senha"] = False
-            st.rerun()
+                st.error(msg)
+
+    if st.button("Voltar ao início", key="btn_voltar_redefinir"):
+        st.session_state["modo_redefinir_senha"] = False
+        st.rerun()
     st.stop()
 
 
@@ -275,8 +286,9 @@ def _renderizar_bloco_esqueci_senha(sufixo_key: str):
             key=f"codigo_otp_{sufixo_key}",
         )
         if st.button("Validar código e trocar senha", use_container_width=True, key=f"btn_validar_otp_{sufixo_key}"):
-            ok_otp, msg_otp = verificar_codigo_otp_recuperacao(email_rec, codigo_otp)
+            ok_otp, msg_otp = verificar_codigo_otp_recuperacao(email_rec.strip(), codigo_otp.strip())
             if ok_otp:
+                st.session_state["modo_redefinir_senha"] = True
                 st.rerun()
             else:
                 st.error(msg_otp)
@@ -1221,7 +1233,7 @@ if email_logado:
 else:
     cta_avulso_html = '<a href="#topo-pagina" class="plan-cta cta-outline">🔐 Cadastre-se na Área do Assinante Primeiro</a>'
     cta_passes_html = '<a href="#topo-pagina" class="plan-cta cta-gold">🔐 Cadastre-se na Área do Assinante Primeiro</a>'
-    
+
 st.markdown(f"""
 <div style="font-size: 1.05rem; font-weight: 700; color: #0F293A; margin-top: 0.8rem;">💎 Escolha o Plano Ideal (Liberação Automática via Pix ou Cartão)</div>
 <div class="pricing-grid">
