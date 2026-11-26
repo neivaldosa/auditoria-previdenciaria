@@ -164,19 +164,9 @@ def aplicar_logo_todas_abas_excel(buffer_excel):
     return saida_final.getvalue()
 
 
-def _obter_gemini_key() -> str:
-    if "GEMINI_API_KEY" in st.secrets:
-        return str(st.secrets["GEMINI_API_KEY"]).strip()
-    if "gemini" in st.secrets and isinstance(st.secrets["gemini"], dict):
-        return str(st.secrets["gemini"].get("api_key", "")).strip()
-    return os.environ.get("GEMINI_API_KEY", "").strip()
-
-
 import json
-import os
 import urllib.error
 import urllib.request
-import streamlit as st
 
 
 def _obter_gemini_api_key() -> str:
@@ -191,16 +181,68 @@ def _obter_gemini_api_key() -> str:
     return chave
 
 
-def _responder_duvida_inss(pergunta: str) -> str:
+def _parece_pedido_calculo_ou_extrato(texto: str) -> bool:
+    t = (texto or "").strip().lower()
+    if len(t) > 650:
+        return True
+    gatilhos_extrato = [
+        "seq.", "nit:", "código emp.", "remunerações", "indicadores",
+        "data início", "data fim", "últ. remun.", "vínculos e contribuições",
+    ]
+    if sum(1 for g in gatilhos_extrato if g in t) >= 2:
+        return True
+    pedidos_servico = [
+        "faça um levantamento", "fazer um levantamento", "faz um levantamento",
+        "audite meu cnis", "auditar meu cnis", "analise meu cnis", "analisar meu cnis",
+        "calcule meu tempo", "calcular meu tempo", "quanto tempo eu tenho",
+        "quanto vou receber", "calcule minha aposentadoria", "calcular minha aposentadoria",
+        "calcule minha rmi", "calcular minha rmi", "simule minha aposentadoria",
+    ]
+    return any(p in t for p in pedidos_servico)
+
+
+def _responder_duvida_inss(pergunta: str, historico: list[dict] | None = None) -> str:
+    if _parece_pedido_calculo_ou_extrato(pergunta):
+        return (
+            "Esse tipo de levantamento, contagem de tempo líquido ou cálculo de valor (RMI) "
+            "não é feito aqui no chat — ele exige as regras determinísticas do motor oficial da página.\n\n"
+            "Para fazer isso com precisão:\n"
+            "1. Envie o **PDF oficial do seu CNIS** no campo de upload acima para ver o diagnóstico gratuito.\n"
+            "2. Para liberar o plano de ação completo, cálculo desde 1994, Especial, PCD e os arquivos **PDF + Excel**, "
+            "crie sua conta na **Área do Assinante** e escolha um dos planos do site."
+        )
+
     api_key = _obter_gemini_api_key()
     if not api_key:
         return "⚠️ Chave GEMINI_API_KEY não configurada nos Secrets do Streamlit Cloud."
 
-    prompt = (
-        "Você é um assistente de apoio sobre regras do INSS e leitura de CNIS no Brasil. "
-        "Responda de forma clara, objetiva e em português, sem substituir aconselhamento jurídico formal.\n\n"
-        f"Pergunta: {pergunta}"
+    instrucoes = (
+        "Você é o assistente conversacional do site Inteligência Previdenciária & Auditoria. "
+        "Converse em português do Brasil de forma natural, humana, direta e acolhedora — como um diálogo entre duas pessoas, "
+        "sem respostas engessadas ou listas gigantes desnecessárias.\n"
+        "REGRAS RÍGIDAS DE ESCOPO (NUNCA QUEBRE):\n"
+        "1. Responda apenas dúvidas conceituais sobre INSS, significado de siglas/indicadores do CNIS (ex.: PREC-MENOR-MIN, PEXT, IEAN), "
+        "regras gerais (tempo comum, especial, PCD LC 142/2013) e como baixar o extrato no Meu INSS.\n"
+        "2. NUNCA faça levantamento de vínculos, contagem de tempo de contribuição, análise de trechos do extrato do usuário "
+        "nem cálculo/estimativa de valor de benefício (RMI) — esses são serviços exclusivos do motor pago do site.\n"
+        "3. Se o usuário pedir levantamento, análise do próprio CNIS ou cálculo de benefício, recuse com educação e oriente "
+        "a enviar o PDF do CNIS no campo de upload da página e adquirir o Dossiê Completo ou Passe na Área do Assinante.\n"
+        "4. Nunca substitua aconselhamento jurídico formal nem o atendimento oficial do INSS."
     )
+
+    contexto_conversa = ""
+    if historico:
+        ultimas = historico[-6:]
+        linhas = []
+        for m in ultimas:
+            papel = "Usuário" if m.get("role") == "user" else "Gemini"
+            conteudo = str(m.get("content", "")).strip()
+            if conteudo:
+                linhas.append(f"{papel}: {conteudo}")
+        if linhas:
+            contexto_conversa = "Histórico recente da conversa:\n" + "\n".join(linhas) + "\n\n"
+
+    prompt = f"{instrucoes}\n\n{contexto_conversa}Usuário: {pergunta}\nGemini:"
 
     # 1) Plano A: SDK google-genai
     try:
@@ -1065,10 +1107,22 @@ st.markdown("""
         padding: 0.5rem 0.65rem !important;
         margin-bottom: 0.45rem !important;
     }
-    .st-key-caixa_lateral_inss [data-testid="stChatMessage"] p {
-        font-size: 0.82rem !important;
-        line-height: 1.42 !important;
+    .st-key-caixa_lateral_inss [data-testid="stChatMessage"],
+    .st-key-caixa_lateral_inss [data-testid="stChatMessage"] p,
+    .st-key-caixa_lateral_inss [data-testid="stChatMessage"] li,
+    .st-key-caixa_lateral_inss [data-testid="stChatMessage"] span,
+    .st-key-caixa_lateral_inss [data-testid="stChatMessage"] strong,
+    .st-key-caixa_lateral_inss [data-testid="stChatMessage"] em,
+    .st-key-caixa_lateral_inss [data-testid="stChatMessage"] div,
+    .st-key-caixa_lateral_inss [data-testid="stChatMessage"] ul,
+    .st-key-caixa_lateral_inss [data-testid="stChatMessage"] ol {
+        font-size: 0.84rem !important;
+        line-height: 1.45 !important;
         color: #FFFFFF !important;
+        opacity: 1 !important;
+    }
+    .st-key-caixa_lateral_inss [data-testid="stChatMessage"] li::marker {
+        color: #F3D06B !important;
     }
     .st-key-caixa_lateral_inss button[kind="secondary"],
     .st-key-caixa_lateral_inss [data-testid="stBaseButton-secondary"] {
@@ -1709,21 +1763,32 @@ if st.session_state.get("gaveta_ia_aberta"):
                 st.session_state["gaveta_ia_aberta"] = False
                 st.rerun()
 
-        c_rap1, c_rap2 = st.columns(2)
+        c_rap1, c_rap2, c_rap3 = st.columns([2, 2, 1.3])
         with c_rap1:
             if st.button("Como baixar CNIS?", key="ia_rap_cnis", use_container_width=True):
                 perg = "Como baixar o CNIS completo no Meu INSS?"
+                resp = _responder_duvida_inss(perg, st.session_state["mensagens_ia"])
                 st.session_state["mensagens_ia"].append({"role": "user", "content": perg})
-                st.session_state["mensagens_ia"].append({"role": "assistant", "content": _responder_duvida_inss(perg)})
+                st.session_state["mensagens_ia"].append({"role": "assistant", "content": resp})
                 st.rerun()
         with c_rap2:
             if st.button("Regra PCD / TEA", key="ia_rap_pcd", use_container_width=True):
                 perg = "Como funciona a aposentadoria PCD e TEA pela LC 142/2013?"
+                resp = _responder_duvida_inss(perg, st.session_state["mensagens_ia"])
                 st.session_state["mensagens_ia"].append({"role": "user", "content": perg})
-                st.session_state["mensagens_ia"].append({"role": "assistant", "content": _responder_duvida_inss(perg)})
+                st.session_state["mensagens_ia"].append({"role": "assistant", "content": resp})
+                st.rerun()
+        with c_rap3:
+            if st.button("Limpar", key="ia_limpar_chat", use_container_width=True):
+                st.session_state["mensagens_ia"] = [
+                    {
+                        "role": "assistant",
+                        "content": "✦ **Gemini** aqui! Posso conversar sobre dúvidas de **CNIS**, pendências no INSS, tempo concomitante, aposentadoria especial ou regra PCD (LC 142/2013). *(O cálculo oficial do seu extrato continua no motor da página.)*"
+                    }
+                ]
                 st.rerun()
 
-        for msg in st.session_state["mensagens_ia"][-6:]:
+        for msg in st.session_state["mensagens_ia"][-8:]:
             with st.chat_message(msg["role"]):
                 st.markdown(msg["content"])
 
@@ -1733,12 +1798,14 @@ if st.session_state.get("gaveta_ia_aberta"):
                 placeholder="Ex.: O que significa PREC-MENOR-MIN?",
                 key="input_gaveta_ia",
             )
-            enviou_ia = st.form_submit_button("Perguntar", type="primary", use_container_width=True)
+            enviou_ia = st.form_submit_button("Enviar", type="primary", use_container_width=True)
 
         if enviou_ia:
             if pergunta_ia.strip():
-                st.session_state["mensagens_ia"].append({"role": "user", "content": pergunta_ia.strip()})
-                st.session_state["mensagens_ia"].append({"role": "assistant", "content": _responder_duvida_inss(pergunta_ia.strip())})
+                perg_limpa = pergunta_ia.strip()
+                resp = _responder_duvida_inss(perg_limpa, st.session_state["mensagens_ia"])
+                st.session_state["mensagens_ia"].append({"role": "user", "content": perg_limpa})
+                st.session_state["mensagens_ia"].append({"role": "assistant", "content": resp})
                 st.rerun()
             else:
                 st.warning("Digite uma dúvida antes de enviar.")
