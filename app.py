@@ -852,6 +852,17 @@ st.markdown("""
         color: #FFFFFF;
         margin: 1rem 0;
     }
+    .save-warning-box {
+        background: linear-gradient(90deg, #FFFDF5 0%, #FEF9C3 100%);
+        border: 1.5px solid #C59B27;
+        border-left: 5px solid #0F293A;
+        border-radius: 10px;
+        padding: 0.85rem 1.1rem;
+        color: #0F293A;
+        font-size: 0.86rem;
+        line-height: 1.45;
+        margin: 0.9rem 0 0.75rem 0;
+    }
     .stButton > button[kind="primary"] {
         background-color: #0F293A;
         border: 2px solid #C59B27;
@@ -1231,7 +1242,7 @@ if "resultado_auditoria" in st.session_state:
             f"2. AUDITORIA DE ALERTAS NO CNIS: Foram detectados {qtd_alertas} ponto(s) de atenção/pendência nos seus vínculos.\n"
             f"   -> Os alertas estão listados na aba 'Alertas de Vínculos', mas o passo a passo de como resolver cada pendência no Meu INSS está retido na versão gratuita.\n\n"
             f"3. CÁLCULOS FINANCEIROS, ESPECIAL E PCD: Bloqueados nesta prévia.\n"
-            f"   -> Cadastre-se primeiro em '🔐 Área do Assinante' (barra lateral esquerda no computador ou menu '⚙️ ENTRAR NA CONTA OU CONFIGURAR PERFIL' no celular) para liberar o pagamento e o Dossiê Completo por {preco_avulso_txt}."
+            f"   -> Cadastre-se primeiro em '🔐 Área do Assinante' (barra lateral esquerda no computador ou menu '🔐 ENTRAR NA CONTA OU CONFIGURAR PERFIL' no celular) para liberar o pagamento e o Dossiê Completo por {preco_avulso_txt}."
         )
 
         if email_logado:
@@ -1300,6 +1311,12 @@ if "resultado_auditoria" in st.session_state:
             st.dataframe(abas["4. ♿ REGRA PCD (LC 142)"], use_container_width=True)
         with tab5:
             st.dataframe(df_fin, use_container_width=True)
+
+        st.markdown("""
+        <div class="save-warning-box">
+            <strong>📥 Baixe e salve seu dossiê agora:</strong> Por segurança e privacidade (LGPD), a leitura do CNIS é feita em memória e o dossiê gerado aqui não fica armazenado para reabertura posterior. Baixe agora o <strong>Relatório Executivo (.pdf)</strong> e a <strong>Planilha Detalhada (.xlsx)</strong> no seu celular ou computador. Se precisar de ajuda ou tiver qualquer dúvida, fale com o suporte pelo WhatsApp <strong>+55 21 96880-7955</strong> ou pelo e-mail <strong>inteligenciaprevidenciariaaudi@gmail.com</strong>.
+        </div>
+        """, unsafe_allow_html=True)
 
         col_dl1, col_dl2, col_dl3 = st.columns(3)
         with col_dl1:
