@@ -1026,6 +1026,17 @@ st.markdown("""
         font-size: 0.82rem !important;
         line-height: 1.42 !important;
         color: #FFFFFF !important;
+        
+    .st-key-caixa_lateral_inss button[kind="secondary"] {
+        background: linear-gradient(135deg, #FFFDF5 0%, #F8E7B2 100%) !important;
+        color: #0F293A !important;
+        border: 1.5px solid #C59B27 !important;
+        font-weight: 700 !important;
+        border-radius: 8px !important;
+    }
+    .st-key-caixa_lateral_inss button[kind="secondary"]:hover {
+        background: #C59B27 !important;
+        color: #0F293A !important;
     }
 
     @media (max-width: 768px) {
