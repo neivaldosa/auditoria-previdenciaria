@@ -1027,16 +1027,33 @@ st.markdown("""
         line-height: 1.42 !important;
         color: #FFFFFF !important;
     }
-    .st-key-caixa_lateral_inss button[kind="secondary"] {
-        background: linear-gradient(135deg, #FFFDF5 0%, #F8E7B2 100%) !important;
+    .st-key-caixa_lateral_inss button[kind="secondary"],
+    .st-key-caixa_lateral_inss [data-testid="stBaseButton-secondary"] {
+        background: #F8E7B2 !important;
         color: #0F293A !important;
         border: 1.5px solid #C59B27 !important;
-        font-weight: 700 !important;
+        font-weight: 800 !important;
         border-radius: 8px !important;
     }
-    .st-key-caixa_lateral_inss button[kind="secondary"]:hover {
+    .st-key-caixa_lateral_inss button[kind="secondary"] p,
+    .st-key-caixa_lateral_inss button[kind="secondary"] span,
+    .st-key-caixa_lateral_inss button[kind="secondary"] div,
+    .st-key-caixa_lateral_inss [data-testid="stBaseButton-secondary"] p,
+    .st-key-caixa_lateral_inss [data-testid="stBaseButton-secondary"] span,
+    .st-key-caixa_lateral_inss [data-testid="stBaseButton-secondary"] div {
+        color: #0F293A !important;
+        font-weight: 800 !important;
+        opacity: 1 !important;
+    }
+    .st-key-caixa_lateral_inss button[kind="secondary"]:hover,
+    .st-key-caixa_lateral_inss [data-testid="stBaseButton-secondary"]:hover {
         background: #C59B27 !important;
         color: #0F293A !important;
+    }
+    .st-key-caixa_lateral_inss input {
+        color: #0F293A !important;
+        background-color: #FFFFFF !important;
+        font-weight: 600 !important;
     }
 
     @media (max-width: 768px) {
