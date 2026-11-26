@@ -174,6 +174,10 @@ def _obter_gemini_key() -> str:
 
 def _responder_duvida_inss(pergunta: str) -> str:
     """Conversa real com o Gemini mantendo o histórico da caixa lateral."""
+    import json
+    import urllib.request
+    import urllib.error
+
     pergunta_limpa = (pergunta or "").strip()
     if not pergunta_limpa:
         return "Pode mandar sua pergunta!"
@@ -182,47 +186,91 @@ def _responder_duvida_inss(pergunta: str) -> str:
     if not api_key:
         return "⚠️ Chave `GEMINI_API_KEY` não encontrada nos Secrets do Streamlit Cloud."
 
+    instrucao_sistema = (
+        "Você é o Gemini, assistente inteligente e conversacional do site 'Inteligência Previdenciária & Auditoria'. "
+        "Converse de forma natural, humana, clara e prestativa em português do Brasil, mantendo o contexto da conversa. "
+        "Ajude com dúvidas sobre INSS, CNIS, indicadores (como PREC-MENOR-MIN, IEAN, PEXT), tempo concomitante, "
+        "aposentadoria especial, regra PCD / TEA (LC 142/2013) e planejamento previdenciário, lembrando quando fizer "
+        "sentido que o cálculo exato do extrato é feito enviando o PDF do CNIS no motor da página principal."
+    )
+
+    historico_msgs = []
+    for m in st.session_state.get("mensagens_ia", [])[-10:]:
+        papel = "user" if m.get("role") == "user" else "model"
+        conteudo = str(m.get("content", "")).strip()
+        if conteudo:
+            historico_msgs.append((papel, conteudo))
+
+    if not historico_msgs:
+        historico_msgs.append(("user", pergunta_limpa))
+
+    # 1ª tentativa: SDK oficial google-genai
     try:
         from google import genai
         from google.genai import types
 
         client = genai.Client(api_key=api_key)
-
-        instrucao_sistema = (
-            "Você é o Gemini, assistente inteligente e conversacional do site 'Inteligência Previdenciária & Auditoria'. "
-            "Converse de forma natural, humana, clara e prestativa em português do Brasil, mantendo o contexto da conversa. "
-            "Ajude com dúvidas sobre INSS, CNIS, indicadores (como PREC-MENOR-MIN, IEAN, PEXT), tempo concomitante, "
-            "aposentadoria especial, regra PCD / TEA (LC 142/2013) e planejamento previdenciário, lembrando quando fizer "
-            "sentido que o cálculo exato do extrato é feito enviando o PDF do CNIS no motor da página principal."
-        )
-
-        historico_contents = []
-        for m in st.session_state.get("mensagens_ia", [])[-10:]:
-            papel = "user" if m.get("role") == "user" else "model"
-            conteudo = str(m.get("content", "")).strip()
-            if conteudo:
-                historico_contents.append(
-                    types.Content(role=papel, parts=[types.Part.from_text(text=conteudo)])
-                )
-
-        if not historico_contents:
-            historico_contents.append(
-                types.Content(role="user", parts=[types.Part.from_text(text=pergunta_limpa)])
-            )
-
+        contents_sdk = [
+            types.Content(role=papel, parts=[types.Part.from_text(text=txt)])
+            for papel, txt in historico_msgs
+        ]
         resp = client.models.generate_content(
             model="gemini-2.5-flash",
-            contents=historico_contents,
+            contents=contents_sdk,
             config=types.GenerateContentConfig(
                 system_instruction=instrucao_sistema,
                 temperature=0.7,
             ),
         )
         texto = (getattr(resp, "text", None) or "").strip()
-        return texto if texto else "Não consegui gerar uma resposta agora. Tente novamente."
-    except Exception as exc:
-        return f"⚠️ Erro ao chamar o Gemini ({type(exc).__name__}): {exc}"
+        if texto:
+            return texto
+    except Exception as exc_sdk:
+        erro_sdk = f"{type(exc_sdk).__name__}: {exc_sdk}"
 
+        # 2ª tentativa: chamada REST direta (útil para chaves com prefixo AQ.)
+        try:
+            url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
+            payload = {
+                "system_instruction": {"parts": [{"text": instrucao_sistema}]},
+                "contents": [
+                    {"role": papel, "parts": [{"text": txt}]}
+                    for papel, txt in historico_msgs
+                ],
+                "generationConfig": {"temperature": 0.7},
+            }
+            req = urllib.request.Request(
+                url,
+                data=json.dumps(payload).encode("utf-8"),
+                headers={
+                    "Content-Type": "application/json",
+                    "x-goog-api-key": api_key,
+                },
+                method="POST",
+            )
+            with urllib.request.urlopen(req, timeout=25) as r:
+                dados = json.loads(r.read().decode("utf-8"))
+                candidatos = dados.get("candidates") or []
+                if candidatos:
+                    partes = (candidatos[0].get("content") or {}).get("parts") or []
+                    texto_rest = "".join(p.get("text", "") for p in partes).strip()
+                    if texto_rest:
+                        return texto_rest
+            return f"⚠️ Resposta vazia da API. Detalhe SDK: {erro_sdk}"
+        except urllib.error.HTTPError as exc_http:
+            corpo_erro = ""
+            try:
+                corpo_erro = exc_http.read().decode("utf-8", errors="ignore")[:300]
+            except Exception:
+                pass
+            return (
+                f"⚠️ Erro HTTP {exc_http.code} ao chamar o Gemini com a chave atual. "
+                f"Detalhe: {corpo_erro or exc_http.reason} | SDK: {erro_sdk}"
+            )
+        except Exception as exc_rest:
+            return f"⚠️ Falha ao chamar o Gemini. SDK ({erro_sdk}) | REST ({type(exc_rest).__name__}: {exc_rest})"
+
+    return "Não consegui gerar uma resposta agora. Tente novamente."
 
 LOGO_SITE = _achar_logo_oficial()
 
