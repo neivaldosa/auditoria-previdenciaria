@@ -1985,8 +1985,26 @@ with col_faq:
 
 st.markdown(
     """
-<div style="text-align:center; color:#475569; font-size:0.82rem; margin:1.8rem auto 1rem auto; padding:0.75rem 1rem; max-width:860px; border-top:1px solid #CBD5E1;">
-    Ferramenta privada e independente de auditoria previdenciária. Não possuímos vínculo com o INSS ou órgãos governamentais.
+<div style="text-align:center; color:#475569; font-size:0.82rem; margin:2rem auto 4.5rem auto; padding:1.25rem 1rem 0.5rem 1rem; max-width:860px; border-top:1px solid #CBD5E1; line-height:1.6;">
+    <div style="color:#0F293A; font-weight:700; font-size:0.86rem; margin-bottom:2px;">
+        Inteligência Previdenciária & Auditoria · Idealizado e desenvolvido por Neivaldo Barbosa de Sá
+    </div>
+    <div style="color:#64748B; font-size:0.79rem; margin-bottom:0.75rem;">
+        Automação, análise de dados e otimização de processos aplicados à revisão previdenciária.
+    </div>
+    <div style="display:flex; justify-content:center; gap:12px; flex-wrap:wrap; margin-bottom:0.9rem;">
+        <a href="https://www.youtube.com/@inteligenciaprevidenciaria" target="_blank" rel="noopener noreferrer"
+           style="color:#0F293A; background:#F8FAFC; border:1px solid #CBD5E1; padding:5px 14px; border-radius:20px; text-decoration:none; font-size:0.78rem; font-weight:700; display:inline-flex; align-items:center; gap:6px;">
+            <span style="color:#DC2626;">▶</span> Canal no YouTube
+        </a>
+        <a href="https://www.linkedin.com/in/neivaldo-barbosa-de-s%C3%A1-4867ba33/" target="_blank" rel="noopener noreferrer"
+           style="color:#0F293A; background:#F8FAFC; border:1px solid #C59B27; padding:5px 14px; border-radius:20px; text-decoration:none; font-size:0.78rem; font-weight:700; display:inline-flex; align-items:center; gap:6px;">
+            <span style="color:#0A66C2; font-weight:900;">in</span> LinkedIn · Projetos & Otimização
+        </a>
+    </div>
+    <div style="font-size:0.76rem; color:#64748B;">
+        Ferramenta privada e independente de auditoria previdenciária. Não possuímos vínculo com o INSS ou órgãos governamentais.
+    </div>
 </div>
 """,
     unsafe_allow_html=True,
